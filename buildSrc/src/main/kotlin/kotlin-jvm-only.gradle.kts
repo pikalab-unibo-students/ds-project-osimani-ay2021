@@ -18,6 +18,7 @@ tasks.withType<KotlinCompile> {
 dependencies {
     implementation(kotlin("bom"))
     api(kotlin("stdlib-jdk8"))
+    testImplementation(kotlin("test-junit"))
 }
 
 java {
