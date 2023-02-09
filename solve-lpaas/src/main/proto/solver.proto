@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.solve.lpaas";
+option java_outer_classname = "LPaaS";
+
+package lpaas;
+
+service Solver {
+  rpc Solve(SolveRequest) returns (stream SolutionReply) { }
+
+  rpc SolveWithTimeout(SolveRequestWithTimeout) returns (stream SolutionReply) { }
+
+  rpc SolveWithOption(SolveRequestWithOptions) returns (stream SolutionReply) { }
+
+  rpc SolveList(SolveRequest) returns (SolutionListReply) { }
+
+  rpc SolveListWithTimeout(SolveRequestWithTimeout) returns (SolutionListReply) { }
+
+  rpc SolveListWithOptions(SolveRequestWithOptions) returns (SolutionListReply) { }
+
+  rpc SolveOnce(SolveRequest) returns (SolutionReply) { }
+
+  rpc SolveOnceWithTimeout(SolveRequestWithTimeout) returns (SolutionReply) { }
+
+  rpc SolveOnceWithOptions(SolveRequestWithOptions) returns (SolutionReply) { }
+}
+
+message SolveRequest {
+  string struct = 1;
+}
+
+message Options {
+  string name = 1;
+  optional int32 limit = 2;
+}
+
+message SolveRequestWithTimeout {
+  SolveRequest request = 1;
+  int64 timeout = 2;
+}
+
+message SolveRequestWithOptions {
+  SolveRequest request = 1;
+  repeated Options options = 2;
+}
+
+message SolutionReply {
+  string solution = 1;
+}
+
+message SolutionListReply {
+  repeated SolutionReply solution = 1;
+}
+
+
