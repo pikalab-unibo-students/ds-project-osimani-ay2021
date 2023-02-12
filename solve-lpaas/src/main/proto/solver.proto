@@ -36,12 +36,12 @@ message Options {
 }
 
 message SolveRequestWithTimeout {
-  SolveRequest request = 1;
+  string struct = 1;
   int64 timeout = 2;
 }
 
 message SolveRequestWithOptions {
-  SolveRequest request = 1;
+  string struct = 1;
   repeated Options options = 2;
 }
 
