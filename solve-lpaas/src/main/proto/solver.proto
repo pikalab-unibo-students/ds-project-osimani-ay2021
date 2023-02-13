@@ -33,6 +33,7 @@ message SolveRequest {
 message Options {
   string name = 1;
   optional int32 limit = 2;
+  optional int64 timeout = 3;
 }
 
 message SolveRequestWithTimeout {
