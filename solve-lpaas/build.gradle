@@ -10,6 +10,7 @@ dependencies {
     api(project(":solve"))
     api(project(":solve-classic"))
     api(project(":parser-core"))
+    api(project(":parser-theory:"))
     api(libs.grpc.protobuf)
     api(libs.grpc.stub)
 

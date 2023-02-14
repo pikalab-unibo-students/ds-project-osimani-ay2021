@@ -6,6 +6,8 @@ option java_outer_classname = "LPaaS";
 
 package lpaas;
 
+/* Solver Service & Messages*/
+
 service Solver {
   rpc Solve(SolveRequest) returns (stream SolutionReply) { }
 
@@ -27,7 +29,9 @@ service Solver {
 }
 
 message SolveRequest {
-  string struct = 1;
+  optional string id = 1;
+  string struct = 2;
+
 }
 
 message Options {
@@ -37,13 +41,15 @@ message Options {
 }
 
 message SolveRequestWithTimeout {
-  string struct = 1;
-  int64 timeout = 2;
+  optional string id = 1;
+  string struct = 2;
+  int64 timeout = 3;
 }
 
 message SolveRequestWithOptions {
-  string struct = 1;
-  repeated Options options = 2;
+  optional string id = 1;
+  string struct = 2;
+  repeated Options options = 3;
 }
 
 message SolutionReply {
@@ -52,6 +58,23 @@ message SolutionReply {
 
 message SolutionListReply {
   repeated SolutionReply solution = 1;
+}
+
+/* Solver Factory Service & Messages*/
+
+service SolverFactory {
+  rpc ProduceSolver(SolverRequest) returns (SolverReply) { }
+
+  rpc ProduceMutableSolver(SolverRequest) returns (SolverReply) { }
+}
+
+message SolverRequest {
+  optional string staticKb = 3;
+  optional string dynamicKb = 4;
+}
+
+message SolverReply {
+  string id = 1;
 }
 
 
