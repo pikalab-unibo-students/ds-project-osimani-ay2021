@@ -10,6 +10,11 @@ fun main(/*args: Array<String>*/) {
         .build()
     server.start()
 
+    val server2 = ServerBuilder.forPort(8081)
+        .addService(SolverFactoryService)
+        .build()
+    server2.start()
+
     println("Listening on port " + 8080)
     server.awaitTermination()
     Runtime.getRuntime().addShutdownHook(Thread { server.shutdownNow() })

@@ -13,14 +13,9 @@ import it.unibo.tuprolog.theory.Theory
 
 object SolverService : SolverGrpc.SolverImplBase() {
 
-    private val theory = Theory.of(
-        Fact.of( Struct.of("f", Atom.of("a"))), // f(a).
-        Fact.of( Struct.of("f", Atom.of("b"))), // f(b).
-        Fact.of( Struct.of("f", Atom.of("c")))
-    )
 
-    val solver = Solver.prolog.solverWithDefaultBuiltins(staticKb = theory)
-    val parser = TermParser.withDefaultOperators()
+    private val solvers = SolversCollection
+    private val parser = TermParser.withDefaultOperators()
 
     private fun buildSolutionReply(solution: Solution): SolutionReply {
         return SolutionReply.newBuilder().setSolution(solution.substitution.toString()).build()
@@ -35,8 +30,8 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver.onCompleted()
     }
 
-    private fun solveQuery(struct: String, options: SolveOptions = SolveOptions.DEFAULT): Sequence<Solution> {
-        return solver.solve(parser.parseStruct(struct), options)
+    private fun solveQuery(id: String, struct: String, options: SolveOptions = SolveOptions.DEFAULT): Sequence<Solution> {
+        return solvers.getSolverOrDefault(id).solve(parser.parseStruct(struct), options)
     }
 
     /*private fun launchWithTimer(f: () -> Unit, timeout: Long) {
@@ -46,12 +41,12 @@ object SolverService : SolverGrpc.SolverImplBase() {
     }*/
 
     override fun solve(request: SolveRequest, responseObserver: StreamObserver<SolutionReply>) {
-        sendListOfReplies(solveQuery(request.struct), responseObserver)
+        sendListOfReplies(solveQuery(request.id, request.struct), responseObserver)
     }
 
     override fun solveWithTimeout(request: SolveRequestWithTimeout, responseObserver: StreamObserver<SolutionReply>) {
         sendListOfReplies(
-            solveQuery(request.struct, SolveOptions.allEagerlyWithTimeout(request.timeout)),
+            solveQuery(request.id, request.struct, SolveOptions.allEagerlyWithTimeout(request.timeout)),
             responseObserver)
     }
 
@@ -73,7 +68,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
 
     override fun solveWithOption(request: SolveRequestWithOptions, responseObserver: StreamObserver<SolutionReply>) {
         sendListOfReplies(
-            solveQuery(request.struct, parseOptions(request.optionsList)),
+            solveQuery(request.id, request.struct, parseOptions(request.optionsList)),
             responseObserver)
     }
 
@@ -86,7 +81,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
     }
 
     override fun solveList(request: SolveRequest, responseObserver: StreamObserver<SolutionListReply>) {
-        responseObserver.onNext(putSolutionsInList(solveQuery(request.struct)))
+        responseObserver.onNext(putSolutionsInList(solveQuery(request.id, request.struct)))
         responseObserver.onCompleted()
     }
 
@@ -95,7 +90,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver: StreamObserver<SolutionListReply>
     ) {
         responseObserver.onNext(putSolutionsInList(
-            solveQuery(request.struct, SolveOptions.allEagerlyWithTimeout(request.timeout))
+            solveQuery(request.id, request.struct, SolveOptions.allEagerlyWithTimeout(request.timeout))
         ))
         responseObserver.onCompleted()
     }
@@ -105,14 +100,14 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver: StreamObserver<SolutionListReply>
     ) {
         responseObserver.onNext(putSolutionsInList(
-            solveQuery(request.struct, parseOptions(request.optionsList))
+            solveQuery(request.id, request.struct, parseOptions(request.optionsList))
         ))
         responseObserver.onCompleted()
     }
 
     override fun solveOnce(request: SolveRequest, responseObserver: StreamObserver<SolutionReply>) {
         sendListOfReplies(
-            solveQuery(request.struct, SolveOptions.someEagerly(1)),
+            solveQuery(request.id, request.struct, SolveOptions.someEagerly(1)),
             responseObserver
         )
     }
@@ -122,7 +117,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver: StreamObserver<SolutionReply>
     ) {
         sendListOfReplies(
-            solveQuery(request.struct, SolveOptions.someEagerlyWithTimeout(1, request.timeout)),
+            solveQuery(request.id, request.struct, SolveOptions.someEagerlyWithTimeout(1, request.timeout)),
             responseObserver
         )
     }
@@ -132,7 +127,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver: StreamObserver<SolutionReply>
     ) {
         sendListOfReplies(
-            solveQuery(request.struct, parseOptions(request.optionsList).setLimit(1)),
+            solveQuery(request.id, request.struct, parseOptions(request.optionsList).setLimit(1)),
             responseObserver
         )
     }
