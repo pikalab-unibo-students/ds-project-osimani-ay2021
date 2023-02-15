@@ -1,34 +1,45 @@
 package it.unibo.tuprolog.solve.lpaas.server
 
-import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.Fact
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.solve.Solver
-import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.ClausesParser
-import kotlin.random.Random
 
 object SolversCollection {
 
-    private val theory = Theory.of(
-        Fact.of( Struct.of("f", Atom.of("a"))),
-        Fact.of( Struct.of("f", Atom.of("b"))),
-        Fact.of( Struct.of("f", Atom.of("c")))
-    )
+    private val theory = """
+                f(b).
+                f(d).
+                """.trimIndent()
 
-    private val defaultSolver: Solver = Solver.prolog.solverWithDefaultBuiltins(staticKb = theory)
+    val parser = ClausesParser.withDefaultOperators()
+
+    /**Default no more needed?**/
+    private val defaultSolver: Solver = Solver.prolog.solverWithDefaultBuiltins(staticKb = parser.parseTheory(theory))
 
     private val solvers: MutableMap<String, Solver> = mutableMapOf()
 
-    fun getSolverOrDefault(id: String): Solver {
+    fun getSolver(id: String): Solver {
         return solvers.getOrDefault(id, defaultSolver)
     }
 
-    fun addSolver(solver: Solver): String {
+    fun addSolver(sKb: String = theory, dKb: String = ""): String {
+        var staticKb: Theory
+        var dynamicKb: Theory
+        try {
+            staticKb = parser.parseTheory(sKb)
+            dynamicKb = parser.parseTheory(dKb)
+        } catch (e: Exception) {
+            staticKb = Theory.empty()
+            dynamicKb = Theory.empty()
+        }
         val id = idGenerator()
-        solvers[id] = solver
+        solvers[id] = Solver.prolog.solverWithDefaultBuiltins(
+            staticKb = staticKb,
+            dynamicKb = dynamicKb
+        )
         return id
     }
 
