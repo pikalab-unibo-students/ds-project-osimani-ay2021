@@ -3,21 +3,22 @@ package it.unibo.tuprolog.solve.lpaas.server
 import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.Fact
 import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.Solver
+import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.ClausesParser
 
 object SolversCollection {
 
-    private val theory = """
-                f(b).
-                f(d).
-                """.trimIndent()
-
     val parser = ClausesParser.withDefaultOperators()
 
     /**Default no more needed?**/
-    private val defaultSolver: Solver = Solver.prolog.solverWithDefaultBuiltins(staticKb = parser.parseTheory(theory))
+    private val defaultSolver: Solver = Solver.prolog.solverWithDefaultBuiltins(
+        staticKb = parser.parseTheory(DEFAULT_STATIC_THEORY)
+    )
 
     private val solvers: MutableMap<String, Solver> = mutableMapOf()
 
@@ -25,7 +26,7 @@ object SolversCollection {
         return solvers.getOrDefault(id, defaultSolver)
     }
 
-    fun addSolver(sKb: String = theory, dKb: String = ""): String {
+    fun addSolver(sKb: String = DEFAULT_STATIC_THEORY, dKb: String = ""): String {
         var staticKb: Theory
         var dynamicKb: Theory
         try {

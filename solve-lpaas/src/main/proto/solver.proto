@@ -52,8 +52,13 @@ message SolveRequestWithOptions {
 }
 
 message SolutionReply {
-  string id = 1;
-  string solution = 2;
+  string query = 1;
+  string solvedQuery = 2;
+  string substitution = 3;
+  bool isYes = 4;
+  bool isNo = 5;
+  bool isHalt = 6;
+  optional string error = 7;
 }
 
 message SolutionListReply {
