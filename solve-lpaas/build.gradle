@@ -19,6 +19,7 @@ dependencies {
     runtimeOnly(libs.grpc.netty.shaded)
 
     testImplementation(libs.grpc.testing)
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
     testImplementation(project(":solve-classic"))
 }
 

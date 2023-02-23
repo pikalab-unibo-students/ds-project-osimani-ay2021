@@ -10,7 +10,6 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
 
     private val solvers = SolversCollection
 
-
     override fun produceSolver(request: SolverRequest, responseObserver: StreamObserver<SolverReply>) {
         val id = solvers.addSolver(request.staticKb, request.dynamicKb)
         responseObserver.onNext(SolverReply.newBuilder().setId(id).build())
