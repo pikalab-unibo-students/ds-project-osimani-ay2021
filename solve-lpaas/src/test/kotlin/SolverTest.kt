@@ -1,4 +1,5 @@
 import io.grpc.internal.testing.StreamRecorder
+import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.SolutionListReply
 import it.unibo.tuprolog.solve.lpaas.SolutionReply
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
@@ -8,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 
 class SolverTest {
 
@@ -27,7 +29,7 @@ class SolverTest {
         client1.solveQuery("f(X)", responseStream)
         responseStream.awaitCompletion()
         assertContentEquals(
-            listOf("f(b)", "f(d)"),
+            listOf("f(b)"),
             responseStream.values.map { it.solvedQuery }
         )
     }
@@ -39,14 +41,39 @@ class SolverTest {
         val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
         client1.createSolver("""
                    p(a).
-                   p(c).
                    """.trimIndent())
         client1.solveQuery("p(X)", responseStream)
         responseStream.awaitCompletion()
         assertContentEquals(
-            listOf("p(a)", "p(c)"),
+            listOf("p(a)"),
             responseStream.values.map { it.solvedQuery }
         )
+    }
+
+    /** Testing Stream-Like Nature of Solve **/
+    @Test
+    @Throws(Exception::class)
+    fun testStreamLikeResponse() {
+        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
+        client1.solveQuery("f(X)", responseStream)
+        responseStream.awaitCompletion()
+        assertContentEquals(
+            listOf("f(b)"),
+            responseStream.values.map { it.solvedQuery }
+        )
+
+        val responseStream2: StreamRecorder<SolutionReply> = StreamRecorder.create()
+        client1.getNextSolution(responseStream2)
+        responseStream2.awaitCompletion()
+        assertContentEquals(
+            listOf("f(d)"),
+            responseStream2.values.map { it.solvedQuery }
+        )
+
+        val responseStream3: StreamRecorder<SolutionReply> = StreamRecorder.create()
+        client1.getNextSolution(responseStream3)
+        responseStream3.awaitCompletion()
+        assert(responseStream3.values.first().isNo)
     }
 
     /** Testing async-nature of requests **/
@@ -61,31 +88,7 @@ class SolverTest {
         client2.solveQuery("f(X)", responseStream)
         responseStream.awaitCompletion()
         assertContentEquals(
-            listOf("f(b)", "f(d)"),
-            responseStream.values.map { it.solvedQuery }
-        )
-    }
-
-    /** Testing Stream-Like Nature of Solve **/
-    @Test
-    @Throws(Exception::class)
-    fun testStreamLikeResponse() {
-        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.createSolver("""
-                   p(a).
-                   p(c) :- sleep(3000).
-                   """.trimIndent())
-        client1.solveQuery("p(X)", responseStream)
-        runBlocking {
-            delay(1000)
-        }
-        assertContentEquals(
-            listOf("p(a)"),
-            responseStream.values.map { it.solvedQuery }
-        )
-        responseStream.awaitCompletion()
-        assertContentEquals(
-            listOf("p(a)", "p(c)"),
+            listOf("f(b)"),
             responseStream.values.map { it.solvedQuery }
         )
     }
@@ -107,8 +110,7 @@ class SolverTest {
         responseStream.awaitCompletion()
         assertContentEquals(
             listOf("p(a)", "p(c)"),
-            responseStream.values[0].solutionList.map {
-                println(it.solvedQuery)
+            responseStream.values.first().solutionList.map {
                 it.solvedQuery
             }
         )
@@ -133,35 +135,37 @@ class SolverTest {
     fun solveQueryWithTimeout() {
         val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
         client1.createSolver("""
+                   p(X):-p(X).
+                   """.trimIndent())
+        client1.solveWithTimeout("p(X)", 50, responseStream)
+        responseStream.awaitCompletion()
+        val results = responseStream.values.map {
+            it.error
+        }
+        assertContains(
+            results.first(), "TimeOutException"
+        )
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun solveQueryAsListWithTimeout() {
+        val responseStream: StreamRecorder<SolutionListReply> = StreamRecorder.create()
+        client1.createSolver("""
                    p(a).
                    p(X):-p(X).
                    """.trimIndent())
-        client1.solveWithTimeout("p(X)", 100, responseStream)
+        client1.solveQueryAsListWithOptions("p(X)", SolveOptions.allEagerlyWithTimeout(50),
+            responseStream)
         responseStream.awaitCompletion()
-        val results = responseStream.values.map {
+        val results = responseStream.values.first().solutionList.map {
             Pair(it.solvedQuery, it.error)
         }
         assertContains(
             results.map { it.first }, "p(a)"
         )
         assertContains(
-            results.last().second, "TimeOutException"
-        )
-    }
-
-    /** Testing Solve With Lazy Option **/
-    @Test
-    @Throws(Exception::class)
-    fun solveLazyQuery() {
-        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.requestQueryWithOptions("f(X)",
-            laziness = true,
-            callback = responseStream)
-        responseStream.awaitCompletion()
-        println(responseStream.values.size)
-        assertContentEquals(
-            listOf("f(b)", "f(d)"),
-            responseStream.values.map { it.solvedQuery }
+            results.last().second,"TimeOutException"
         )
     }
 }
