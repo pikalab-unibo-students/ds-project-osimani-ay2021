@@ -9,11 +9,11 @@ package lpaas;
 /* Solver Service & Messages*/
 
 service Solver {
-  rpc Solve(SolveRequest) returns (stream SolutionReply) { }
+  rpc Solve(SolveRequest) returns (IteratorReply) { }
 
-  rpc SolveWithTimeout(SolveRequestWithTimeout) returns (stream SolutionReply) { }
+  rpc SolveWithTimeout(SolveRequestWithTimeout) returns (IteratorReply) { }
 
-  rpc SolveWithOptions(SolveRequestWithOptions) returns (stream SolutionReply) { }
+  rpc SolveWithOptions(SolveRequestWithOptions) returns (IteratorReply) { }
 
   rpc SolveList(SolveRequest) returns (SolutionListReply) { }
 
@@ -21,17 +21,19 @@ service Solver {
 
   rpc SolveListWithOptions(SolveRequestWithOptions) returns (SolutionListReply) { }
 
-  rpc SolveOnce(SolveRequest) returns (SolutionReply) { }
+  rpc SolveOnce(SolveRequest) returns (IteratorReply) { }
 
-  rpc SolveOnceWithTimeout(SolveRequestWithTimeout) returns (SolutionReply) { }
+  rpc SolveOnceWithTimeout(SolveRequestWithTimeout) returns (IteratorReply) { }
 
-  rpc SolveOnceWithOptions(SolveRequestWithOptions) returns (SolutionReply) { }
+  rpc SolveOnceWithOptions(SolveRequestWithOptions) returns (IteratorReply) { }
+
+  /* Iterate Stream of Solution */
+  rpc NextSolution(NextSolutionRequest) returns (SolutionReply) { }
 }
 
 message SolveRequest {
   optional string id = 1;
   string struct = 2;
-
 }
 
 message Options {
@@ -49,6 +51,16 @@ message SolveRequestWithOptions {
   optional string id = 1;
   string struct = 2;
   repeated Options options = 3;
+}
+
+message IteratorReply {
+  string id = 1;
+  string query = 2;
+}
+
+message NextSolutionRequest {
+  string id = 1;
+  string query = 2;
 }
 
 message SolutionReply {

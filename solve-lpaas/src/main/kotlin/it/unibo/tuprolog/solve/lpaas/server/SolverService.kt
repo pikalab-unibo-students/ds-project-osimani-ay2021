@@ -1,9 +1,7 @@
 package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.stub.StreamObserver
-import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.parsing.TermParser
-import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.*
@@ -15,42 +13,26 @@ object SolverService : SolverGrpc.SolverImplBase() {
     private val solvers = SolversCollection
     private val parser = TermParser.withDefaultOperators()
 
-    private fun buildSolutionReply(solution: Solution): SolutionReply {
-        return SolutionReply.newBuilder()
-            .setQuery(solution.query.toString())
-            .setSolvedQuery(solution.solvedQuery.toString())
-            .setSubstitution(solution.substitution.toString())
-            .setIsYes(solution.isYes)
-            .setIsNo(solution.isNo)
-            .setIsHalt(solution.isHalt)
-            .setError(solution.exception.toString()).build()
-    }
-
-    private fun sendListOfReplies(solutions: Sequence<Solution>, responseObserver: StreamObserver<SolutionReply>) {
-        solutions.forEach {
-            responseObserver.onNext(
-                buildSolutionReply(it)
-            )
-        }
+    private fun solveQuery(id: String, struct: String, responseObserver: StreamObserver<IteratorReply>,
+                           options: SolveOptions = SolveOptions.DEFAULT) {
+        ComputationsCollection.addIterator(id, struct, options)
+        responseObserver.onNext(
+            IteratorReply.newBuilder().setId(id).setQuery(struct).build()
+        )
         responseObserver.onCompleted()
     }
 
-    private fun solveQuery(id: String, struct: String, options: SolveOptions = SolveOptions.DEFAULT): Sequence<Solution> {
-        return solvers.getSolver(id).solve(parser.parseStruct(struct), options)
+    override fun solve(request: SolveRequest, responseObserver: StreamObserver<IteratorReply>) {
+       solveQuery(request.id, request.struct, responseObserver)
     }
 
-    override fun solve(request: SolveRequest, responseObserver: StreamObserver<SolutionReply>) {
-        sendListOfReplies(solveQuery(request.id, request.struct), responseObserver)
-    }
-
-    override fun solveWithTimeout(request: SolveRequestWithTimeout, responseObserver: StreamObserver<SolutionReply>) {
-        sendListOfReplies(
-            solveQuery(request.id, request.struct, SolveOptions.allLazilyWithTimeout(request.timeout)),
-            responseObserver)
+    override fun solveWithTimeout(request: SolveRequestWithTimeout, responseObserver: StreamObserver<IteratorReply>) {
+            solveQuery(request.id, request.struct,
+                responseObserver, SolveOptions.allLazilyWithTimeout(request.timeout))
     }
 
     private fun parseOptions(options: List<Options>): SolveOptions {
-        var lazyness = false
+        var laziness = false
         var limit = SolveOptions.ALL_SOLUTIONS
         var timeout = SolveOptions.MAX_TIMEOUT
 
@@ -58,17 +40,15 @@ object SolverService : SolverGrpc.SolverImplBase() {
             when(it.name) {
                 TIMEOUT_OPTION -> timeout = it.value
                 LIMIT_OPTION -> limit = it.value.toInt()
-                LAZY_OPTION -> lazyness = true
-                EAGER_OPTION -> lazyness = false
+                LAZY_OPTION -> laziness = true
+                EAGER_OPTION -> laziness = false
             }
         }
-        return SolveOptions.of(lazyness, timeout, limit)
+        return SolveOptions.of(laziness, timeout, limit)
     }
 
-    override fun solveWithOptions(request: SolveRequestWithOptions, responseObserver: StreamObserver<SolutionReply>) {
-        sendListOfReplies(
-            solveQuery(request.id, request.struct, parseOptions(request.optionsList)),
-            responseObserver)
+    override fun solveWithOptions(request: SolveRequestWithOptions, responseObserver: StreamObserver<IteratorReply>) {
+            solveQuery(request.id, request.struct, responseObserver, parseOptions(request.optionsList))
     }
 
     private fun solveQueryAsList(id: String, struct: String, options: SolveOptions = SolveOptions.DEFAULT):
@@ -109,31 +89,42 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver.onCompleted()
     }
 
-    override fun solveOnce(request: SolveRequest, responseObserver: StreamObserver<SolutionReply>) {
-        sendListOfReplies(
-            solveQuery(request.id, request.struct, SolveOptions.someEagerly(1)),
-            responseObserver
-        )
+    override fun solveOnce(request: SolveRequest, responseObserver: StreamObserver<IteratorReply>) {
+        solveQuery(request.id, request.struct, responseObserver, SolveOptions.someEagerly(1))
     }
 
     override fun solveOnceWithTimeout(
         request: SolveRequestWithTimeout,
-        responseObserver: StreamObserver<SolutionReply>
+        responseObserver: StreamObserver<IteratorReply>
     ) {
-        sendListOfReplies(
-            solveQuery(request.id, request.struct, SolveOptions.someEagerlyWithTimeout(1, request.timeout)),
-            responseObserver
-        )
+        solveQuery(request.id, request.struct, responseObserver,
+            SolveOptions.someEagerlyWithTimeout(1, request.timeout))
     }
 
-    /** NEED TO CHANGE BASIC IMPLEMENTATION, SOLUTION GIVEN WITH NEXT **/
     override fun solveOnceWithOptions(
         request: SolveRequestWithOptions,
-        responseObserver: StreamObserver<SolutionReply>
+        responseObserver: StreamObserver<IteratorReply>
     ) {
-        sendListOfReplies(
-            solveQuery(request.id, request.struct, parseOptions(request.optionsList).setLimit(1)),
-            responseObserver
+        solveQuery(request.id, request.struct, responseObserver,
+            parseOptions(request.optionsList).setLimit(1))
+    }
+
+    override fun nextSolution(request: NextSolutionRequest, responseObserver: StreamObserver<SolutionReply>) {
+        responseObserver.onNext(
+            buildSolutionReply(ComputationsCollection.getNextSolution(request.id, request.query))
         )
+        responseObserver.onCompleted()
+    }
+
+    private fun buildSolutionReply(solution: Solution): SolutionReply? {
+        return SolutionReply.newBuilder()
+            .setQuery(solution.query.toString())
+            .setSolvedQuery(solution.solvedQuery.toString())
+            .setSubstitution(solution.substitution.toString())
+            .setIsYes(solution.isYes)
+            .setIsNo(solution.isNo)
+            .setIsHalt(solution.isHalt)
+            .setError(solution.exception.toString())
+            .build()
     }
 }
