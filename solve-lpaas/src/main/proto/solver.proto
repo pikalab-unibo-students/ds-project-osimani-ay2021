@@ -31,14 +31,11 @@ service Solver {
   rpc NextSolution(NextSolutionRequest) returns (SolutionReply) { }
 }
 
+/* Request messages */
+
 message SolveRequest {
   optional string id = 1;
   string struct = 2;
-}
-
-message Options {
-  string name = 1;
-  optional int64 value = 2;
 }
 
 message SolveRequestWithTimeout {
@@ -53,9 +50,9 @@ message SolveRequestWithOptions {
   repeated Options options = 3;
 }
 
-message IteratorReply {
-  string id = 1;
-  string query = 2;
+message Options {
+  string name = 1;
+  optional int64 value = 2;
 }
 
 message NextSolutionRequest {
@@ -63,14 +60,25 @@ message NextSolutionRequest {
   string query = 2;
 }
 
+/* Reply messages */
+
+message IteratorReply {
+  string id = 1;
+  string query = 2;
+}
+
 message SolutionReply {
-  string query = 1;
-  string solvedQuery = 2;
-  string substitution = 3;
   bool isYes = 4;
   bool isNo = 5;
   bool isHalt = 6;
+  string query = 1;
+  repeated Substitution substitution = 3;
   optional string error = 7;
+}
+
+message Substitution {
+  string var = 1;
+  string term = 2;
 }
 
 message SolutionListReply {
@@ -81,13 +89,11 @@ message SolutionListReply {
 
 service SolverFactory {
   rpc ProduceSolver(SolverRequest) returns (SolverReply) { }
-
-  rpc ProduceMutableSolver(SolverRequest) returns (SolverReply) { }
 }
 
 message SolverRequest {
-  optional string staticKb = 3;
-  optional string dynamicKb = 4;
+  optional string staticKb = 1;
+  optional string dynamicKb = 2;
 }
 
 message SolverReply {

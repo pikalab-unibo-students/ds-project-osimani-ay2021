@@ -1,7 +1,11 @@
 package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.stub.StreamObserver
+import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.core.parsing.TermParser
+import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.*
@@ -116,15 +120,21 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver.onCompleted()
     }
 
-    private fun buildSolutionReply(solution: Solution): SolutionReply? {
-        return SolutionReply.newBuilder()
+    private fun buildSolutionReply(solution: Solution): SolutionReply {
+        val solutionBuilder = SolutionReply.newBuilder()
             .setQuery(solution.query.toString())
-            .setSolvedQuery(solution.solvedQuery.toString())
-            .setSubstitution(solution.substitution.toString())
             .setIsYes(solution.isYes)
             .setIsNo(solution.isNo)
             .setIsHalt(solution.isHalt)
-            .setError(solution.exception.toString())
-            .build()
+        if(solution.substitution.isSuccess) {
+            solution.substitution.asIterable().forEach {
+                solutionBuilder.addSubstitution(Substitution.newBuilder()
+                    .setVar(it.key.name)
+                    .setTerm(it.value.toString()))
+            }
+        }
+        if(solution.exception != null)
+            solution.exception
+        return solutionBuilder.build()
     }
 }

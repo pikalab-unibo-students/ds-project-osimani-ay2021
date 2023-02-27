@@ -12,15 +12,12 @@ interface SimpleSolver  {
     fun solveList(goal: String, timeout: TimeDuration = SolveOptions.MAX_TIMEOUT): List<Solution>
     fun solveList(goal: String): List<Solution>
     fun solveList(goal: String, options: SolveOptions): List<Solution>
-
     fun solveOnce(goal: String, timeout: TimeDuration = SolveOptions.MAX_TIMEOUT): Sequence<Solution>
-
     fun solveOnce(goal: String): Sequence<Solution>
-
     fun solveOnce(goal: String, options: SolveOptions): Sequence<Solution>
 
     companion object {
-        //@JvmStatic
+        @JvmStatic
         val prolog: PrologSolverFactory by lazy { PrologSolverFactory }
     }
 }

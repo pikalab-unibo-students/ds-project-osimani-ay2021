@@ -1,8 +1,6 @@
 package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.ServerBuilder
-import it.unibo.tuprolog.core.Struct
-import it.unibo.tuprolog.solve.Solver
 
 fun main(/*args: Array<String>*/) {
     val server = ServerBuilder.forPort(8080)

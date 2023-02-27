@@ -12,20 +12,19 @@ internal class ClientPrologSolverImpl(staticKb: String = DEFAULT_STATIC_THEORY, 
 
     private var solverId = ""
 
-    private val clientSolverFactory: SolverFactoryGrpc.SolverFactoryFutureStub =
-        SolverFactoryGrpc.newFutureStub(ManagedChannelBuilder.forAddress("localhost", 8081)
-            .usePlaintext()
-            .build())
     private val clientSolver: SolverGrpc.SolverFutureStub =
         SolverGrpc.newFutureStub(ManagedChannelBuilder.forAddress("localhost", 8080)
             .usePlaintext()
             .build())
 
-
     init {
-        val createSolver: SolverRequest = SolverRequest.newBuilder()
+        val clientSolverFactory: SolverFactoryGrpc.SolverFactoryFutureStub =
+            SolverFactoryGrpc.newFutureStub(ManagedChannelBuilder.forAddress("localhost", 8081)
+                .usePlaintext()
+                .build())
+        val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
             .setStaticKb(staticKb).setDynamicKb(dynamicKb).build()
-        solverId = clientSolverFactory.produceSolver(createSolver).get().id
+        solverId = clientSolverFactory.produceSolver(createSolverRequest).get().id
     }
 
     override fun solve(goal: String): SolutionSequence {
