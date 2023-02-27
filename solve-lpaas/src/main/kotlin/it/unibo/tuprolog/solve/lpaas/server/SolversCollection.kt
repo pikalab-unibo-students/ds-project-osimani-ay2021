@@ -15,13 +15,13 @@ object SolversCollection {
 
     val parser = ClausesParser.withDefaultOperators()
 
-    /**Default no more needed?**/
+    private val solvers: MutableMap<String, Solver> = mutableMapOf()
+
     private val defaultSolver: Solver = Solver.prolog.solverWithDefaultBuiltins(
         staticKb = parser.parseTheory(DEFAULT_STATIC_THEORY)
     )
 
-    private val solvers: MutableMap<String, Solver> = mutableMapOf()
-
+    /** Include error instead of default? **/
     fun getSolver(id: String): Solver {
         return solvers.getOrDefault(id, defaultSolver)
     }

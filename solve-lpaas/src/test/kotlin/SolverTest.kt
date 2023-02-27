@@ -27,26 +27,28 @@ class SolverTest {
     @Test
     @Throws(Exception::class)
     fun simpleSolveQuery() {
-        val result = basicSolver.solve("f(X)")
+        val result = basicSolver.solve("f(X)").iterator()
         assertEquals(
-            Struct.Companion.of("f", Term.parse("b")),
-            result.iterator().next().solvedQuery
+            Struct.of("f", Term.parse("b")),
+            result.next().solvedQuery
+        )
+        assertEquals(
+            Struct.of("f", Term.parse("d")),
+            result.next().solvedQuery
         )
     }
-    /*
+
     /** Testing Factory of Solvers **/
     @Test
     @Throws(Exception::class)
     fun createSolver() {
-        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.createSolver("""
-                   p(a).
+        val client = SimpleSolver.prolog.basicClient("""
+                   p(a, b).
                    """.trimIndent())
-        client1.solve("p(X)", responseStream)
-        responseStream.awaitCompletion()
-        assertContentEquals(
-            listOf("p(a)"),
-            responseStream.values.map { it.solvedQuery }
+        val result = client.solve("p(X, Y)").iterator()
+        assertEquals(
+            Struct.of("p", Term.parse("a"), Term.parse("b")),
+            result.next().solvedQuery
         )
     }
 
@@ -54,65 +56,51 @@ class SolverTest {
     @Test
     @Throws(Exception::class)
     fun testStreamLikeResponse() {
-        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.solve("f(X)", responseStream)
-        responseStream.awaitCompletion()
-        assertContentEquals(
-            listOf("f(b)"),
-            responseStream.values.map { it.solvedQuery }
+        val result = basicSolver.solve("f(X)").iterator()
+        assertEquals(
+            Struct.of("f", Term.parse("b")),
+            result.next().solvedQuery
         )
 
-        val responseStream2: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.getNextSolution(responseStream2)
-        responseStream2.awaitCompletion()
-        assertContentEquals(
-            listOf("f(d)"),
-            responseStream2.values.map { it.solvedQuery }
+        assertEquals(
+            Struct.of("f", Term.parse("d")),
+            result.next().solvedQuery
         )
 
-        val responseStream3: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.getNextSolution(responseStream3)
-        responseStream3.awaitCompletion()
-        assert(responseStream3.values.first().isNo)
+        assert(result.next().isNo && !result.hasNext())
     }
 
-    /** Testing async-nature of requests **/
+    /** Testing async-nature of requests FIX **/
     @Test
     @Throws(Exception::class)
     fun asyncRequests() {
-        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.createSolver("""
+        val client = SimpleSolver.prolog.basicClient("""
                    p(X):-p(X).
                    """.trimIndent())
-        client1.solve("p(X)")
-        client2.solve("f(X)", responseStream)
-        responseStream.awaitCompletion()
-        assertContentEquals(
-            listOf("f(b)"),
-            responseStream.values.map { it.solvedQuery }
+        client.solve("p(X)").iterator()
+        val result = basicSolver.solve("f(X)").iterator()
+        assertEquals(
+            Struct.of("f", Term.parse("b")),
+            result.next().solvedQuery
         )
     }
 
-    /** Testing SolveAsList **/
+    /** Testing SolveAsList FIX**/
     @Test
     @Throws(Exception::class)
     fun solveQueryList() {
-        val responseStream: StreamRecorder<SolutionListReply> = StreamRecorder.create()
-        client1.createSolver("""
+        val client = SimpleSolver.prolog.basicClient("""
                    p(a) :- sleep(3000).
                    p(c).
                    """.trimIndent())
-        client1.solveList("p(X)", responseStream)
+        val result = client.solveList("p(X)")
         runBlocking {
             delay(1000)
         }
-        assert(responseStream.values.isEmpty())
-        responseStream.awaitCompletion()
+        assert(result.isEmpty())
         assertContentEquals(
-            listOf("p(a)", "p(c)"),
-            responseStream.values.first().solutionList.map {
-                it.solvedQuery
-            }
+            listOf(Struct.of("p", Term.parse("a")), Struct.of("p", Term.parse("c"))),
+            result.map {it.solvedQuery}
         )
     }
 
@@ -120,55 +108,44 @@ class SolverTest {
     @Test
     @Throws(Exception::class)
     fun solveOnceQuery() {
-        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.solveOnce("f(X)", responseStream)
-        responseStream.awaitCompletion()
-        assertContentEquals(
-            listOf("f(b)"),
-            responseStream.values.map { it.solvedQuery }
+        val result = basicSolver.solveOnce("f(X)").iterator()
+        assertEquals(
+            Struct.of("f", Term.parse("b")),
+            result.next().solvedQuery
         )
+
+        assert(result.next().isNo && !result.hasNext())
     }
 
-    /** Testing Solve With Timeout **/
+    /** Testing Solve With Timeout FIX**/
     @Test
     @Throws(Exception::class)
     fun solveQueryWithTimeout() {
-        val responseStream: StreamRecorder<SolutionReply> = StreamRecorder.create()
-        client1.createSolver("""
+        val client = SimpleSolver.prolog.basicClient("""
                    p(X):-p(X).
                    """.trimIndent())
-        client1.solve("p(X)", 50, responseStream)
-        responseStream.awaitCompletion()
-        val results = responseStream.values.map {
-            it.error
-        }
+        val result = client.solve("p(X)", 10).iterator().next()
         assertContains(
-            results.first(), "TimeOutException"
+            result.exception.toString(), "TimeOutException"
         )
     }
 
+    /** Testing Solve List With Timeout FIX**/
     @Test
     @Throws(Exception::class)
     fun solveQueryAsListWithTimeout() {
-        val responseStream: StreamRecorder<SolutionListReply> = StreamRecorder.create()
-        client1.createSolver("""
+        val client = SimpleSolver.prolog.basicClient("""
                    p(a).
                    p(X):-p(X).
                    """.trimIndent())
-        client1.solveList("p(X)", SolveOptions.allEagerlyWithTimeout(50),
-            responseStream)
-        responseStream.awaitCompletion()
-        val results = responseStream.values.first().solutionList.map {
-            Pair(it.solvedQuery, it.error)
-        }
-        assertContains(
-            results.map { it.first }, "p(a)"
+        val results = client.solveList("p(X)", SolveOptions.allEagerlyWithTimeout(50))
+        assertEquals(
+            Struct.of("p", Term.parse("a")), results.first().solvedQuery
         )
         assertContains(
-            results.last().second,"TimeOutException"
+            results.last().exception.toString(),"TimeOutException"
         )
     }
-    */
 }
 
 
