@@ -1,5 +1,8 @@
 package it.unibo.tuprolog.solve.lpaas.server
 
+import io.grpc.Status
+import io.grpc.StatusException
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
@@ -10,6 +13,7 @@ import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.util.*
+import jdk.net.SocketFlow
 
 object SolverService : SolverGrpc.SolverImplBase() {
 
@@ -114,8 +118,9 @@ object SolverService : SolverGrpc.SolverImplBase() {
     }
 
     override fun nextSolution(request: NextSolutionRequest, responseObserver: StreamObserver<SolutionReply>) {
+        val solution = ComputationsCollection.getNextSolution(request.id, request.query)
         responseObserver.onNext(
-            buildSolutionReply(ComputationsCollection.getNextSolution(request.id, request.query))
+            buildSolutionReply(solution)
         )
         responseObserver.onCompleted()
     }
@@ -134,7 +139,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
             }
         }
         if(solution.exception != null)
-            solution.exception
+            solutionBuilder.error = solution.exception.toString()
         return solutionBuilder.build()
     }
 }
