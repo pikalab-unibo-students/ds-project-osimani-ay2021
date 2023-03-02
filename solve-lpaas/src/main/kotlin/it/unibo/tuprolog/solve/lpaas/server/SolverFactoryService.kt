@@ -1,10 +1,8 @@
 package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.stub.StreamObserver
-import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.lpaas.*
-import it.unibo.tuprolog.theory.Theory
-import it.unibo.tuprolog.theory.parsing.ClausesParser
+import it.unibo.tuprolog.solve.lpaas.server.utils.SolversCollection
 
 object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
 
