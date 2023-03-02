@@ -1,19 +1,16 @@
-package it.unibo.tuprolog.solve.lpaas.server
+package it.unibo.tuprolog.solve.lpaas.server.utils
 
-import it.unibo.tuprolog.core.Atom
-import it.unibo.tuprolog.core.Fact
-import it.unibo.tuprolog.core.Struct
-import it.unibo.tuprolog.core.Term
-import it.unibo.tuprolog.core.parsing.parse
-import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.ClausesParser
+import it.unibo.tuprolog.solve.lpaas.util.idGenerator
 
 object SolversCollection {
 
-    val parser = ClausesParser.withDefaultOperators()
+    private const val SOLVER_CODE = "SV"
+
+    private val parser = ClausesParser.withDefaultOperators()
 
     private val solvers: MutableMap<String, Solver> = mutableMapOf()
 
@@ -36,19 +33,13 @@ object SolversCollection {
             staticKb = Theory.empty()
             dynamicKb = Theory.empty()
         }
-        val id = idGenerator()
+        var id: String
+        do {id = idGenerator()+ SOLVER_CODE
+        } while (solvers.containsKey(id))
         solvers[id] = Solver.prolog.solverWithDefaultBuiltins(
             staticKb = staticKb,
             dynamicKb = dynamicKb
         )
         return id
-    }
-
-    private const val STRING_LENGTH = 10
-    private val charPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-    private fun idGenerator(): String {
-        val id = List(STRING_LENGTH) { charPool.random() }.joinToString("")
-        return if (solvers.containsKey(id)) idGenerator()
-            else id
     }
 }

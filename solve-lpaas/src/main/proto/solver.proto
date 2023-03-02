@@ -9,44 +9,24 @@ package lpaas;
 /* Solver Service & Messages*/
 
 service Solver {
-  rpc Solve(SolveRequest) returns (IteratorReply) { }
-
-  rpc SolveWithTimeout(SolveRequestWithTimeout) returns (IteratorReply) { }
-
-  rpc SolveWithOptions(SolveRequestWithOptions) returns (IteratorReply) { }
-
-  rpc SolveList(SolveRequest) returns (SolutionListReply) { }
-
-  rpc SolveListWithTimeout(SolveRequestWithTimeout) returns (SolutionListReply) { }
-
-  rpc SolveListWithOptions(SolveRequestWithOptions) returns (SolutionListReply) { }
-
-  rpc SolveOnce(SolveRequest) returns (IteratorReply) { }
-
-  rpc SolveOnceWithTimeout(SolveRequestWithTimeout) returns (IteratorReply) { }
-
-  rpc SolveOnceWithOptions(SolveRequestWithOptions) returns (IteratorReply) { }
-
-  /* Iterate Stream of Solution */
-  /** Aggiungi indice della soluzione per renderla restful & stateless **/
-  rpc NextSolution(NextSolutionRequest) returns (SolutionReply) { }
+  rpc Solve(SolveRequest) returns (SolutionSequence) {}
+  rpc GetSolution(stream SolutionID) returns (stream SolutionReply) {}
+  /*rpc WriteOnInputChannel(stream WrittenLine) {}
+  rpc ReadFromOutputChannel(SolverID) returns (stream ReadLine) {}
+  rpc GetFlags(SolverID) returns (Flags) {}
+  rpc GetStaticKB(SolverID) returns (stream Clause) {}
+  rpc GetDynamicKB(SolverID) returns (stream Clause) {}
+  rpc GetLibraries(SolverID) returns (Runtime) {}
+  rpc GetUnificator(SolverID) returns (Unificator) {}
+  rpc GetOperators(SolverID) returns (OperatorSet) {}
+  rpc GetInputChannels(SolverID) returns (ChannelID) {}
+  rpc GetOutputChannels(SolverID) returns (ChannelID) {}*/
 }
 
 /* Request messages */
 
 message SolveRequest {
-  optional string id = 1;
-  string struct = 2;
-}
-
-message SolveRequestWithTimeout {
-  optional string id = 1;
-  string struct = 2;
-  int64 timeout = 3;
-}
-
-message SolveRequestWithOptions {
-  optional string id = 1;
+  optional string solverID = 1;
   string struct = 2;
   repeated Options options = 3;
 }
@@ -56,16 +36,19 @@ message Options {
   optional int64 value = 2;
 }
 
-message NextSolutionRequest {
-  string id = 1;
-  string query = 2;
+message SolutionID {
+  string solverID = 1;
+  string computationID = 2;
+  string query = 3;
+  int32 index = 4;
 }
 
 /* Reply messages */
 
-message IteratorReply {
-  string id = 1;
-  string query = 2;
+message SolutionSequence {
+  string solverID = 1;
+  string computationID = 2;
+  string query = 3;
 }
 
 message SolutionReply {
@@ -80,10 +63,6 @@ message SolutionReply {
 message Substitution {
   string var = 1;
   string term = 2;
-}
-
-message SolutionListReply {
-  repeated SolutionReply solution = 1;
 }
 
 /* Solver Factory Service & Messages*/
