@@ -5,6 +5,8 @@ option java_package = "it.unibo.tuprolog.solve.lpaas";
 option java_outer_classname = "LPaaS";
 
 package lpaas;
+import "solverElements.proto";
+import "solverFactory.proto";
 
 /* Solver Service & Messages*/
 
@@ -26,14 +28,14 @@ service Solver {
 /* Request messages */
 
 message SolveRequest {
+  message Options {
+    string name = 1;
+    optional int64 value = 2;
+  }
+
   optional string solverID = 1;
   string struct = 2;
   repeated Options options = 3;
-}
-
-message Options {
-  string name = 1;
-  optional int64 value = 2;
 }
 
 message SolutionID {
@@ -58,27 +60,6 @@ message SolutionReply {
   string query = 1;
   repeated Substitution substitution = 3;
   optional string error = 7;
-}
-
-message Substitution {
-  string var = 1;
-  string term = 2;
-}
-
-/* Solver Factory Service & Messages*/
-
-service SolverFactory {
-  rpc ProduceSolver(SolverRequest) returns (SolverReply) { }
-}
-
-message SolverRequest {
-  /** Implementa le altre caratteristiche di execution context **/
-  optional string staticKb = 1;
-  optional string dynamicKb = 2;
-}
-
-message SolverReply {
-  string id = 1;
 }
 
 

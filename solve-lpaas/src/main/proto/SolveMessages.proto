@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.solve.lpaas.elements";
+option java_outer_classname = "Elements";
+
+package lpaas;
+
+message Substitution {
+  string var = 1;
+  string term = 2;
+}
+
+
