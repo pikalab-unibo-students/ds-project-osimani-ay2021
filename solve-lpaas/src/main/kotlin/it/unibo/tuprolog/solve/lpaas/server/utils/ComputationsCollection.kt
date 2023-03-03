@@ -17,6 +17,7 @@ object ComputationsCollection {
         Pair<Mutex, MutableMap<String, CursorSolutions>>> = mutableMapOf()
     private val parser = TermParser.withDefaultOperators()
 
+    /** Add a new iterator of solving computation to the map, generating its id **/
     fun addIterator(solverID: String, query: String, options: SolveOptions): String{
         if(!computations.containsKey(solverID)) {
             computations[solverID] = Pair(Mutex(), mutableMapOf())
@@ -29,17 +30,22 @@ object ComputationsCollection {
         return computationID
     }
 
+    /**
+     * @return the requested solution, Solution.No if outOfBounds.
+     */
     suspend fun getSolution(solverID: String, computationID: String, query: String, index: Int): Solution {
-        if (computations.containsKey(solverID) && computations[solverID]?.second?.containsKey(computationID)!!) {
-            computations[solverID]?.first?.withLock {
-                val iterator = computations[solverID]?.second?.get(computationID)!!
-                val solution = iterator.getSolution(index)
-                if (!solution.isYes || !iterator.hasNext()) {
-                    computations[solverID]?.second?.remove(computationID)
+        try {
+            if (computations.containsKey(solverID) && computations[solverID]?.second?.containsKey(computationID)!!) {
+                computations[solverID]?.first?.withLock {
+                    val iterator = computations[solverID]?.second?.get(computationID)!!
+                    val solution = iterator.getSolution(index)
+                    if (!solution.isYes || !iterator.hasNext()) {
+                        computations[solverID]?.second?.remove(computationID)
+                    }
+                    return solution
                 }
-                return solution
             }
-        }
+        } catch (_: Exception) {}
         return Solution.no(Struct.parse(query))
     }
 }
