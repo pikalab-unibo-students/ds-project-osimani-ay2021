@@ -10,7 +10,7 @@ package lpaas;
 
 service Solver {
   rpc Solve(SolveRequest) returns (SolutionSequence) {}
-  rpc GetSolution(stream SolutionID) returns (stream SolutionReply) {}
+  rpc GetSolution(SolutionID) returns (SolutionReply) {}
   /*rpc WriteOnInputChannel(stream WrittenLine) {}
   rpc ReadFromOutputChannel(SolverID) returns (stream ReadLine) {}
   rpc GetFlags(SolverID) returns (Flags) {}

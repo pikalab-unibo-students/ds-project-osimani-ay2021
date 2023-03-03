@@ -16,6 +16,7 @@ class CursorSolutions(private val iterator: Iterator<Solution>) :
 
     private val solutionsCache: MutableList<Solution> = mutableListOf()
 
+    /** Generate all solutions till the requested one **/
     fun getSolution(index: Int): Solution {
         while(solutionsCache.size <= index) {
             next()
@@ -28,8 +29,10 @@ class CursorSolutions(private val iterator: Iterator<Solution>) :
     }
 
     override fun next(): Solution {
-        val solution = iterator.next()
-        solutionsCache.add(solution)
-        return solution
+        if(hasNext()) {
+            val solution = iterator.next()
+            solutionsCache.add(solution)
+            return solution
+        } else throw IndexOutOfBoundsException()
     }
 }

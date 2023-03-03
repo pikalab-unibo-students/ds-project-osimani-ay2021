@@ -25,30 +25,18 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver.onCompleted()
     }
 
-    override fun getSolution(responseObserver: StreamObserver<SolutionReply>): StreamObserver<SolutionID> {
-        return object: StreamObserver<SolutionID> {
-            override fun onNext(value: SolutionID) {
-                val message: SolutionReply = try {
-                    val solution = runBlocking {
-                        ComputationsCollection.getSolution(value.solverID, value.computationID,
-                            value.query, value.index)
-                    }
-                    buildSolutionReply(solution)
-                } catch (e: Error) {
-                    SolutionReply.newBuilder().setQuery(value.query).setIsNo(true).setError(e.toString()).build()
-                }
-                responseObserver.onNext( message )
-                if(!message.isYes)
-                    this.onCompleted()
+    override fun getSolution(request: SolutionID, responseObserver: StreamObserver<SolutionReply>) {
+        val message: SolutionReply = try {
+            val solution = runBlocking {
+                ComputationsCollection.getSolution(request.solverID, request.computationID,
+                    request.query, request.index)
             }
-
-            override fun onError(t: Throwable?) {
-                println(t)
-            }
-
-            override fun onCompleted() { responseObserver.onCompleted() }
+            buildSolutionReply(solution)
+        } catch (e: Error) {
+            SolutionReply.newBuilder().setQuery(request.query).setIsNo(true).setError(e.toString()).build()
         }
-
+        responseObserver.onNext( message )
+        responseObserver.onCompleted()
     }
 
     private fun parseOptions(options: List<Options>): SolveOptions {

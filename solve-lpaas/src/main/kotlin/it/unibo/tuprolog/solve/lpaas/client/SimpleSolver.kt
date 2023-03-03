@@ -8,6 +8,14 @@ import it.unibo.tuprolog.solve.lpaas.client.prolog.SolutionsSequence
 
 interface SimpleSolver  {
     fun solve(goal: String): SolutionsSequence
+    fun solve(goal: String, timeout: TimeDuration): SolutionsSequence
+    fun solve(goal: String, options: SolveOptions): SolutionsSequence
+    fun solveList(goal: String, timeout: TimeDuration): List<Solution>
+    fun solveList(goal: String): List<Solution>
+    fun solveList(goal: String, options: SolveOptions): List<Solution>
+    fun solveOnce(goal: String, timeout: TimeDuration): Solution
+    fun solveOnce(goal: String): Solution
+    fun solveOnce(goal: String, options: SolveOptions): Solution
 
     fun closeClient()
 
