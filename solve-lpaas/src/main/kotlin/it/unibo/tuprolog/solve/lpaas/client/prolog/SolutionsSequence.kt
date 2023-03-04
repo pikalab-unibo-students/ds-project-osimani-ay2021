@@ -4,8 +4,8 @@ import io.grpc.ManagedChannel
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solution
-import it.unibo.tuprolog.solve.lpaas.SolutionID
-import it.unibo.tuprolog.solve.lpaas.SolverGrpc
+import it.unibo.tuprolog.solve.lpaas.*
+import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 
 class SolutionsSequence(private val solverID: String, private val computationID: String, private val query: String,
     channel: ManagedChannel

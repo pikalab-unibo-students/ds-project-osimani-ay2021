@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.solve.lpaas.mutableSolverMessages";
+option java_outer_classname = "MutableSolverMessages";
+
+package lpaas;
+import "solveMessages.proto";
+
+message MutableLibrary {
+  string solverID = 1;
+  Runtime.Library library = 2;
+}
+
+message MutableRuntime {
+  string solverID = 1;
+  Runtime runtime = 2;
+}
+
+message MutableClause {
+  string solverID = 1;
+  Theory.Clause clause = 2;
+}
+
+message MutableFlag {
+  string solverID = 1;
+  Flags.Flag flag = 2;
+}
+
+

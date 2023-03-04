@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.solve.lpaas.solveMessage";
+option java_outer_classname = "SolveMessage";
+
+package lpaas;
+
+/* Request messages */
+
+message SolveRequest {
+  message Options {
+    string name = 1;
+    optional int64 value = 2;
+  }
+
+  optional string solverID = 1;
+  string struct = 2;
+  repeated Options options = 3;
+}
+
+message SolutionID {
+  string solverID = 1;
+  string computationID = 2;
+  string query = 3;
+  int32 index = 4;
+}
+
+/* Reply messages */
+
+message SolutionSequence {
+  string solverID = 1;
+  string computationID = 2;
+  string query = 3;
+}
+
+message SolutionReply {
+  bool isYes = 4;
+  bool isNo = 5;
+  bool isHalt = 6;
+  string query = 1;
+  repeated SubstitutionMessage substitution = 3;
+  optional string error = 7;
+}
+
+message SubstitutionMessage {
+  string var = 1;
+  string term = 2;
+}
+
+//Elements of Solver
+
+message SolverID {
+  string solverID = 1;
+}
+
+message Unificator {
+  repeated SubstitutionMessage substitution = 1;
+}
+
+message Runtime {
+  message Library {
+    string name = 1;
+  }
+
+  repeated Library libraries = 1;
+}
+
+message Flags {
+  message Flag {
+    string name = 1;
+    string value = 2;
+  }
+
+  repeated Flag flags = 1;
+}
+
+message Theory {
+  message Clause {
+    string content = 1;
+  }
+
+  repeated Clause clause = 1;
+}
+
+message OperatorSet {
+  message Operator {
+    string functor = 1;
+    string specifier = 2;
+    int32 priority = 3;
+  }
+
+  repeated Operator operator = 1;
+}
+
+message Channels {
+  message ChannelID {
+    string name = 1;
+  }
+
+  repeated ChannelID channel = 1;
+}
+
+message LineEvent {
+  string solverID = 1;
+  Channels.ChannelID channelID = 2;
+  string line = 3;
+}
+
+message OutputChannelMessage {
+  string solverID = 1;
+  Channels.ChannelID channelID = 2;
+}
+
+message OperationResult {
+  bool result = 1;
+  optional string error = 2;
+}
+
+
+
+
+

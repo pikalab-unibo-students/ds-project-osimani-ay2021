@@ -6,7 +6,7 @@ import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.client.prolog.SolutionsSequence
 
-interface SimpleSolver  {
+interface ClientSolver  {
     fun solve(goal: String): SolutionsSequence
     fun solve(goal: String, timeout: TimeDuration): SolutionsSequence
     fun solve(goal: String, options: SolveOptions): SolutionsSequence

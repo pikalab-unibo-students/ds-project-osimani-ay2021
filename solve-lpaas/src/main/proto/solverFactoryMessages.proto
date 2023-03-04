@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.solve.lpaas.solverFactoryMessage";
+option java_outer_classname = "SolverFactoryMessage";
+
+package lpaas;
+import "solveMessages.proto";
+
+message SolverRequest {
+  optional Unificator unificator = 1;
+  optional Runtime runtime = 2;
+  optional Flags flags = 3;
+  optional Theory staticKb = 4;
+  optional Theory dynamicKb = 5;
+  optional OperatorSet operators = 6;
+  optional Channels.ChannelID inputChannel = 7;
+  optional Channels.ChannelID outputChannel = 8;
+  optional Channels.ChannelID errorChannel = 9;
+  optional Channels.ChannelID warningChannel = 10;
+}
+
+message SolverReply {
+  string id = 1;
+}
+
+
