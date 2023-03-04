@@ -1,19 +1,19 @@
 package it.unibo.tuprolog.solve.lpaas.client.prolog
 
-import io.grpc.Channel
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.TimeDuration
-import it.unibo.tuprolog.solve.lpaas.*
-import it.unibo.tuprolog.solve.lpaas.client.SimpleSolver
+import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.util.*
-import it.unibo.tuprolog.utils.forceCast
+import it.unibo.tuprolog.solve.lpaas.*
+import it.unibo.tuprolog.solve.lpaas.solveMessage.*
+import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
 import java.util.concurrent.TimeUnit
 
 internal class ClientPrologSolverImpl(staticKb: String = DEFAULT_STATIC_THEORY, dynamicKb: String = ""):
-    SimpleSolver {
+    ClientSolver {
 
     private var solverID: String
 
@@ -25,8 +25,9 @@ internal class ClientPrologSolverImpl(staticKb: String = DEFAULT_STATIC_THEORY, 
 
     init {
         val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
-            .setStaticKb(staticKb).setDynamicKb(dynamicKb).build()
-        solverID = SolverFactoryGrpc.newFutureStub(channel).produceSolver(createSolverRequest).get().id
+            .setStaticKb(Theory.newBuilder().addClause(Theory.Clause.newBuilder().setContent(staticKb)))
+            .setDynamicKb(Theory.newBuilder().addClause(Theory.Clause.newBuilder().setContent(dynamicKb))).build()
+        solverID = SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
     }
 
     override fun closeClient() {
@@ -83,7 +84,7 @@ internal class ClientPrologSolverImpl(staticKb: String = DEFAULT_STATIC_THEORY, 
         return request.build()
     }
 
-    private fun buildOption(key: String, value: Long = -1): Options {
-        return Options.newBuilder().setName(key).setValue(value).build()
+    private fun buildOption(key: String, value: Long = -1): SolveRequest.Options {
+        return SolveRequest.Options.newBuilder().setName(key).setValue(value).build()
     }
 }

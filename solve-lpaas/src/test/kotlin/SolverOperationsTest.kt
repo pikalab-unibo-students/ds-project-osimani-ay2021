@@ -3,13 +3,13 @@ import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.lpaas.client.SimpleSolver
+import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import kotlin.test.*
 
 class SolverOperationsTest {
 
-    private var clients: MutableMap<String, SimpleSolver> = mutableMapOf()
+    private var clients: MutableMap<String, ClientSolver> = mutableMapOf()
     private lateinit var server: Service
 
     private val BASIC: String = "basic"
@@ -19,7 +19,7 @@ class SolverOperationsTest {
     fun beforeEach() {
         server = Service()
         server.start()
-        clients[BASIC] = SimpleSolver.prolog.basicClient()
+        clients[BASIC] = ClientSolver.prolog.basicClient()
     }
 
     @AfterTest
@@ -65,7 +65,7 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun createSolver() {
-        clients[BLOCKING] = SimpleSolver.prolog.basicClient("""
+        clients[BLOCKING] = ClientSolver.prolog.basicClient("""
                    p(a, b).
                    """.trimIndent())
         val sequence = clients[BLOCKING]!!.solve("p(X, Y)")
@@ -99,7 +99,7 @@ class SolverOperationsTest {
     @Ignore
     @Throws(Exception::class)
     fun failingRequest() {
-        clients[BLOCKING] = SimpleSolver.prolog.basicClient("""
+        clients[BLOCKING] = ClientSolver.prolog.basicClient("""
                    p(X):-p(X).
                    """.trimIndent())
         val sequence = clients[BLOCKING]!!.solve("p(X)")
@@ -110,7 +110,7 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun multipleConcurrentRequests() {
-        clients[BLOCKING] = (SimpleSolver.prolog.basicClient("""
+        clients[BLOCKING] = (ClientSolver.prolog.basicClient("""
                       p(X):-p(X).
                       """.trimIndent()))
         clients[BLOCKING]!!.solve("p(X)")
@@ -147,7 +147,7 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun solveQueryWithTimeout() {
-        clients[BLOCKING] = (SimpleSolver.prolog.basicClient("""
+        clients[BLOCKING] = (ClientSolver.prolog.basicClient("""
                       p(a):- sleep(5000).
                       """.trimIndent()))
         val result = clients[BLOCKING]!!.solve("p(X)", 1000).getSolution(0)
@@ -161,7 +161,7 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun solveQueryWithLimit() {
-        clients[BLOCKING] = (SimpleSolver.prolog.basicClient("""
+        clients[BLOCKING] = (ClientSolver.prolog.basicClient("""
                       p(a).
                       p(b).
                       p(c).
@@ -180,7 +180,7 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun solveQueryAsListWithTimeout() {
-        clients[BLOCKING] = (SimpleSolver.prolog.basicClient("""
+        clients[BLOCKING] = (ClientSolver.prolog.basicClient("""
                       p(a).
                       p(b).
                       p(c):- sleep(5000).

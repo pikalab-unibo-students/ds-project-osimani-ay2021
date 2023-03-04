@@ -5,63 +5,62 @@ option java_package = "it.unibo.tuprolog.solve.lpaas";
 option java_outer_classname = "LPaaS";
 
 package lpaas;
-import "solverElements.proto";
-import "solverFactory.proto";
 
-/* Solver Service & Messages*/
+/* Solver Service */
+
+import "solveMessages.proto";
 
 service Solver {
   rpc Solve(SolveRequest) returns (SolutionSequence) {}
   rpc GetSolution(SolutionID) returns (SolutionReply) {}
-  /*rpc WriteOnInputChannel(stream WrittenLine) {}
-  rpc ReadFromOutputChannel(SolverID) returns (stream ReadLine) {}
+  rpc WriteOnInputChannel(stream LineEvent) returns (LineEvent) {}
+  rpc ReadFromOutputChannel(OutputChannelMessage) returns (stream LineEvent) {}
   rpc GetFlags(SolverID) returns (Flags) {}
-  rpc GetStaticKB(SolverID) returns (stream Clause) {}
-  rpc GetDynamicKB(SolverID) returns (stream Clause) {}
+  rpc GetStaticKB(SolverID) returns (stream Theory.Clause) {}
+  rpc GetDynamicKB(SolverID) returns (stream Theory.Clause) {}
   rpc GetLibraries(SolverID) returns (Runtime) {}
   rpc GetUnificator(SolverID) returns (Unificator) {}
   rpc GetOperators(SolverID) returns (OperatorSet) {}
-  rpc GetInputChannels(SolverID) returns (ChannelID) {}
-  rpc GetOutputChannels(SolverID) returns (ChannelID) {}*/
+  rpc GetInputChannels(SolverID) returns (Channels) {}
+  rpc GetOutputChannels(SolverID) returns (Channels) {}
 }
 
-/* Request messages */
+/* Solver Factory Service*/
 
-message SolveRequest {
-  message Options {
-    string name = 1;
-    optional int64 value = 2;
-  }
+import "solverFactoryMessages.proto";
 
-  optional string solverID = 1;
-  string struct = 2;
-  repeated Options options = 3;
+service SolverFactory {
+  rpc SolverOf(SolverRequest) returns (SolverReply) { }
+  rpc SolverWithDefaultBuiltIns(SolverRequest) returns (SolverReply) { }
+  rpc MutableSolverOf(SolverRequest) returns (SolverReply) { }
+  rpc MutableSolverWithDefaultBuiltIns(SolverRequest) returns (SolverReply) { }
 }
 
-message SolutionID {
-  string solverID = 1;
-  string computationID = 2;
-  string query = 3;
-  int32 index = 4;
+/* Solver service to modify at dynamically a server */
+
+import "mutableSolverMessages.proto";
+
+service MutableSolver {
+  rpc LoadLibrary(MutableLibrary) returns (OperationResult) { }
+  rpc UnloadLibrary(MutableLibrary) returns (OperationResult) { }
+  rpc SetLibraries(MutableRuntime) returns (OperationResult) { }
+
+  rpc LoadStaticKB(stream MutableClause) returns (OperationResult) { }
+  rpc AppendStaticKB(stream MutableClause) returns (OperationResult) { }
+  rpc ResetStaticKb(SolutionID) returns (OperationResult) { }
+
+  rpc LoadDynamicKB(stream MutableClause) returns (OperationResult) { }
+  rpc AppendDynamicKB(stream MutableClause) returns (OperationResult) { }
+  rpc ResetDynamicKb(SolutionID) returns (OperationResult) { }
+
+  rpc AssertA(MutableClause) returns (OperationResult) { }
+  rpc AssertZ(MutableClause) returns (OperationResult) { }
+
+  rpc Retract(MutableClause) returns (Theory) { }
+  rpc RetractAll(MutableClause) returns (Theory) { }
+
+  rpc setFlag(MutableFlag) returns (OperationResult) { }
 }
-
-/* Reply messages */
-
-message SolutionSequence {
-  string solverID = 1;
-  string computationID = 2;
-  string query = 3;
-}
-
-message SolutionReply {
-  bool isYes = 4;
-  bool isNo = 5;
-  bool isHalt = 6;
-  string query = 1;
-  repeated Substitution substitution = 3;
-  optional string error = 7;
-}
-
 
 // Liste bloccanti per quando si fanno input-output channel
 // Stampe canale output, fa da quel momento in poi o anche prima?
