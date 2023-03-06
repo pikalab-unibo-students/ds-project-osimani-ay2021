@@ -8,16 +8,19 @@ package lpaas;
 import "solveMessages.proto";
 
 message SolverRequest {
-  optional Unificator unificator = 1;
-  optional Runtime runtime = 2;
-  optional Flags flags = 3;
-  optional Theory staticKb = 4;
-  optional Theory dynamicKb = 5;
-  optional OperatorSet operators = 6;
-  optional Channels.ChannelID inputChannel = 7;
-  optional Channels.ChannelID outputChannel = 8;
-  optional Channels.ChannelID errorChannel = 9;
-  optional Channels.ChannelID warningChannel = 10;
+  optional UnificatorMsg unificator = 1;
+  optional RuntimeMsg runtime = 2;
+  optional FlagsMsg flags = 3;
+  optional TheoryMsg staticKb = 4;
+  optional TheoryMsg dynamicKb = 5;
+  optional OperatorSetMsg operators = 6;
+  optional Channels inputStore = 7;
+  optional Channels outputStore = 8;
+}
+
+message InputChannelMsg {
+  Channels.ChannelID id = 1;
+  string content = 2;
 }
 
 message SolverReply {

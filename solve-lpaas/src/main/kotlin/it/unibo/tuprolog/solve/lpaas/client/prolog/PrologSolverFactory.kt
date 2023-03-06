@@ -1,17 +1,13 @@
 package it.unibo.tuprolog.solve.lpaas.client.prolog
 
-import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
-import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
+import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY_STRING
+import it.unibo.tuprolog.theory.Theory
+import it.unibo.tuprolog.theory.parsing.parse
 
-/**
- * General type for logic solvers, i.e. any entity capable of solving some logic query -- provided as a [Struct] --
- * according to some logic, implementing one or more inference rule, via some resolution strategy.
- *
- * __Solvers are not immutable entities__. Their state may mutate as an effect of solving queries.
- */
+
 object PrologSolverFactory  {
-    fun basicClient(staticKb: String = DEFAULT_STATIC_THEORY, dynamicKb: String = ""): ClientSolver {
-        return ClientPrologSolverImpl(staticKb, dynamicKb)
+    fun basicClient(staticKb: String = "", dynamicKb: String = ""): ClientSolver {
+        return ClientPrologSolverImpl(Theory.parse(staticKb), Theory.parse(dynamicKb))
     }
 }

@@ -8,7 +8,7 @@ import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.server.utils.ComputationsCollection
 import it.unibo.tuprolog.solve.lpaas.server.utils.SolversCollection
-import it.unibo.tuprolog.solve.lpaas.solveMessage.Runtime.Library
+import it.unibo.tuprolog.solve.lpaas.solveMessage.RuntimeMsg.LibraryMsg
 import it.unibo.tuprolog.solve.lpaas.util.EAGER_OPTION
 import it.unibo.tuprolog.solve.lpaas.util.LAZY_OPTION
 import it.unibo.tuprolog.solve.lpaas.util.LIMIT_OPTION
@@ -45,74 +45,69 @@ object SolverService : SolverGrpc.SolverImplBase() {
         return object: StreamObserver<LineEvent> {
 
             override fun onNext(value: LineEvent) {
-                SolversCollection.getSolver(value.solverID).inputChannels.setStdIn(
-                    InputChannel.of(value.line)
-                )
+                SolversCollection.getChannelDequesOfSolver(value.solverID)
+                    .writeOnInputChannel(value.channelID.name, value.line)
             }
 
             override fun onError(t: Throwable?) {}
-
             override fun onCompleted() {}
         }
     }
 
-    override fun readFromOutputChannel(request: OutputChannelMessage, responseObserver: StreamObserver<LineEvent>) {
-        val outputChannel = SolversCollection.getSolver(request.solverID).outputChannels[request.channelID.name]
-        outputChannel?.addListener {
-            responseObserver.onNext(LineEvent.newBuilder().setSolverID(request.solverID)
-                .setChannelID(Channels.ChannelID.newBuilder().setName(request.channelID.name)).setLine(it).build())
-            if(outputChannel.isClosed) {
-                responseObserver.onCompleted()
-            }
-        }
+    override fun readFromOutputChannel(request: OutputChannelEvent, responseObserver: StreamObserver<LineEvent>) {
+        val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
+            .readFromOutputChannel(request.channelID.name)
+        responseObserver.onNext(LineEvent.newBuilder().setLine(outputValue)
+            .setSolverID(request.solverID).setChannelID(request.channelID).build())
+        responseObserver.onCompleted()
     }
 
-    override fun getFlags(request: SolverID, responseObserver: StreamObserver<Flags>) {
-        val messageBuilder = Flags.newBuilder()
+    override fun getFlags(request: SolverID, responseObserver: StreamObserver<FlagsMsg>) {
+        val messageBuilder = FlagsMsg.newBuilder()
         SolversCollection.getSolver(request.solverID).flags.forEach {
-            messageBuilder.addFlags(Flags.Flag.newBuilder().setName(it.key).setValue(it.value.toString()))
-        }
+            messageBuilder.addFlags(
+                FlagsMsg.FlagMsg.newBuilder().setName(it.key).setValue(it.value.toString()))}
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()
     }
 
-    override fun getStaticKB(request: SolverID, responseObserver: StreamObserver<Theory.Clause>) {
+    override fun getStaticKB(request: SolverID, responseObserver: StreamObserver<TheoryMsg.ClauseMsg>) {
         SolversCollection.getSolver(request.solverID).staticKb.clauses.forEach {
-            responseObserver.onNext(Theory.Clause.newBuilder().setContent(it.toString()).build())
+            responseObserver.onNext(TheoryMsg.ClauseMsg.newBuilder().setContent(it.toString()).build())
         }
         responseObserver.onCompleted()
     }
 
-    override fun getDynamicKB(request: SolverID, responseObserver: StreamObserver<Theory.Clause>) {
+    override fun getDynamicKB(request: SolverID, responseObserver: StreamObserver<TheoryMsg.ClauseMsg>) {
         SolversCollection.getSolver(request.solverID).dynamicKb.clauses.forEach {
-            responseObserver.onNext(Theory.Clause.newBuilder().setContent(it.toString()).build())
+            responseObserver.onNext(TheoryMsg.ClauseMsg.newBuilder().setContent(it.toString()).build())
         }
         responseObserver.onCompleted()
     }
 
-    override fun getLibraries(request: SolverID, responseObserver: StreamObserver<Runtime>) {
-        val messageBuilder = Runtime.newBuilder()
+    override fun getLibraries(request: SolverID, responseObserver: StreamObserver<RuntimeMsg>) {
+        val messageBuilder = RuntimeMsg.newBuilder()
         SolversCollection.getSolver(request.solverID).libraries.forEach {
-            messageBuilder.addLibraries(Library.newBuilder().setName(it.key))
+            messageBuilder.addLibraries(LibraryMsg.newBuilder().setName(it.key))
         }
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()
     }
 
-    override fun getUnificator(request: SolverID, responseObserver: StreamObserver<Unificator>) {
-        val messageBuilder = Unificator.newBuilder()
+    override fun getUnificator(request: SolverID, responseObserver: StreamObserver<UnificatorMsg>) {
+        val messageBuilder = UnificatorMsg.newBuilder()
         SolversCollection.getSolver(request.solverID).unificator.context.forEach {
-            messageBuilder.addSubstitution(SubstitutionMessage.newBuilder()
+            messageBuilder.addSubstitution(SubstitutionMsg.newBuilder()
                 .setVar(it.key.toString()).setTerm(it.value.toString()))
         }
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()
     }
 
-    override fun getOperators(request: SolverID, responseObserver: StreamObserver<OperatorSet>) {
-        val messageBuilder = OperatorSet.newBuilder()
+    override fun getOperators(request: SolverID, responseObserver: StreamObserver<OperatorSetMsg>) {
+        val messageBuilder = OperatorSetMsg.newBuilder()
         SolversCollection.getSolver(request.solverID).operators.forEach {
-            messageBuilder.addOperator(OperatorSet.Operator.newBuilder()
+            messageBuilder.addOperator(OperatorSetMsg.OperatorMsg.newBuilder()
                 .setFunctor(it.functor).setSpecifier(it.specifier.name).setPriority(it.priority))
         }
         responseObserver.onNext(messageBuilder.build())
@@ -162,9 +157,9 @@ object SolverService : SolverGrpc.SolverImplBase() {
         if(solution.substitution.isSuccess) {
             solution.substitution.asIterable().forEach {
                 solutionBuilder.addSubstitution(
-                    SubstitutionMessage.newBuilder()
+                    SubstitutionMsg.newBuilder()
                     .setVar(it.key.name)
-                    .setTerm(it.value.toString()).build())
+                    .setTerm(it.value.toString()))
             }
         }
         if(solution.exception != null)

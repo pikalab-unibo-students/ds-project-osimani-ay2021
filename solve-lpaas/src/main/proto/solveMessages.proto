@@ -39,11 +39,11 @@ message SolutionReply {
   bool isNo = 5;
   bool isHalt = 6;
   string query = 1;
-  repeated SubstitutionMessage substitution = 3;
+  repeated SubstitutionMsg substitution = 3;
   optional string error = 7;
 }
 
-message SubstitutionMessage {
+message SubstitutionMsg {
   string var = 1;
   string term = 2;
 }
@@ -54,48 +54,49 @@ message SolverID {
   string solverID = 1;
 }
 
-message Unificator {
-  repeated SubstitutionMessage substitution = 1;
+message UnificatorMsg {
+  repeated SubstitutionMsg substitution = 1;
 }
 
-message Runtime {
-  message Library {
+message RuntimeMsg {
+  message LibraryMsg {
     string name = 1;
   }
 
-  repeated Library libraries = 1;
+  repeated LibraryMsg libraries = 1;
 }
 
-message Flags {
-  message Flag {
+message FlagsMsg {
+  message FlagMsg {
     string name = 1;
     string value = 2;
   }
 
-  repeated Flag flags = 1;
+  repeated FlagMsg flags = 1;
 }
 
-message Theory {
-  message Clause {
+message TheoryMsg {
+  message ClauseMsg {
     string content = 1;
   }
 
-  repeated Clause clause = 1;
+  repeated ClauseMsg clause = 1;
 }
 
-message OperatorSet {
-  message Operator {
+message OperatorSetMsg {
+  message OperatorMsg {
     string functor = 1;
     string specifier = 2;
     int32 priority = 3;
   }
 
-  repeated Operator operator = 1;
+  repeated OperatorMsg operator = 1;
 }
 
 message Channels {
   message ChannelID {
     string name = 1;
+    optional string content = 2;
   }
 
   repeated ChannelID channel = 1;
@@ -107,7 +108,7 @@ message LineEvent {
   string line = 3;
 }
 
-message OutputChannelMessage {
+message OutputChannelEvent {
   string solverID = 1;
   Channels.ChannelID channelID = 2;
 }

@@ -14,13 +14,13 @@ service Solver {
   rpc Solve(SolveRequest) returns (SolutionSequence) {}
   rpc GetSolution(SolutionID) returns (SolutionReply) {}
   rpc WriteOnInputChannel(stream LineEvent) returns (LineEvent) {}
-  rpc ReadFromOutputChannel(OutputChannelMessage) returns (stream LineEvent) {}
-  rpc GetFlags(SolverID) returns (Flags) {}
-  rpc GetStaticKB(SolverID) returns (stream Theory.Clause) {}
-  rpc GetDynamicKB(SolverID) returns (stream Theory.Clause) {}
-  rpc GetLibraries(SolverID) returns (Runtime) {}
-  rpc GetUnificator(SolverID) returns (Unificator) {}
-  rpc GetOperators(SolverID) returns (OperatorSet) {}
+  rpc ReadFromOutputChannel(OutputChannelEvent) returns (stream LineEvent) {}
+  rpc GetFlags(SolverID) returns (FlagsMsg) {}
+  rpc GetStaticKB(SolverID) returns (stream TheoryMsg.ClauseMsg) {}
+  rpc GetDynamicKB(SolverID) returns (stream TheoryMsg.ClauseMsg) {}
+  rpc GetLibraries(SolverID) returns (RuntimeMsg) {}
+  rpc GetUnificator(SolverID) returns (UnificatorMsg) {}
+  rpc GetOperators(SolverID) returns (OperatorSetMsg) {}
   rpc GetInputChannels(SolverID) returns (Channels) {}
   rpc GetOutputChannels(SolverID) returns (Channels) {}
 }
@@ -56,8 +56,8 @@ service MutableSolver {
   rpc AssertA(MutableClause) returns (OperationResult) { }
   rpc AssertZ(MutableClause) returns (OperationResult) { }
 
-  rpc Retract(MutableClause) returns (Theory) { }
-  rpc RetractAll(MutableClause) returns (Theory) { }
+  rpc Retract(MutableClause) returns (TheoryMsg) { }
+  rpc RetractAll(MutableClause) returns (TheoryMsg) { }
 
   rpc setFlag(MutableFlag) returns (OperationResult) { }
 }

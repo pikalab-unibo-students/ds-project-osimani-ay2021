@@ -15,6 +15,14 @@ dependencies {
     api(libs.grpc.protobuf)
     api(libs.grpc.stub)
 
+    //Libraries Import
+    implementation project(path: ':io-lib')
+    implementation project(path: ':oop-lib')
+
+    //
+    testImplementation project(path: ':io-lib')
+    //
+
     compileOnly(libs.tomcat.annotations)
 
     runtimeOnly(libs.grpc.netty.shaded)
