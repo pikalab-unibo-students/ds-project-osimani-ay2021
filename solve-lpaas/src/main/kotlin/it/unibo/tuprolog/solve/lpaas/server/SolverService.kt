@@ -3,7 +3,6 @@ package it.unibo.tuprolog.solve.lpaas.server
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.server.utils.ComputationsCollection
@@ -43,20 +42,19 @@ object SolverService : SolverGrpc.SolverImplBase() {
 
     override fun writeOnInputChannel(responseObserver: StreamObserver<LineEvent>): StreamObserver<LineEvent> {
         return object: StreamObserver<LineEvent> {
-
             override fun onNext(value: LineEvent) {
                 SolversCollection.getChannelDequesOfSolver(value.solverID)
                     .writeOnInputChannel(value.channelID.name, value.line)
             }
 
             override fun onError(t: Throwable?) {}
-            override fun onCompleted() {}
+            override fun onCompleted() {responseObserver.onCompleted()}
         }
     }
 
     override fun readFromOutputChannel(request: OutputChannelEvent, responseObserver: StreamObserver<LineEvent>) {
         val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
-            .readFromOutputChannel(request.channelID.name)
+            .readOnOutputChannel(request.channelID.name)
         responseObserver.onNext(LineEvent.newBuilder().setLine(outputValue)
             .setSolverID(request.solverID).setChannelID(request.channelID).build())
         responseObserver.onCompleted()

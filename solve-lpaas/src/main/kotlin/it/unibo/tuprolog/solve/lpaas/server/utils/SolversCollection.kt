@@ -13,6 +13,7 @@ import it.unibo.tuprolog.solve.lpaas.util.idGenerator
 import it.unibo.tuprolog.unify.Unificator
 
 import it.unibo.tuprolog.solve.lpaas.util.toMap
+import kotlin.reflect.jvm.internal.impl.builtins.DefaultBuiltIns
 
 object SolversCollection {
 
@@ -35,12 +36,12 @@ object SolversCollection {
     fun addSolver(unificator: Unificator, runtime: Runtime, flagStore: FlagStore,
                   staticKb: Theory, dynamicKb: Theory,
                   /*/operatorSet: OperatorSet,*/ inputs: Map<String, String>,
-                  outputs: Set<String>): String {
+                  outputs: Set<String>, mutable: Boolean, defaultBuiltIns: Boolean): String {
         var id: String
         do {id = idGenerator()+ SOLVER_CODE
         } while (solvers.containsKey(id))
 
-        val channelsDeque = ChannelsDequesCollector(outputs = outputs)
+        val channelsDeque = ChannelsDequesCollector(inputs.map { it.key }.toSet(), outputs)
         solversDeques[id] = channelsDeque
 
         inputs.forEach {channelsDeque.writeOnInputChannel(it.key, it.value) }
@@ -50,15 +51,28 @@ object SolversCollection {
         val outputChannels = channelsDeque.getAllOutputs().map {
             Pair(it.key, OutputChannel.of { line: String-> it.value.putLast(line) })}.toMap()
 
-        solvers[id] = Solver.prolog.solverOf(
+        val libraries = if(defaultBuiltIns) runtime + Solver.prolog.defaultBuiltins else runtime
+
+        solvers[id] = if(mutable) {
+            Solver.prolog.mutableSolverOf(
+                unificator = unificator,
+                libraries = libraries,
+                flags = flagStore,
+                staticKb = staticKb,
+                dynamicKb = dynamicKb,
+                inputs = InputStore.of(inputChannels),
+                outputs = OutputStore.of(outputChannels))
+        } else {
+            Solver.prolog.solverOf(
             unificator = unificator,
-            libraries = runtime,
+            libraries = libraries,
             flags = flagStore,
             staticKb = staticKb,
             dynamicKb = dynamicKb,
             inputs = InputStore.of(inputChannels),
-            outputs = OutputStore.of(outputChannels)
-        )
+            outputs = OutputStore.of(outputChannels))
+        }
+
         return id
     }
 }

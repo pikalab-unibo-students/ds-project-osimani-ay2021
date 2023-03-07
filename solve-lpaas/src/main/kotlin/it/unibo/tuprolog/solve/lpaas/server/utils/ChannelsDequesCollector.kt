@@ -1,6 +1,6 @@
 package it.unibo.tuprolog.solve.lpaas.server.utils
 
-import java.lang.IllegalArgumentException
+import it.unibo.tuprolog.solve.lpaas.util.toMap
 import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 
@@ -10,16 +10,8 @@ class ChannelsDequesCollector(inputs: Set<String> = emptySet(),
     private val outputs: MutableMap<String, BlockingDeque<String>> = mutableMapOf()
 
     init {
-        inputs.forEach { writeOnInputChannel(it) }
-        outputs.forEach { generateOutputListener(it) }
-    }
-
-    fun getInputDeque(name: String): BlockingDeque<String>? {
-        return inputs[name]
-    }
-
-    fun getOutputDeque(name: String): BlockingDeque<String>? {
-        return outputs[name]
+        inputs.forEach { this.inputs[it] = LinkedBlockingDeque() }
+        outputs.forEach { this.outputs[it] = LinkedBlockingDeque() }
     }
 
     fun getAllInputs(): Map<String, BlockingDeque<String>> {
@@ -27,25 +19,16 @@ class ChannelsDequesCollector(inputs: Set<String> = emptySet(),
     }
 
     fun getAllOutputs(): Map<String, BlockingDeque<String>> {
-        return outputs
+        return outputs.map { Pair(it.key, it.value) }.toMap()
     }
 
-    fun writeOnInputChannel(name: String, line: String = ""): BlockingDeque<String> {
-        val deque: BlockingDeque<String> = if(inputs.containsKey(name))
-            inputs[name]!! else LinkedBlockingDeque()
+    fun writeOnInputChannel(name: String, line: String = "") {
         line.toCharArray().forEach { inputs[name]?.putLast(it.toString()) }
-        return deque
     }
 
-    fun readFromOutputChannel(name: String): String {
+    fun readOnOutputChannel(name: String): String {
         if(outputs.containsKey(name))
-            return outputs[name]!!.takeFirst()
+           return outputs[name]!!.takeFirst()
         else throw IllegalArgumentException()
-    }
-
-    fun generateOutputListener(name: String): BlockingDeque<String> {
-        val deque = LinkedBlockingDeque<String>()
-        outputs[name] = deque
-        return deque
     }
 }

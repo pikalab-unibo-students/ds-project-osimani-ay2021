@@ -3,6 +3,7 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
+import io.grpc.stub.StreamObservers
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.operators.Operator
 import it.unibo.tuprolog.core.operators.OperatorSet
@@ -15,6 +16,7 @@ import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.util.*
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
+import it.unibo.tuprolog.solve.lpaas.solveMessage.RuntimeMsg.LibraryMsg
 import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg.ClauseMsg
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
 import it.unibo.tuprolog.theory.Theory
@@ -38,7 +40,9 @@ internal class ClientPrologSolverImpl(staticKb: Theory, dynamicKb: Theory):
     init {
         val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
             .setStaticKb(fromTheoryToMsg(staticKb))
-            .setDynamicKb(fromTheoryToMsg(dynamicKb)).build()
+            .setDynamicKb(fromTheoryToMsg(dynamicKb)).setRuntime(
+                RuntimeMsg.newBuilder().addLibraries(LibraryMsg.newBuilder().setName("IOLib")))
+            .setDefaultBuiltIns(true).build()
         solverID = SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
     }
 
@@ -49,8 +53,11 @@ internal class ClientPrologSolverImpl(staticKb: Theory, dynamicKb: Theory):
     }
 
     override fun closeClient() {
-        channel.shutdown()
-        channel.awaitTermination(1, TimeUnit.SECONDS);
+        if(!channel.isTerminated) {
+            openStreamObservers.forEach { it.onCompleted() }
+            channel.shutdown()
+            channel.awaitTermination(1, TimeUnit.SECONDS)
+        }
     }
 
     override fun solve(goal: String): SolutionsSequence {
@@ -164,27 +171,23 @@ internal class ClientPrologSolverImpl(staticKb: Theory, dynamicKb: Theory):
             .channelList.map { it.name }
     }
 
-    /** To FIX **/
-    override fun writeOnInputChannel(channelID: String, message: String): BlockingDeque<String> {
-        solverStub.writeOnInputChannel(object: StreamObserver<LineEvent> {
-            override fun onNext(value: LineEvent?) {}
+    private val openStreamObservers: MutableList<StreamObserver<LineEvent>> = mutableListOf()
+    override fun writeOnInputChannel(channelID: String, message: String) {
+        val stub = solverStub.writeOnInputChannel(object: StreamObserver<LineEvent> {
+            override fun onNext(value: LineEvent) { println(value.line) }
             override fun onError(t: Throwable?) {}
             override fun onCompleted() {}
         })
-        return LinkedBlockingDeque()
+        stub.onNext(LineEvent.newBuilder().setSolverID(solverID).setChannelID(
+            Channels.ChannelID.newBuilder().setName(channelID)).setLine(message).build())
+        openStreamObservers.add(stub)
     }
 
-    /** To FIX **/
-    override fun readOnOutputChannel(channelID: String, callback: (String) -> Unit) {
-        solverStub.readFromOutputChannel(
+    override fun readOnOutputChannel(channelID: String): String {
+        return solverFutureStub.readFromOutputChannel(
             OutputChannelEvent.newBuilder()
             .setChannelID(Channels.ChannelID.newBuilder().setName(channelID))
-            .setSolverID(solverID).build(),
-            object: StreamObserver<LineEvent> {
-                override fun onNext(value: LineEvent) { callback(value.line) }
-                override fun onError(t: Throwable?) {}
-                override fun onCompleted() { }
-        })
+            .setSolverID(solverID).build()).get().line
     }
 
     private fun buildRequestWithOptionsMessage(goal:String, options: SolveOptions): SolveRequest {

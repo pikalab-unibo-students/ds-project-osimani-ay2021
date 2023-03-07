@@ -16,6 +16,8 @@ message SolverRequest {
   optional OperatorSetMsg operators = 6;
   optional Channels inputStore = 7;
   optional Channels outputStore = 8;
+  optional bool mutable = 9;
+  optional bool defaultBuiltIns = 10;
 }
 
 message InputChannelMsg {
