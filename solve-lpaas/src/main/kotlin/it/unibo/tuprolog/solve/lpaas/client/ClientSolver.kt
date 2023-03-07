@@ -35,11 +35,10 @@ interface ClientSolver  {
     fun getOutputChannels(): List<String>
 
     /** To FIX **/
-    fun writeOnInputChannel(channelID: String, message: String): BlockingDeque<String>
+    fun writeOnInputChannel(channelID: String, message: String)
 
     /** To FIX **/
-    fun readOnOutputChannel(channelID: String,
-                            callback: (String) -> Unit = fun(s: String) { println(s) })
+    fun readOnOutputChannel(channelID: String): String
 
     fun closeClient()
 

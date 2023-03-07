@@ -6,10 +6,12 @@ import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import kotlin.test.*
 
 import it.unibo.tuprolog.solve.channel.InputChannel
+import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.libs.io.IOLib
+import it.unibo.tuprolog.solve.libs.oop.identifier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -46,27 +48,17 @@ class SolverGettersAndSettersTest {
 
     @Test
     @Throws(Exception::class)
-    fun getOperatorSet() {
-        val messages = mutableListOf<String>()
-        val solver = Solver.prolog.mutableSolverWithDefaultBuiltins (
-            otherLibraries = Runtime.of(IOLib),
-            stdIn = InputChannel.of("hello"),
-            stdOut = OutputChannel.of { messages += it }
-        )
-
-        //solver.inputChannels.setStdIn(InputChannel.of("hello"))
-        solver.setStandardInput(InputChannel.of("byeee"))// = solver.inputChannels.plus(Pair("second", )))
-        runBlocking { delay(1000) }
-        println(solver.inputChannels)
-        val goal = Scope.empty {
-            tupleOf (
-                structOf ("get_char", varOf ("X")),
-                structOf ("write", varOf ("X"))
-            )
-        } // ?- get_char (X), write (X).
-        for (i in 0 until "hello".length*2 ) {
-            println(solver.solveOnce(goal)) // X=h, X=e, X=l, ...
+    fun testInAndOut() {
+        clients[BASIC]!!.writeOnInputChannel("\$current", "message")
+        val result = mutableListOf<String>()
+        for (i in 0 until "message".length ) {
+           clients[BASIC]!!.solveOnce("get_char(X), write(X)")
+           result.add(clients[BASIC]!!.readOnOutputChannel("\$current"))
         }
-        println ( messages ) // [h, e, l, l, o]
+        /** Solve closing stream, write on demand, etc **/
+        clients[BASIC]!!.closeClient()
+        assertContentEquals(
+            listOf("m","e","s","s","a","g","e"),
+            result)
     }
 }

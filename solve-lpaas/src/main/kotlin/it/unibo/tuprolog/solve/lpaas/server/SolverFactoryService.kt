@@ -5,7 +5,9 @@ import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.*
+import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.flags.FlagStore
+import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.libs.io.IOLib
 import it.unibo.tuprolog.solve.libs.oop.OOPLib
@@ -35,14 +37,13 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
             ifEmptyUseDefault(request.dynamicKb.clauseList,
                 { parseTheory(it)}, Solver.prolog.defaultDynamicKb),
             ifEmptyUseDefault(request.inputStore.channelList,
-                { parseChannels(it) }, InputStore.fromStandard().map { Pair(it.key, "") }.toMap()),
+                { parseInputChannels(it) }, InputStore.fromStandard().map { Pair(it.key, "") }.toMap()),
             ifEmptyUseDefault(request.outputStore.channelList,
-                { list: List<Channels.ChannelID> -> list.map { it.name }.toSet()},
-               OutputStore.fromStandard().map { it.key }.toSet()))
+                { parseOutputChannels(it) }, OutputStore.fromStandard().map { it.key }.toSet()),
+            request.mutable, request.defaultBuiltIns)
         responseObserver.onNext(buildSolverReply(id))
         responseObserver.onCompleted()
     }
-
     private fun <A, B> ifEmptyUseDefault(value: List<A>, parser: (List<A>) -> B, default: B): B {
         return if(value.isEmpty()) default else parser(value)
     }
@@ -73,8 +74,12 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
     }
 
     /** Add handling with BlockingDeque */
-    private fun parseChannels(msg: List<Channels.ChannelID>): Map<String, String> {
+    private fun parseInputChannels(msg: List<Channels.ChannelID>): Map<String, String> {
         return msg.map { Pair(it.name, it.content) }.toMap()
+    }
+
+    private fun parseOutputChannels(msg: List<Channels.ChannelID>): Set<String> {
+        return msg.map { it.name }.toSet()
     }
 
     private fun buildSolverReply(id: String): SolverReply {

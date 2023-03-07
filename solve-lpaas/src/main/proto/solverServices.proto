@@ -14,7 +14,7 @@ service Solver {
   rpc Solve(SolveRequest) returns (SolutionSequence) {}
   rpc GetSolution(SolutionID) returns (SolutionReply) {}
   rpc WriteOnInputChannel(stream LineEvent) returns (LineEvent) {}
-  rpc ReadFromOutputChannel(OutputChannelEvent) returns (stream LineEvent) {}
+  rpc ReadFromOutputChannel(OutputChannelEvent) returns (LineEvent) {}
   rpc GetFlags(SolverID) returns (FlagsMsg) {}
   rpc GetStaticKB(SolverID) returns (stream TheoryMsg.ClauseMsg) {}
   rpc GetDynamicKB(SolverID) returns (stream TheoryMsg.ClauseMsg) {}
@@ -31,9 +31,6 @@ import "solverFactoryMessages.proto";
 
 service SolverFactory {
   rpc SolverOf(SolverRequest) returns (SolverReply) { }
-  rpc SolverWithDefaultBuiltIns(SolverRequest) returns (SolverReply) { }
-  rpc MutableSolverOf(SolverRequest) returns (SolverReply) { }
-  rpc MutableSolverWithDefaultBuiltIns(SolverRequest) returns (SolverReply) { }
 }
 
 /* Solver service to modify at dynamically a server */
