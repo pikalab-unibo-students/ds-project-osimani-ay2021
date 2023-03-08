@@ -27,4 +27,16 @@ message MutableFlag {
   FlagsMsg.FlagMsg flag = 2;
 }
 
+message MutableChannelID {
+  string solverID = 1;
+  enum CHANNEL_TYPE{
+    INPUT = 0;
+    OUTPUT = 1;
+    WARNING = 2;
+    ERROR = 3;
+  }
+  CHANNEL_TYPE type = 2;
+  Channels.ChannelID channel = 3;
+}
+
 

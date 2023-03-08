@@ -23,6 +23,8 @@ service Solver {
   rpc GetOperators(SolverID) returns (OperatorSetMsg) {}
   rpc GetInputChannels(SolverID) returns (Channels) {}
   rpc GetOutputChannels(SolverID) returns (Channels) {}
+
+
 }
 
 /* Solver Factory Service*/
@@ -44,11 +46,11 @@ service MutableSolver {
 
   rpc LoadStaticKB(stream MutableClause) returns (OperationResult) { }
   rpc AppendStaticKB(stream MutableClause) returns (OperationResult) { }
-  rpc ResetStaticKb(SolutionID) returns (OperationResult) { }
+  rpc ResetStaticKb(SolverID) returns (OperationResult) { }
 
   rpc LoadDynamicKB(stream MutableClause) returns (OperationResult) { }
   rpc AppendDynamicKB(stream MutableClause) returns (OperationResult) { }
-  rpc ResetDynamicKb(SolutionID) returns (OperationResult) { }
+  rpc ResetDynamicKb(SolverID) returns (OperationResult) { }
 
   rpc AssertA(MutableClause) returns (OperationResult) { }
   rpc AssertZ(MutableClause) returns (OperationResult) { }
@@ -57,6 +59,8 @@ service MutableSolver {
   rpc RetractAll(MutableClause) returns (TheoryMsg) { }
 
   rpc setFlag(MutableFlag) returns (OperationResult) { }
+
+  rpc setChannel(MutableChannelID) returns (OperationResult) { }
 }
 
 // Liste bloccanti per quando si fanno input-output channel

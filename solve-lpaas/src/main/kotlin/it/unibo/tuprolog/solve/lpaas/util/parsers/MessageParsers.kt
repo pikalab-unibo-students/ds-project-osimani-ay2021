@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.util
+package it.unibo.tuprolog.solve.lpaas.util.parsers
 
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.parsing.parse
