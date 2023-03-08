@@ -1,5 +1,6 @@
 package it.unibo.tuprolog.solve.lpaas.server.utils
 
+import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
@@ -27,6 +28,10 @@ object SolversCollection {
     /** Include error instead of default? **/
     fun getSolver(id: String): Solver {
         return solvers[id]!!
+    }
+
+    fun getMutableSolver(id: String): MutableSolver? {
+        return if (solvers[id] is MutableSolver) solvers[id] as MutableSolver else null
     }
 
     fun getChannelDequesOfSolver(id: String): ChannelsDequesCollector {

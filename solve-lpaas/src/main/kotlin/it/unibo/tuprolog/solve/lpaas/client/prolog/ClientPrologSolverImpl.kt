@@ -3,7 +3,6 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
-import io.grpc.stub.StreamObservers
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.operators.Operator
 import it.unibo.tuprolog.core.operators.OperatorSet
@@ -12,26 +11,28 @@ import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.flags.FlagStore
-import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
-import it.unibo.tuprolog.solve.lpaas.util.*
 import it.unibo.tuprolog.solve.lpaas.*
+import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
-import it.unibo.tuprolog.solve.lpaas.solveMessage.RuntimeMsg.LibraryMsg
 import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg.ClauseMsg
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
+import it.unibo.tuprolog.solve.lpaas.util.*
+import it.unibo.tuprolog.solve.lpaas.util.parsers.*
+import it.unibo.tuprolog.solve.lpaas.util.parsers.fromTheoryToMsg
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
-import java.util.concurrent.BlockingDeque
-import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
-internal class ClientPrologSolverImpl(staticKb: Theory, dynamicKb: Theory):
+internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
+                                           flags: Map<String, String>, staticKb: Theory, dynamicKb: Theory,
+                                           operators: Map<String, Pair<String, Int>>, inputChannels: Map<String, String>,
+                                           outputChannels: Set<String>, defaultBuiltins: Boolean):
     ClientSolver {
 
-    private var solverID: String
+    protected var solverID: String
 
-    private val channel: ManagedChannel = ManagedChannelBuilder.forAddress("localhost", 8080)
+    protected val channel: ManagedChannel = ManagedChannelBuilder.forAddress("localhost", 8080)
         .usePlaintext()
         .build()
 
@@ -39,17 +40,16 @@ internal class ClientPrologSolverImpl(staticKb: Theory, dynamicKb: Theory):
 
     init {
         val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
+            .setUnificator(fromUnificatorToMsg(unificator))
+            .setRuntime(fromLibrariesToMsg(libraries))
+            .setFlags(fromFlagsToMsg(flags))
+            .setOperators(fromOperatorSetToMsg(operators))
             .setStaticKb(fromTheoryToMsg(staticKb))
-            .setDynamicKb(fromTheoryToMsg(dynamicKb)).setRuntime(
-                RuntimeMsg.newBuilder().addLibraries(LibraryMsg.newBuilder().setName("IOLib")))
-            .setDefaultBuiltIns(true).build()
+            .setDynamicKb(fromTheoryToMsg(dynamicKb))
+            .setInputStore(fromChannelsToMsg(inputChannels))
+            .setOutputStore(fromChannelsToMsg(outputChannels))
+            .setDefaultBuiltIns(defaultBuiltins).build()
         solverID = SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
-    }
-
-    private fun fromTheoryToMsg(theory: Theory): TheoryMsg {
-        val builder = TheoryMsg.newBuilder()
-        theory.forEach { builder.addClause(TheoryMsg.ClauseMsg.newBuilder().setContent(it.toString())) }
-        return builder.build()
     }
 
     override fun closeClient() {
@@ -109,7 +109,7 @@ internal class ClientPrologSolverImpl(staticKb: Theory, dynamicKb: Theory):
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getStaticKB(): Theory {
         val future: CompletableDeferred<List<Clause>> = CompletableDeferred()
-        solverStub.getStaticKB(buildSolverId(), generateStreamObserverOfTheory(future))
+        solverStub.getStaticKB(buildSolverId(), generateStreamObserverOfTheory {future.complete(it) })
         runBlocking {
             future.await()
         }
@@ -119,25 +119,25 @@ internal class ClientPrologSolverImpl(staticKb: Theory, dynamicKb: Theory):
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getDynamicKB(): Theory {
         val future: CompletableDeferred<List<Clause>> = CompletableDeferred()
-        solverStub.getDynamicKB(buildSolverId(), generateStreamObserverOfTheory(future))
+        solverStub.getDynamicKB(buildSolverId(), generateStreamObserverOfTheory { future.complete(it) })
         runBlocking {
             future.await()
         }
         return Theory.of(future.getCompleted())
     }
 
-    private val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
-
-    private fun generateStreamObserverOfTheory(future: CompletableDeferred<List<Clause>>): StreamObserver<ClauseMsg> {
+    private fun generateStreamObserverOfTheory(onCompletion: (List<Clause>) -> Unit): StreamObserver<ClauseMsg> {
         return object: StreamObserver<ClauseMsg> {
             val clauseList = mutableListOf<Clause>()
             override fun onNext(value: ClauseMsg) {
                 clauseList.add(Clause.parse(value.content))
             }
             override fun onError(t: Throwable?) {}
-            override fun onCompleted() { future.complete(clauseList) }
+            override fun onCompleted() { onCompletion(clauseList) }
         }
     }
+
+    private val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
 
     override fun getLibraries(): List<String> {
         return solverFutureStub.getLibraries(buildSolverId()).get()

@@ -1,19 +1,9 @@
-import it.unibo.tuprolog.core.Scope
-import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import kotlin.test.*
 
-import it.unibo.tuprolog.solve.channel.InputChannel
-import it.unibo.tuprolog.solve.channel.InputStore
-import it.unibo.tuprolog.solve.channel.OutputChannel
-import it.unibo.tuprolog.solve.library.Library
-import it.unibo.tuprolog.solve.library.Runtime
-import it.unibo.tuprolog.solve.libs.io.IOLib
-import it.unibo.tuprolog.solve.libs.oop.identifier
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY_STRING
 
 
 class SolverGettersAndSettersTest {
@@ -27,7 +17,7 @@ class SolverGettersAndSettersTest {
     fun beforeEach() {
         server = Service()
         server.start()
-        clients[BASIC] = ClientSolver.prolog.basicClient()
+        clients[BASIC] = ClientSolver.prolog.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"))
     }
 
     @AfterTest

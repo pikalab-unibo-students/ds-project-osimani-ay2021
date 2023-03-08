@@ -12,6 +12,7 @@ class Service {
     fun start() {
         serviceSolver = ServerBuilder.forPort(8080)
             .addService(SolverService)
+            .addService(MutableSolverService)
             .addService(SolverFactoryService)
             .build()
         serviceSolver!!.start()

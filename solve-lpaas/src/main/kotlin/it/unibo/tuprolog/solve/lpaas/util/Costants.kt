@@ -1,7 +1,15 @@
 package it.unibo.tuprolog.solve.lpaas.util
 
+import io.grpc.stub.StreamObserver
+import it.unibo.tuprolog.core.Clause
+import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.solve.library.Library
+import it.unibo.tuprolog.solve.libs.io.IOLib
+import it.unibo.tuprolog.solve.libs.oop.OOPLib
+import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.parse
+import kotlinx.coroutines.CompletableDeferred
 
 const val EAGER_OPTION = "eagerness"
 const val TIMEOUT_OPTION = "timeout"
@@ -26,3 +34,12 @@ fun <A, B> List<Pair<A, B>>.toMap(): MutableMap<A, B> {
     this.forEach { map[it.first] = it.second }
     return map
 }
+
+fun convertStringToKnownLibrary(libName: String): Library {
+    return when(libName) {
+        "IOLib" -> IOLib
+        "OOPLib" -> OOPLib
+        else -> throw IllegalArgumentException()
+    }
+}
+

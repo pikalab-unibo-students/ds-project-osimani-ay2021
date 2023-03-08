@@ -15,6 +15,7 @@ import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.server.utils.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
+import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
@@ -56,11 +57,7 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
 
     private fun parseRuntime(msg: List<RuntimeMsg.LibraryMsg>): Runtime {
         return Runtime.of(msg.map {
-            when(it.name) {
-                "IOLib" -> IOLib
-                "OOPLib" -> OOPLib
-                else -> throw IllegalArgumentException()
-            }})
+            convertStringToKnownLibrary(it.name)})
     }
 
     private fun parseFlagStore(msg: List<FlagsMsg.FlagMsg>): FlagStore {
@@ -73,7 +70,6 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
         return Theory.of(msg.map { Clause.parse(it.content) })
     }
 
-    /** Add handling with BlockingDeque */
     private fun parseInputChannels(msg: List<Channels.ChannelID>): Map<String, String> {
         return msg.map { Pair(it.name, it.content) }.toMap()
     }
