@@ -46,15 +46,8 @@ object SolversCollection {
         do {id = idGenerator()+ SOLVER_CODE
         } while (solvers.containsKey(id))
 
-        val channelsDeque = ChannelsDequesCollector(inputs.map { it.key }.toSet(), outputs)
+        val channelsDeque = ChannelsDequesCollector.of(inputs, outputs)
         solversDeques[id] = channelsDeque
-
-        inputs.forEach {channelsDeque.writeOnInputChannel(it.key, it.value) }
-
-        val inputChannels = channelsDeque.getAllInputs().map {
-            Pair(it.key, InputChannel.of { -> it.value.takeFirst() })}.toMap()
-        val outputChannels = channelsDeque.getAllOutputs().map {
-            Pair(it.key, OutputChannel.of { line: String-> it.value.putLast(line) })}.toMap()
 
         val libraries = if(defaultBuiltIns) runtime + Solver.prolog.defaultBuiltins else runtime
 
@@ -65,8 +58,8 @@ object SolversCollection {
                 flags = flagStore,
                 staticKb = staticKb,
                 dynamicKb = dynamicKb,
-                inputs = InputStore.of(inputChannels),
-                outputs = OutputStore.of(outputChannels))
+                inputs = InputStore.of(channelsDeque.getInputChannels()),
+                outputs = OutputStore.of(channelsDeque.getOutputChannels()))
         } else {
             Solver.prolog.solverOf(
             unificator = unificator,
@@ -74,8 +67,8 @@ object SolversCollection {
             flags = flagStore,
             staticKb = staticKb,
             dynamicKb = dynamicKb,
-            inputs = InputStore.of(inputChannels),
-            outputs = OutputStore.of(outputChannels))
+            inputs = InputStore.of(channelsDeque.getInputChannels()),
+            outputs = OutputStore.of(channelsDeque.getOutputChannels()))
         }
 
         return id

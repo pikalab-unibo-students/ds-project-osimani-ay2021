@@ -55,8 +55,8 @@ service MutableSolver {
   rpc AssertA(MutableClause) returns (OperationResult) { }
   rpc AssertZ(MutableClause) returns (OperationResult) { }
 
-  rpc Retract(MutableClause) returns (TheoryMsg) { }
-  rpc RetractAll(MutableClause) returns (TheoryMsg) { }
+  rpc Retract(MutableClause) returns (RetractResultMsg) { }
+  rpc RetractAll(MutableClause) returns (RetractResultMsg) { }
 
   rpc setFlag(MutableFlag) returns (OperationResult) { }
 
