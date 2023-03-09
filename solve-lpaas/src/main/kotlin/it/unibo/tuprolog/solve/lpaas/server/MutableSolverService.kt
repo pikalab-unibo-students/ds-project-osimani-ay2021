@@ -113,30 +113,33 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             responseObserver)
     }
 
-    override fun retract(request: MutableClause, responseObserver: StreamObserver<TheoryMsg>) {
+    override fun retract(request: MutableClause, responseObserver: StreamObserver<RetractResultMsg>) {
         genericRetract(request.solverID, request.clause.content, responseObserver) {
             solver, struct -> solver.retract(struct)
         }
     }
 
-    override fun retractAll(request: MutableClause, responseObserver: StreamObserver<TheoryMsg>) {
+    override fun retractAll(request: MutableClause, responseObserver: StreamObserver<RetractResultMsg>) {
         genericRetract(request.solverID, request.clause.content, responseObserver) {
                 solver, struct -> solver.retractAll(struct)
         }
     }
 
     private fun genericRetract(solverID: String, structToRetract: String,
-                               responseObserver: StreamObserver<TheoryMsg>,
+                               responseObserver: StreamObserver<RetractResultMsg>,
                                operation: (MutableSolver, Struct) -> RetractResult<Theory>) {
         try {
             val result = operation(solvers.getMutableSolver(solverID)!!, Struct.parse(structToRetract))
+            val responseBuilder = RetractResultMsg.newBuilder().setTheory(fromTheoryToMsg(result.theory))
             if(result.isSuccess) {
-                responseObserver.onNext(fromTheoryToMsg(result.theory))
+                responseObserver.onNext(responseBuilder.setIsSuccess(true).build())
+            } else {
+                responseObserver.onNext(responseBuilder.setIsFailure(true).build())
             }
-            responseObserver.onCompleted()
         } catch (e: Exception) {
             println(e)
         }
+        responseObserver.onCompleted()
     }
 
     override fun setFlag(request: MutableFlag, responseObserver: StreamObserver<OperationResult>) {
@@ -161,21 +164,25 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
 
     /** FIX **/
     override fun setChannel(request: MutableChannelID, responseObserver: StreamObserver<OperationResult>) {
+        val collection = SolversCollection.getChannelDequesOfSolver(request.solverID)
         doOperationOnMutableSolver(request.solverID,
             { when(request.type) {
-                (MutableChannelID.CHANNEL_TYPE.INPUT) ->
-                    it.setStandardInput(InputChannel.of(request.channel.content))
-                (MutableChannelID.CHANNEL_TYPE.OUTPUT) ->
-                    it.setStandardOutput(OutputChannel.of {  })
-                (MutableChannelID.CHANNEL_TYPE.WARNING) ->
-                    it.setStandardInput(InputChannel.of(request.channel.content))
-                (MutableChannelID.CHANNEL_TYPE.ERROR) ->
-                    it.setStandardInput(InputChannel.of(request.channel.content))
+                (MutableChannelID.CHANNEL_TYPE.INPUT) -> {
+                    val channel = collection.addInputChannel(request.channel.name, request.channel.content)
+                    it.setStandardInput(channel)
+                }
+                (MutableChannelID.CHANNEL_TYPE.OUTPUT) -> {
+                    it.setStandardOutput(collection.addOutputChannel(request.channel.name))
+                }
+                (MutableChannelID.CHANNEL_TYPE.WARNING) -> {
+                    /** Add generic output **/
+                    //it.setWarnings(collection.addOutputChannel(request.channel.name))
+                }
+                (MutableChannelID.CHANNEL_TYPE.ERROR) -> {
+                    it.setStandardError(collection.addOutputChannel(request.channel.name))
+                }
                 else -> {}
-            } },
-            
-            responseObserver)
-        TODO("Not yet implemented")
+            }}, responseObserver)
     }
 
     private fun doOperationOnMutableSolver(solverID: String, operation: (MutableSolver) -> Unit, responseObserver: StreamObserver<OperationResult>) {

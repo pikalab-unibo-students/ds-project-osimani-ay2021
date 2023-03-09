@@ -2,6 +2,7 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.*
+import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.exception.Warning
@@ -136,11 +137,19 @@ internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, li
     }
 
     override fun retract(fact: Struct): RetractResult<Theory> {
-        TODO("Not yet implemented")
+        return genericRetract { mutableSolverFutureStub.retract(fromClauseToMutableMsg(solverID, fact)).get() }
     }
 
     override fun retractAll(fact: Struct): RetractResult<Theory> {
-        TODO("Not yet implemented")
+        return genericRetract { mutableSolverFutureStub.retractAll(fromClauseToMutableMsg(solverID, fact)).get() }
+    }
+
+    private fun genericRetract(op: () -> RetractResultMsg): RetractResult<Theory> {
+        val result = op()
+        val theory = Theory.of(result.theory.clauseList.map { Clause.parse(it.content) })
+        return if(result.isSuccess) {
+            RetractResult.Success(theory, theory.clauses)
+        } else RetractResult.Failure(theory)
     }
 
     override fun setFlag(name: String, value: Term) {
