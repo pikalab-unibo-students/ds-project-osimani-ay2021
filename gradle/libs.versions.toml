@@ -14,7 +14,7 @@ npm-tuprolog-parserUtils = "0.4.1" # @tuprolog/parser-utils
 npm-syncRequest = "6.1.0" # sync-request
 ktlint = "10.3.0"
 detekt = "1.22.0"
-grpc = "1.51.0"
+grpc = "1.51.3"
 proto = "3.21.9"
 
 [plugins]
