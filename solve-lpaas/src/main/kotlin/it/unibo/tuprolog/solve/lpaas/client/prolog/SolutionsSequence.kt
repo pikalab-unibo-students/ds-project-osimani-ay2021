@@ -3,7 +3,9 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 import io.grpc.ManagedChannel
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
-import it.unibo.tuprolog.solve.Solution
+import it.unibo.tuprolog.solve.*
+import it.unibo.tuprolog.solve.data.CustomDataStore
+import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 
@@ -27,23 +29,30 @@ class SolutionsSequence(private val solverID: String, private val computationID:
             ).get()
 
             val scope = Scope.of(struct.args.filter { it.isVar }.map { it.castToVar() })
-
-            if (reply.isYes) {
-                val unifiers: MutableMap<Var, Term> = mutableMapOf()
-                reply.substitutionList.forEach { pair ->
-                    unifiers[scope.varOf(pair.`var`)] = Term.parse(pair.term)
-                }
-                solutionsCache[index] = Solution.yes(struct, Substitution.unifier(unifiers))
-            } else {
-                if(reply.error.isNotEmpty()) println(reply.error)
-                solutionsCache[index] =
-                    if (reply.isNo) Solution.no(struct)
-                    /** Fix Error **/
-                    else Solution.no(struct)
+            val unifiers: MutableMap<Var, Term> = mutableMapOf()
+            reply.substitutionList.forEach { pair ->
+                unifiers[scope.varOf(pair.`var`)] = Term.parse(pair.term)
             }
+
+            solutionsCache[index] = if (reply.isYes) {
+                Solution.yes(struct, Substitution.unifier(unifiers))
+            } else if (reply.isNo) {
+                Solution.no(struct)
+            } else
+                Solution.halt(struct, ResolutionException(
+                    Throwable(reply.error.message), object : ExecutionContext by DummyInstances.executionContext {
+                        override val procedure: Struct = Struct.parse(reply.query)
+                        override val substitution: Substitution.Unifier = Substitution.unifier(unifiers)
+                        override val logicStackTrace: List<Struct> = reply.error
+                            .logicStackTraceList.map { Struct.parse(it) }
+                        override val startTime: TimeInstant = reply.error.startTime.toLong()
+                        override val maxDuration: TimeDuration = reply.error.maxDuration.toLong()
+                        //override val customData: CustomDataStore = CustomDataStore(reply.error.customDataStore)
+                    }))
         }
         return solutionsCache[index]!!
     }
+
 
     private var iteratorIndex = -1
     /**

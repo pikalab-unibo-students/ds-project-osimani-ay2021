@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server.utils
+package it.unibo.tuprolog.solve.lpaas.server.collections
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.parsing.TermParser

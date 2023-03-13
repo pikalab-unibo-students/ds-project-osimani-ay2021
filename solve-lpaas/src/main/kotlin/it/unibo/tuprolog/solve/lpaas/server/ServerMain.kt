@@ -5,6 +5,12 @@ import io.grpc.ServerBuilder
 import java.io.IOException
 
 
+/** TO-DO
+ * Add stream-like listeners to input/output channels
+ * Add generic deque for warnings when adding channel
+ * Fix error when testing mutables
+ */
+
 class Service {
 
     private var serviceSolver: Server? = null

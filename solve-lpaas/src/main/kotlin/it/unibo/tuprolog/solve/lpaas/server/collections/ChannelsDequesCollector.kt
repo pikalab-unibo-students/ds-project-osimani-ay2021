@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server.utils
+package it.unibo.tuprolog.solve.lpaas.server.collections
 
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
@@ -12,7 +12,9 @@ class ChannelsDequesCollector() {
 
     fun addInputChannel(name: String, content: String = ""): InputChannel<String> {
         val deque = LinkedBlockingDeque<String>()
-        val channel = InputChannel.of { deque.takeFirst() }
+        val channel = InputChannel.of {
+            inputs[name]?.first?.takeFirst()
+        }
         inputs[name] = Pair(deque, channel)
         if(content.isNotEmpty()) writeOnInputChannel(name, content)
         return channel
@@ -20,7 +22,7 @@ class ChannelsDequesCollector() {
 
     fun addOutputChannel(name: String): OutputChannel<String> {
         val deque = LinkedBlockingDeque<String>()
-        val channel = OutputChannel.of { line: String-> deque.putLast(line) }
+        val channel = OutputChannel.of { line: String-> outputs[name]?.first?.putLast(line) }
         outputs[name] = Pair(deque, channel)
         return channel
     }

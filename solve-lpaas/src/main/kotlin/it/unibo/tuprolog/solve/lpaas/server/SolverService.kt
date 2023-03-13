@@ -5,8 +5,8 @@ import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
-import it.unibo.tuprolog.solve.lpaas.server.utils.ComputationsCollection
-import it.unibo.tuprolog.solve.lpaas.server.utils.SolversCollection
+import it.unibo.tuprolog.solve.lpaas.server.collections.ComputationsCollection
+import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.solveMessage.RuntimeMsg.LibraryMsg
 import it.unibo.tuprolog.solve.lpaas.util.EAGER_OPTION
 import it.unibo.tuprolog.solve.lpaas.util.LAZY_OPTION
@@ -34,7 +34,9 @@ object SolverService : SolverGrpc.SolverImplBase() {
             }
             buildSolutionReply(solution)
         } catch (e: Error) {
-            SolutionReply.newBuilder().setQuery(request.query).setIsNo(true).setError(e.toString()).build()
+            SolutionReply.newBuilder().setQuery(request.query).setIsNo(true).setError(
+                SolutionReply.ErrorMsg.newBuilder().setMessage(e.toString())
+            ).build()
         }
         responseObserver.onNext( message )
         responseObserver.onCompleted()
@@ -160,8 +162,16 @@ object SolverService : SolverGrpc.SolverImplBase() {
                     .setTerm(it.value.toString()))
             }
         }
-        if(solution.exception != null)
-            solutionBuilder.error = solution.exception.toString()
+        if(solution.exception != null) {
+            val error = solution.exception!!
+            solutionBuilder.error = SolutionReply.ErrorMsg.newBuilder()
+                .setMessage(error.message)
+                .addAllLogicStackTrace(error.logicStackTrace.map { it.toString() })
+                .setCustomDataStore(error.context.customData.toString())
+                .setStartTime(error.context.startTime.toString())
+                .setMaxDuration(error.context.maxDuration.toString())
+                .build()
+        }
         return solutionBuilder.build()
     }
 }

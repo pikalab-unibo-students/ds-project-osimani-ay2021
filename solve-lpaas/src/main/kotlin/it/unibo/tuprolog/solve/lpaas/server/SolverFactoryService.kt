@@ -5,14 +5,10 @@ import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.*
-import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.flags.FlagStore
-import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
-import it.unibo.tuprolog.solve.libs.io.IOLib
-import it.unibo.tuprolog.solve.libs.oop.OOPLib
 import it.unibo.tuprolog.solve.lpaas.*
-import it.unibo.tuprolog.solve.lpaas.server.utils.SolversCollection
+import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
 import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
