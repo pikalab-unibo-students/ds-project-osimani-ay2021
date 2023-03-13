@@ -22,6 +22,8 @@ import it.unibo.tuprolog.solve.lpaas.util.parsers.fromTheoryToMsg
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
+import java.util.concurrent.BlockingDeque
+import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
 internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
@@ -171,16 +173,26 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
             .channelList.map { it.name }
     }
 
-    private val openStreamObservers: MutableList<StreamObserver<LineEvent>> = mutableListOf()
-    override fun writeOnInputChannel(channelID: String, message: String) {
-        val stub = solverStub.writeOnInputChannel(object: StreamObserver<LineEvent> {
-            override fun onNext(value: LineEvent) { println(value.line) }
+    private val openStreamObservers: MutableList<GenericStreamObserver> = mutableListOf()
+
+    override fun writeOnInputChannel(channelID: String): InputStreamWriter {
+        val stub = solverStub.writeOnInputChannel(object: StreamObserver<OperationResult> {
+            override fun onNext(value: OperationResult) {}
             override fun onError(t: Throwable?) {}
             override fun onCompleted() {}
         })
-        stub.onNext(LineEvent.newBuilder().setSolverID(solverID).setChannelID(
-            Channels.ChannelID.newBuilder().setName(channelID)).setLine(message).build())
-        openStreamObservers.add(stub)
+        openStreamObservers.add(GenericStreamObserver.OfLineEvent(stub))
+        return object: InputStreamWriter {
+            override fun writeNext(message: String) {
+                try {
+                    stub.onNext(
+                        LineEvent.newBuilder().setSolverID(solverID).setChannelID(
+                            Channels.ChannelID.newBuilder().setName(channelID)
+                        ).setLine(message).build()
+                    )
+                } catch (e: Exception) { println("The stream is already closed") }
+            }
+        }
     }
 
     override fun readOnOutputChannel(channelID: String): String {
@@ -188,6 +200,22 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
             OutputChannelEvent.newBuilder()
             .setChannelID(Channels.ChannelID.newBuilder().setName(channelID))
             .setSolverID(solverID).build()).get().line
+    }
+
+    override fun readStreamOnOutputChannel(channelID: String): BlockingDeque<String> {
+        val deque = LinkedBlockingDeque<String>()
+        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<LineEvent> {
+            override fun onNext(value: LineEvent) {
+                deque.putLast(value.line)
+            }
+            override fun onError(t: Throwable?) {}
+            override fun onCompleted() {}
+        })
+        stub.onNext(OutputChannelEvent.newBuilder()
+            .setChannelID(Channels.ChannelID.newBuilder().setName(channelID))
+            .setSolverID(solverID).build())
+        openStreamObservers.add(GenericStreamObserver.OfOutputChannelEvent(stub))
+        return deque
     }
 
     private fun buildRequestWithOptionsMessage(goal:String, options: SolveOptions): SolveRequest {
@@ -208,4 +236,8 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
     private fun buildSolverId(): SolverID {
         return SolverID.newBuilder().setSolverID(this.solverID).build()
     }
+}
+
+interface InputStreamWriter {
+    fun writeNext(message: String)
 }

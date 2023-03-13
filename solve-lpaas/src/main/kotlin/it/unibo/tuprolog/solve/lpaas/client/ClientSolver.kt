@@ -12,6 +12,8 @@ import it.unibo.tuprolog.solve.lpaas.client.prolog.SolutionsSequence
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import it.unibo.tuprolog.solve.library.Runtime
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverImpl
+import it.unibo.tuprolog.solve.lpaas.client.prolog.InputStreamWriter
 import java.util.concurrent.BlockingDeque
 
 interface ClientSolver  {
@@ -35,10 +37,12 @@ interface ClientSolver  {
     fun getOutputChannels(): List<String>
 
     /** To FIX **/
-    fun writeOnInputChannel(channelID: String, message: String)
+    fun writeOnInputChannel(channelID: String): InputStreamWriter
 
     /** To FIX **/
     fun readOnOutputChannel(channelID: String): String
+
+    fun readStreamOnOutputChannel(channelID: String): BlockingDeque<String>
 
     fun closeClient()
 

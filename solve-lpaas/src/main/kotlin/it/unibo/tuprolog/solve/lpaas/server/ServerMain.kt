@@ -7,8 +7,9 @@ import java.io.IOException
 
 /** TO-DO
  * Add stream-like listeners to input/output channels
- * Add generic deque for warnings when adding channel
- * Fix error when testing mutables
+ * ?
+ * Handling of stream-like outputs channels
+ * Handling of generic Stream-Observer
  */
 
 class Service {
