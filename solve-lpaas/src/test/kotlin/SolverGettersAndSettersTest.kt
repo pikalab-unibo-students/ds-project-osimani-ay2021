@@ -90,11 +90,26 @@ class SolverGettersAndSettersTest {
     @Test
     @Throws(Exception::class)
     fun testInAndOutChannel() {
-        clients[BASIC]!!.writeOnInputChannel("\$current", "message")
+        clients[BASIC]!!.writeOnInputChannel("\$current").writeNext("message")
         val result = mutableListOf<String>()
         for (i in 0 until "message".length ) {
-           clients[BASIC]!!.solveOnce("get_char(X), write(X)")
-           result.add(clients[BASIC]!!.readOnOutputChannel("\$current"))
+            clients[BASIC]!!.solveOnce("get_char(X), write(X)")
+            result.add(clients[BASIC]!!.readOnOutputChannel("\$current"))
+        }
+        /** Solve closing stream, write on demand, etc **/
+        clients[BASIC]!!.closeClient()
+        assertContentEquals(
+            listOf("m","e","s","s","a","g","e"),
+            result)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testInAndOutStreamChannel() {
+        clients[BASIC]!!.writeOnInputChannel("\$current").writeNext("message")
+        val result = clients[BASIC]!!.readStreamOnOutputChannel("\$current")
+        for (i in 0 until "message".length ) {
+            clients[BASIC]!!.solveOnce("get_char(X), write(X)")
         }
         /** Solve closing stream, write on demand, etc **/
         clients[BASIC]!!.closeClient()

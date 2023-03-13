@@ -4,6 +4,7 @@ import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.*
+import it.unibo.tuprolog.solve.lpaas.server.collections.ChannelsDequesCollector
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.server.collections.ComputationsCollection
 import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
@@ -42,15 +43,16 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver.onCompleted()
     }
 
-    override fun writeOnInputChannel(responseObserver: StreamObserver<LineEvent>): StreamObserver<LineEvent> {
+    override fun writeOnInputChannel(responseObserver: StreamObserver<OperationResult>): StreamObserver<LineEvent> {
         return object: StreamObserver<LineEvent> {
             override fun onNext(value: LineEvent) {
                 SolversCollection.getChannelDequesOfSolver(value.solverID)
                     .writeOnInputChannel(value.channelID.name, value.line)
+                responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
             }
 
             override fun onError(t: Throwable?) {}
-            override fun onCompleted() {responseObserver.onCompleted()}
+            override fun onCompleted() { responseObserver.onCompleted() }
         }
     }
 
@@ -60,6 +62,26 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver.onNext(LineEvent.newBuilder().setLine(outputValue)
             .setSolverID(request.solverID).setChannelID(request.channelID).build())
         responseObserver.onCompleted()
+    }
+
+    override fun readStreamFromOutputChannel(responseObserver: StreamObserver<LineEvent>): StreamObserver<OutputChannelEvent> {
+        return object: StreamObserver<OutputChannelEvent> {
+            var solverID = ""
+            var channelID = ""
+            override fun onNext(value: OutputChannelEvent) {
+                solverID = value.solverID
+                channelID = value.channelID.name
+                SolversCollection.getChannelDequesOfSolver(solverID)
+                    .addListener(channelID, responseObserver)
+            }
+
+            override fun onError(t: Throwable?) {}
+
+            override fun onCompleted() {
+                SolversCollection.getChannelDequesOfSolver(solverID)
+                    .removeListener(channelID, responseObserver)
+            }
+        }
     }
 
     override fun getFlags(request: SolverID, responseObserver: StreamObserver<FlagsMsg>) {
