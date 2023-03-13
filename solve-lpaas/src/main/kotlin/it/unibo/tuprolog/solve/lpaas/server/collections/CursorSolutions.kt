@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server.utils
+package it.unibo.tuprolog.solve.lpaas.server.collections
 
 import it.unibo.tuprolog.solve.Solution
 

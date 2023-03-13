@@ -6,12 +6,10 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.MutableSolver
-import it.unibo.tuprolog.solve.channel.InputChannel
-import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.MutableSolverGrpc
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
-import it.unibo.tuprolog.solve.lpaas.server.utils.SolversCollection
+import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolverID
 import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg
@@ -131,6 +129,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
         try {
             val result = operation(solvers.getMutableSolver(solverID)!!, Struct.parse(structToRetract))
             val responseBuilder = RetractResultMsg.newBuilder().setTheory(fromTheoryToMsg(result.theory))
+                .addAllClauses(result.clauses?.map { TheoryMsg.ClauseMsg.newBuilder().setContent(it.toString()).build()})
             if(result.isSuccess) {
                 responseObserver.onNext(responseBuilder.setIsSuccess(true).build())
             } else {

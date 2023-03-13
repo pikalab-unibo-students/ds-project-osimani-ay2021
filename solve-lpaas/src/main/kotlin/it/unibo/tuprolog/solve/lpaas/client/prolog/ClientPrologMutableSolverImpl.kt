@@ -35,6 +35,21 @@ internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, li
     private val mutableSolverStub: MutableSolverGrpc.MutableSolverStub = MutableSolverGrpc
         .newStub(channel)
 
+    init {
+        val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
+            .setUnificator(fromUnificatorToMsg(unificator))
+            .setRuntime(fromLibrariesToMsg(libraries))
+            .setFlags(fromFlagsToMsg(flags))
+            .setOperators(fromOperatorSetToMsg(operators))
+            .setStaticKb(fromTheoryToMsg(staticKb))
+            .setDynamicKb(fromTheoryToMsg(dynamicKb))
+            .setInputStore(fromChannelsToMsg(inputChannels))
+            .setOutputStore(fromChannelsToMsg(outputChannels))
+            .setDefaultBuiltIns(defaultBuiltins)
+            .setMutable(true).build()
+        solverID = SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
+    }
+
     private fun operationWithResult(op: () -> OperationResult) {
         val result = op()
         if (!result.result) println(result.error)
@@ -147,8 +162,9 @@ internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, li
     private fun genericRetract(op: () -> RetractResultMsg): RetractResult<Theory> {
         val result = op()
         val theory = Theory.of(result.theory.clauseList.map { Clause.parse(it.content) })
+        val clauses = result.clausesList.map { Clause.parse(it.content) }
         return if(result.isSuccess) {
-            RetractResult.Success(theory, theory.clauses)
+            RetractResult.Success(theory, clauses)
         } else RetractResult.Failure(theory)
     }
 

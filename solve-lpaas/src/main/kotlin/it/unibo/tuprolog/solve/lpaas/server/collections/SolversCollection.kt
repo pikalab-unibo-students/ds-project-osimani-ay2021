@@ -1,20 +1,14 @@
-package it.unibo.tuprolog.solve.lpaas.server.utils
+package it.unibo.tuprolog.solve.lpaas.server.collections
 
 import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.Solver
-import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
-import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
-import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.solve.lpaas.util.idGenerator
 import it.unibo.tuprolog.unify.Unificator
-
-import it.unibo.tuprolog.solve.lpaas.util.toMap
-import kotlin.reflect.jvm.internal.impl.builtins.DefaultBuiltIns
 
 object SolversCollection {
 

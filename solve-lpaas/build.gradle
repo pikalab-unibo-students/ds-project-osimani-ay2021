@@ -18,10 +18,7 @@ dependencies {
     //Libraries Import
     implementation project(path: ':io-lib')
     implementation project(path: ':oop-lib')
-
-    //
-    testImplementation project(path: ':io-lib')
-    //
+    implementation project(path: ':test-solve')
 
     compileOnly(libs.tomcat.annotations)
 

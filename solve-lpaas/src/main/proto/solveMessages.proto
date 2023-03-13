@@ -40,7 +40,16 @@ message SolutionReply {
   bool isHalt = 6;
   string query = 1;
   repeated SubstitutionMsg substitution = 3;
-  optional string error = 7;
+
+  message ErrorMsg {
+    string message = 1;
+    repeated string logicStackTrace = 2;
+    string startTime = 3;
+    string maxDuration = 4;
+    string customDataStore = 5;
+  }
+
+  optional ErrorMsg error = 7;
 }
 
 message SubstitutionMsg {
@@ -117,7 +126,6 @@ message OperationResult {
   bool result = 1;
   optional string error = 2;
 }
-
 
 
 

@@ -41,8 +41,9 @@ message MutableChannelID {
 
 message RetractResultMsg {
   TheoryMsg theory = 1;
-  bool isSuccess = 2;
-  bool isFailure = 3;
+  repeated TheoryMsg.ClauseMsg clauses = 2;
+  bool isSuccess = 3;
+  bool isFailure = 4;
 }
 
 
