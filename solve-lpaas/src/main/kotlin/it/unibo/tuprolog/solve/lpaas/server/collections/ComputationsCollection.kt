@@ -45,7 +45,7 @@ object ComputationsCollection {
                     return solution
                 }
             }
-        } catch (_: Exception) {}
+        } catch (_: Exception) { }
         return Solution.no(Struct.parse(query))
     }
 }

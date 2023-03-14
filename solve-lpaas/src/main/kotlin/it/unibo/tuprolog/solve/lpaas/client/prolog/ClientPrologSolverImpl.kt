@@ -26,10 +26,10 @@ import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
-internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
-                                           flags: Map<String, String>, staticKb: Theory, dynamicKb: Theory,
-                                           operators: Map<String, Pair<String, Int>>, inputChannels: Map<String, String>,
-                                           outputChannels: Set<String>, defaultBuiltins: Boolean):
+open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
+                                  flags: Map<String, String>, staticKb: Theory, dynamicKb: Theory,
+                                  operators: Map<String, Pair<String, Int>>, inputChannels: Map<String, String>,
+                                  outputChannels: Set<String>, defaultBuiltins: Boolean):
     ClientSolver {
 
     protected var solverID: String
@@ -38,6 +38,7 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
         .usePlaintext()
         .build()
 
+    private val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
     private val solverFutureStub: SolverGrpc.SolverFutureStub = SolverGrpc.newFutureStub(channel)
 
     init {
@@ -72,7 +73,7 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
 
     override fun solve(goal: String, options: SolveOptions): SolutionsSequence {
         val reply = solverFutureStub.solve(buildRequestWithOptionsMessage(goal, options)).get()
-        solverID = reply.solverID
+        if(solverID != reply.solverID) solverID = reply.solverID
         return SolutionsSequence(solverID, reply.computationID, reply.query, channel)
     }
 
@@ -108,38 +109,30 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
         return FlagStore.of(flagsMap)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getStaticKB(): Theory {
-        val future: CompletableDeferred<List<Clause>> = CompletableDeferred()
-        solverStub.getStaticKB(buildSolverId(), generateStreamObserverOfTheory {future.complete(it) })
-        runBlocking {
-            future.await()
-        }
-        return Theory.of(future.getCompleted())
+        return getKBTheory { msg, obs -> solverStub.getStaticKB(msg, obs)}
+    }
+
+    override fun getDynamicKB(): Theory {
+        return getKBTheory { msg, obs -> solverStub.getDynamicKB(msg, obs)}
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getDynamicKB(): Theory {
+    private fun getKBTheory(op: (SolverID, StreamObserver<ClauseMsg>) -> Unit): Theory {
         val future: CompletableDeferred<List<Clause>> = CompletableDeferred()
-        solverStub.getDynamicKB(buildSolverId(), generateStreamObserverOfTheory { future.complete(it) })
-        runBlocking {
-            future.await()
-        }
-        return Theory.of(future.getCompleted())
-    }
-
-    private fun generateStreamObserverOfTheory(onCompletion: (List<Clause>) -> Unit): StreamObserver<ClauseMsg> {
-        return object: StreamObserver<ClauseMsg> {
+        op(buildSolverId(), object: StreamObserver<ClauseMsg> {
             val clauseList = mutableListOf<Clause>()
             override fun onNext(value: ClauseMsg) {
                 clauseList.add(Clause.parse(value.content))
             }
             override fun onError(t: Throwable?) {}
-            override fun onCompleted() { onCompletion(clauseList) }
+            override fun onCompleted() { future.complete(clauseList) }
+        })
+        runBlocking {
+            future.await()
         }
+        return Theory.of(future.getCompleted())
     }
-
-    private val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
 
     override fun getLibraries(): List<String> {
         return solverFutureStub.getLibraries(buildSolverId()).get()
@@ -157,7 +150,7 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
     override fun getOperators(): OperatorSet {
         val operators = mutableListOf<Operator>()
         solverFutureStub.getOperators(buildSolverId()).get().operatorList.map {
-            val operator = Operator.fromTerms(Integer.Companion.of(it.priority), Atom.of(it.specifier), Atom.of(it.functor))
+            val operator = Operator.fromTerms(Integer.of(it.priority), Atom.of(it.specifier), Atom.of(it.functor))
             if(operator != null) operators.add(operator)
         }
         return OperatorSet(operators)
@@ -175,23 +168,23 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
 
     private val openStreamObservers: MutableList<GenericStreamObserver> = mutableListOf()
 
-    override fun writeOnInputChannel(channelID: String): InputStreamWriter {
+    override fun writeOnInputChannel(channelID: String): StreamObserver<String> {
         val stub = solverStub.writeOnInputChannel(object: StreamObserver<OperationResult> {
             override fun onNext(value: OperationResult) {}
             override fun onError(t: Throwable?) {}
             override fun onCompleted() {}
         })
         openStreamObservers.add(GenericStreamObserver.OfLineEvent(stub))
-        return object: InputStreamWriter {
-            override fun writeNext(message: String) {
-                try {
-                    stub.onNext(
-                        LineEvent.newBuilder().setSolverID(solverID).setChannelID(
-                            Channels.ChannelID.newBuilder().setName(channelID)
-                        ).setLine(message).build()
-                    )
-                } catch (e: Exception) { println("The stream is already closed") }
+        return object: StreamObserver<String> {
+            override fun onNext(value: String) {
+                stub.onNext(
+                    LineEvent.newBuilder().setSolverID(solverID).setChannelID(
+                        Channels.ChannelID.newBuilder().setName(channelID)
+                    ).setLine(value).build()
+                )
             }
+            override fun onError(t: Throwable?) {}
+            override fun onCompleted() { stub.onCompleted() }
         }
     }
 
@@ -212,7 +205,7 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
             override fun onCompleted() {}
         })
         stub.onNext(OutputChannelEvent.newBuilder()
-            .setChannelID(Channels.ChannelID.newBuilder().setName(channelID))
+            .setChannelID(fromChannelIDToMsg(channelID))
             .setSolverID(solverID).build())
         openStreamObservers.add(GenericStreamObserver.OfOutputChannelEvent(stub))
         return deque
@@ -236,8 +229,4 @@ internal open class ClientPrologSolverImpl(unificator: Map<String, String>, libr
     private fun buildSolverId(): SolverID {
         return SolverID.newBuilder().setSolverID(this.solverID).build()
     }
-}
-
-interface InputStreamWriter {
-    fun writeNext(message: String)
 }

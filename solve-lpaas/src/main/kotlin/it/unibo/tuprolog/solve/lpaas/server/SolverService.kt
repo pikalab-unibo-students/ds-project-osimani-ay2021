@@ -9,11 +9,10 @@ import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.server.collections.ComputationsCollection
 import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.solveMessage.RuntimeMsg.LibraryMsg
-import it.unibo.tuprolog.solve.lpaas.util.EAGER_OPTION
-import it.unibo.tuprolog.solve.lpaas.util.LAZY_OPTION
-import it.unibo.tuprolog.solve.lpaas.util.LIMIT_OPTION
-import it.unibo.tuprolog.solve.lpaas.util.TIMEOUT_OPTION
+import it.unibo.tuprolog.solve.lpaas.util.*
+import it.unibo.tuprolog.solve.lpaas.util.parsers.*
 import kotlinx.coroutines.runBlocking
+import kotlin.collections.toMap
 
 object SolverService : SolverGrpc.SolverImplBase() {
 
@@ -59,8 +58,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
     override fun readFromOutputChannel(request: OutputChannelEvent, responseObserver: StreamObserver<LineEvent>) {
         val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
             .readOnOutputChannel(request.channelID.name)
-        responseObserver.onNext(LineEvent.newBuilder().setLine(outputValue)
-            .setSolverID(request.solverID).setChannelID(request.channelID).build())
+        responseObserver.onNext(fromLineEventToMsg(request.solverID, request.channelID.name, outputValue))
         responseObserver.onCompleted()
     }
 
@@ -85,24 +83,22 @@ object SolverService : SolverGrpc.SolverImplBase() {
     }
 
     override fun getFlags(request: SolverID, responseObserver: StreamObserver<FlagsMsg>) {
-        val messageBuilder = FlagsMsg.newBuilder()
-        SolversCollection.getSolver(request.solverID).flags.forEach {
-            messageBuilder.addFlags(
-                FlagsMsg.FlagMsg.newBuilder().setName(it.key).setValue(it.value.toString()))}
-        responseObserver.onNext(messageBuilder.build())
+        responseObserver.onNext(fromFlagsToMsg( SolversCollection.getSolver(request.solverID).flags
+            .map { Pair(it.key, it.value.toString()) }.toMap())
+        )
         responseObserver.onCompleted()
     }
 
     override fun getStaticKB(request: SolverID, responseObserver: StreamObserver<TheoryMsg.ClauseMsg>) {
         SolversCollection.getSolver(request.solverID).staticKb.clauses.forEach {
-            responseObserver.onNext(TheoryMsg.ClauseMsg.newBuilder().setContent(it.toString()).build())
+            responseObserver.onNext(fromClauseToMsg(it))
         }
         responseObserver.onCompleted()
     }
 
     override fun getDynamicKB(request: SolverID, responseObserver: StreamObserver<TheoryMsg.ClauseMsg>) {
         SolversCollection.getSolver(request.solverID).dynamicKb.clauses.forEach {
-            responseObserver.onNext(TheoryMsg.ClauseMsg.newBuilder().setContent(it.toString()).build())
+            responseObserver.onNext(fromClauseToMsg(it))
         }
         responseObserver.onCompleted()
     }
@@ -110,7 +106,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
     override fun getLibraries(request: SolverID, responseObserver: StreamObserver<RuntimeMsg>) {
         val messageBuilder = RuntimeMsg.newBuilder()
         SolversCollection.getSolver(request.solverID).libraries.forEach {
-            messageBuilder.addLibraries(LibraryMsg.newBuilder().setName(it.key))
+            messageBuilder.addLibraries(fromLibraryToMsg(it.key))
         }
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()
@@ -139,7 +135,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
     override fun getInputChannels(request: SolverID, responseObserver: StreamObserver<Channels>) {
         val messageBuilder = Channels.newBuilder()
         SolversCollection.getSolver(request.solverID).inputChannels.forEach {
-            messageBuilder.addChannel(Channels.ChannelID.newBuilder().setName(it.key))
+            messageBuilder.addChannel(fromChannelIDToMsg(it.key))
         }
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()
@@ -148,7 +144,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
     override fun getOutputChannels(request: SolverID, responseObserver: StreamObserver<Channels>) {
         val messageBuilder = Channels.newBuilder()
         SolversCollection.getSolver(request.solverID).outputChannels.forEach {
-            messageBuilder.addChannel(Channels.ChannelID.newBuilder().setName(it.key))
+            messageBuilder.addChannel(fromChannelIDToMsg(it.key))
         }
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()
@@ -184,14 +180,15 @@ object SolverService : SolverGrpc.SolverImplBase() {
                     .setTerm(it.value.toString()))
             }
         }
+
         if(solution.exception != null) {
             val error = solution.exception!!
             solutionBuilder.error = SolutionReply.ErrorMsg.newBuilder()
-                .setMessage(error.message)
+                .setMessage(error.toString())
                 .addAllLogicStackTrace(error.logicStackTrace.map { it.toString() })
                 .setCustomDataStore(error.context.customData.toString())
-                .setStartTime(error.context.startTime.toString())
-                .setMaxDuration(error.context.maxDuration.toString())
+                .setStartTime(error.context.startTime)
+                .setMaxDuration(error.context.maxDuration)
                 .build()
         }
         return solutionBuilder.build()

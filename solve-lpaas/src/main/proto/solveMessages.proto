@@ -44,8 +44,8 @@ message SolutionReply {
   message ErrorMsg {
     string message = 1;
     repeated string logicStackTrace = 2;
-    string startTime = 3;
-    string maxDuration = 4;
+    int64 startTime = 3;
+    int64 maxDuration = 4;
     string customDataStore = 5;
   }
 

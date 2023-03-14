@@ -90,7 +90,7 @@ class SolverGettersAndSettersTest {
     @Test
     @Throws(Exception::class)
     fun testInAndOutChannel() {
-        clients[BASIC]!!.writeOnInputChannel("\$current").writeNext("message")
+        clients[BASIC]!!.writeOnInputChannel("\$current").onNext("message")
         val result = mutableListOf<String>()
         for (i in 0 until "message".length ) {
             clients[BASIC]!!.solveOnce("get_char(X), write(X)")
@@ -106,7 +106,7 @@ class SolverGettersAndSettersTest {
     @Test
     @Throws(Exception::class)
     fun testInAndOutStreamChannel() {
-        clients[BASIC]!!.writeOnInputChannel("\$current").writeNext("message")
+        clients[BASIC]!!.writeOnInputChannel("\$current").onNext("message")
         val result = clients[BASIC]!!.readStreamOnOutputChannel("\$current")
         for (i in 0 until "message".length ) {
             clients[BASIC]!!.solveOnce("get_char(X), write(X)")

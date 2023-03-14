@@ -3,26 +3,18 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
-import it.unibo.tuprolog.solve.channel.InputChannel
-import it.unibo.tuprolog.solve.channel.OutputChannel
-import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
-import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg.ClauseMsg
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
-import it.unibo.tuprolog.solve.lpaas.util.*
 import it.unibo.tuprolog.solve.lpaas.util.parsers.*
 import it.unibo.tuprolog.solve.lpaas.util.parsers.fromTheoryToMsg
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
-import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
-import java.util.concurrent.TimeUnit
 
-internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
+class ClientPrologMutableSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
                                              flags: Map<String, String>, staticKb: Theory, dynamicKb: Theory,
                                              operators: Map<String, Pair<String, Int>>, inputChannels: Map<String, String>,
                                              outputChannels: Set<String>, defaultBuiltins: Boolean):
@@ -58,8 +50,7 @@ internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, li
     override fun loadLibrary(libraryName: String) {
         operationWithResult {
             mutableSolverFutureStub.loadLibrary(
-                MutableLibrary.newBuilder().setSolverID(solverID)
-                    .setLibrary(RuntimeMsg.LibraryMsg.newBuilder().setName(libraryName)).build()
+                fromLibraryToMutableMsg(solverID, libraryName)
             ).get()
         }
     }
@@ -67,8 +58,7 @@ internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, li
     override fun unloadLibrary(libraryName: String) {
         operationWithResult {
             mutableSolverFutureStub.unloadLibrary(
-                MutableLibrary.newBuilder().setSolverID(solverID)
-                    .setLibrary(RuntimeMsg.LibraryMsg.newBuilder().setName(libraryName)).build()
+                fromLibraryToMutableMsg(solverID, libraryName)
             ).get()
         }
     }
@@ -171,7 +161,7 @@ internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, li
     override fun setFlag(name: String, value: Term) {
         operationWithResult {
             mutableSolverFutureStub.setFlag(MutableFlag.newBuilder().setSolverID(solverID)
-                .setFlag(FlagsMsg.FlagMsg.newBuilder().setName(name).setValue(value.toString())).build()).get()
+                .setFlag(fromFlagToMsg(name, value.toString())).build()).get()
         }
     }
 
@@ -179,7 +169,7 @@ internal class ClientPrologMutableSolverImpl(unificator: Map<String, String>, li
         operationWithResult {
             mutableSolverFutureStub.setChannel(MutableChannelID.newBuilder().setSolverID(solverID)
                 .setType(type)
-                .setChannel(Channels.ChannelID.newBuilder().setName(name).setContent(content)).build()).get()
+                .setChannel(fromChannelIDToMsg(name, content)).build()).get()
         }
     }
 

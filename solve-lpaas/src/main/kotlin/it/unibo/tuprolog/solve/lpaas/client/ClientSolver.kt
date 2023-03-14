@@ -1,19 +1,15 @@
 package it.unibo.tuprolog.solve.lpaas.client
 
+import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.TimeDuration
-import it.unibo.tuprolog.solve.channel.InputStore
-import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.client.prolog.SolutionsSequence
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
-import it.unibo.tuprolog.solve.library.Runtime
-import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverImpl
-import it.unibo.tuprolog.solve.lpaas.client.prolog.InputStreamWriter
 import java.util.concurrent.BlockingDeque
 
 interface ClientSolver  {
@@ -35,15 +31,9 @@ interface ClientSolver  {
     fun getOperators(): OperatorSet
     fun getInputChannels(): List<String>
     fun getOutputChannels(): List<String>
-
-    /** To FIX **/
-    fun writeOnInputChannel(channelID: String): InputStreamWriter
-
-    /** To FIX **/
+    fun writeOnInputChannel(channelID: String): StreamObserver<String>
     fun readOnOutputChannel(channelID: String): String
-
     fun readStreamOnOutputChannel(channelID: String): BlockingDeque<String>
-
     fun closeClient()
 
     companion object {

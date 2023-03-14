@@ -23,54 +23,22 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
     private val solvers = SolversCollection
 
     override fun appendDynamicKB(responseObserver: StreamObserver<OperationResult>): StreamObserver<MutableClause> {
-        return generateStreamObserverOfTheory {solver, theory ->
-            if(solver != null ) {
-                solver.appendDynamicKb(theory)
-                responseObserver.onNext(buildOperationResult())
-            } else {
-                responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
-            }
-            responseObserver.onCompleted()
-        }
+        return doOperationWithKB(responseObserver) {solver, theory -> solver.appendDynamicKb(theory)}
     }
 
     override fun loadDynamicKB(responseObserver: StreamObserver<OperationResult>): StreamObserver<MutableClause> {
-        return generateStreamObserverOfTheory {solver, theory ->
-            if(solver != null ) {
-                solver.loadDynamicKb(theory)
-                responseObserver.onNext(buildOperationResult())
-            } else {
-                responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
-            }
-            responseObserver.onCompleted()
-        }
+        return doOperationWithKB(responseObserver) {solver, theory -> solver.loadDynamicKb(theory)}
     }
 
     override fun loadStaticKB(responseObserver: StreamObserver<OperationResult>): StreamObserver<MutableClause> {
-        return generateStreamObserverOfTheory {solver, theory ->
-            if(solver != null ) {
-                solver.loadStaticKb(theory)
-                responseObserver.onNext(buildOperationResult())
-            } else {
-                responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
-            }
-            responseObserver.onCompleted()
-        }
+        return doOperationWithKB(responseObserver) {solver, theory -> solver.loadStaticKb(theory)}
     }
 
     override fun appendStaticKB(responseObserver: StreamObserver<OperationResult>): StreamObserver<MutableClause> {
-        return generateStreamObserverOfTheory {solver, theory ->
-            if(solver != null ) {
-                solver.appendStaticKb(theory)
-                responseObserver.onNext(buildOperationResult())
-            } else {
-                responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
-            }
-            responseObserver.onCompleted()
-        }
+        return doOperationWithKB(responseObserver) {solver, theory -> solver.appendStaticKb(theory)}
     }
 
-    private fun generateStreamObserverOfTheory(onCompletion: (MutableSolver?, Theory) -> Unit): StreamObserver<MutableClause> {
+    private fun doOperationWithKB(responseObserver: StreamObserver<OperationResult>, op: (MutableSolver, Theory) -> Unit): StreamObserver<MutableClause> {
         return object: StreamObserver<MutableClause> {
             var solverID = ""
             val clauseList = mutableListOf<Clause>()
@@ -79,7 +47,16 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
                 if(solverID.isEmpty()) solverID = value.solverID
             }
             override fun onError(t: Throwable?) {}
-            override fun onCompleted() { onCompletion(solvers.getMutableSolver(solverID), Theory.of(clauseList)) }
+            override fun onCompleted() {
+                val solver = solvers.getMutableSolver(solverID)
+                if(solver != null ) {
+                    op(solver, Theory.of(clauseList))
+                    responseObserver.onNext(buildOperationResult())
+                } else {
+                    responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
+                }
+                responseObserver.onCompleted()
+            }
         }
     }
 
@@ -161,7 +138,6 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             responseObserver)
     }
 
-    /** FIX **/
     override fun setChannel(request: MutableChannelID, responseObserver: StreamObserver<OperationResult>) {
         val collection = SolversCollection.getChannelDequesOfSolver(request.solverID)
         doOperationOnMutableSolver(request.solverID,

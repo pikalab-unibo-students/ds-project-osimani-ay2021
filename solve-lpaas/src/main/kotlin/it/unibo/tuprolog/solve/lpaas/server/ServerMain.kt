@@ -7,9 +7,11 @@ import java.io.IOException
 
 /** TO-DO
  * Add stream-like listeners to input/output channels
+ * CustomStore implementation from solution
  * ?
  * Handling of stream-like outputs channels
  * Handling of generic Stream-Observer
+ * Operators for initialization of solver
  */
 
 class Service {

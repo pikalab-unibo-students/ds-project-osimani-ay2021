@@ -6,8 +6,6 @@ import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
-import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY_STRING
-import it.unibo.tuprolog.theory.Theory
 import kotlin.test.*
 
 class SolverOperationsTest {
@@ -154,10 +152,10 @@ class SolverOperationsTest {
                       p(a):- sleep(5000).
                       """.trimIndent()))
         val result = clients[BLOCKING]!!.solve("p(X)", 1000).getSolution(0)
-        /*assertContains(
+        assertContains(
             result.exception.toString(), "TimeOutException"
-        )*/
-        assert(result.isNo)
+        )
+        assert(result.isHalt)
     }
 
     /** Testing Solve With Timeout */

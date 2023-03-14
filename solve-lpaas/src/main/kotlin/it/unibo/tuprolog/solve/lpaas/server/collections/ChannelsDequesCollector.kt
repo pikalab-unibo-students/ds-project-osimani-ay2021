@@ -3,9 +3,7 @@ package it.unibo.tuprolog.solve.lpaas.server.collections
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
-import it.unibo.tuprolog.solve.lpaas.solveMessage.Channels
 import it.unibo.tuprolog.solve.lpaas.solveMessage.LineEvent
-import it.unibo.tuprolog.solve.lpaas.solveMessage.OutputChannelEvent
 import it.unibo.tuprolog.solve.lpaas.util.toMap
 import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
