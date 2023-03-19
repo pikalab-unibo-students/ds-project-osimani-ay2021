@@ -3,77 +3,49 @@ package it.unibo.tuprolog.solve.lpaas.server.collections
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
+import it.unibo.tuprolog.solve.libs.oop.identifier
 import it.unibo.tuprolog.solve.lpaas.solveMessage.LineEvent
-import it.unibo.tuprolog.solve.lpaas.util.toMap
-import java.util.concurrent.BlockingDeque
-import java.util.concurrent.LinkedBlockingDeque
 
 class ChannelsDequesCollector {
-    private val inputs: MutableMap<String, Pair<BlockingDeque<String>, InputChannel<String>>> = mutableMapOf()
-    private val outputs: MutableMap<String, Pair<BlockingDeque<String>, OutputChannel<String>>> = mutableMapOf()
-    private val outputListeners: MutableMap<String, MutableList<StreamObserver<LineEvent>>> = mutableMapOf()
+    private val inputs: MutableMap<String, InputChannelObserver<String>> = mutableMapOf()
+    private val outputs: MutableMap<String, OutputChannelObserver<String>> = mutableMapOf()
 
     fun addInputChannel(name: String, content: String = ""): InputChannel<String> {
-        val deque = LinkedBlockingDeque<String>()
-        val channel = InputChannel.of {
-            inputs[name]?.first?.takeFirst()
-        }
-        inputs[name] = Pair(deque, channel)
-        if(content.isNotEmpty()) writeOnInputChannel(name, content)
+        val channel = InputChannelObserver.of(content.toCharArray().map { it.toString() })
+        inputs[name] = channel
         return channel
     }
 
     fun addOutputChannel(name: String): OutputChannel<String> {
-        val deque = LinkedBlockingDeque<String>()
-        val channel = OutputChannel.of { line: String->
-            if(outputListeners[name]?.isNotEmpty() == true) {
-                outputListeners[name]!!.forEach { sendOutput(line, it) }
-            } else {
-                outputs[name]?.first?.putLast(line)
-            }
-        }
-        outputs[name] = Pair(deque, channel)
+        val channel = OutputChannelObserver.of<String>()
+        outputs[name] = channel
         return channel
     }
 
     fun getInputChannels(): Map<String, InputChannel<String>> {
-        return inputs.map { Pair(it.key, it.value.second) }.toMap()
+        return inputs
     }
 
     fun getOutputChannels(): Map<String, OutputChannel<String>> {
-        return outputs.map { Pair(it.key, it.value.second) }.toMap()
+        return outputs
     }
 
     fun addListener(channelID: String, observer: StreamObserver<LineEvent>) {
-        if(!outputListeners.containsKey(channelID))
-            outputListeners[channelID] = mutableListOf()
-        outputListeners[channelID]!!.add(observer)
-        while(outputs[channelID]?.first?.isNotEmpty() == true) {
-            sendOutput(outputs[channelID]!!.first.takeFirst().toString(), observer)
-        }
+        outputs[channelID]?.addObserverListener(observer)
     }
 
     fun removeListener(channelID: String, observer: StreamObserver<LineEvent>) {
-        outputListeners[channelID]?.remove(observer)
-        observer.onCompleted()
+        outputs[channelID]?.removeObserverListener(observer)
     }
 
     fun writeOnInputChannel(name: String, line: String = "") {
-        line.toCharArray().forEach { char ->
-            inputs[name]?.first!!.putLast(char.toString())
-        }
+        inputs[name]?.writeOnChannel(line.toCharArray().map { it.toString() })
     }
 
     fun readOnOutputChannel(name: String): String {
         if(outputs.containsKey(name))
-           return outputs[name]!!.first.takeFirst()
+           return outputs[name]!!.queue.takeFirst().item!!
         else throw IllegalArgumentException()
-    }
-
-    private fun sendOutput(line: String, observer: StreamObserver<LineEvent>) {
-        observer.onNext(
-            LineEvent.newBuilder().setLine(line).build()
-        )
     }
 
     companion object {

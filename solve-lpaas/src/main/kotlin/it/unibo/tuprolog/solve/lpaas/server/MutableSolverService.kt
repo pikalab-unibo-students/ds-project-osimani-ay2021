@@ -6,7 +6,9 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.MutableSolver
+import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.library.Runtime
+import it.unibo.tuprolog.solve.libs.oop.identifier
 import it.unibo.tuprolog.solve.lpaas.MutableSolverGrpc
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
 import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
@@ -143,7 +145,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
         doOperationOnMutableSolver(request.solverID,
             { when(request.type) {
                 (MutableChannelID.CHANNEL_TYPE.INPUT) -> {
-                    val channel = collection.addInputChannel(request.channel.name, request.channel.content)
+                    val channel = collection.addInputChannel("stdin", request.channel.content)
                     it.setStandardInput(channel)
                 }
                 (MutableChannelID.CHANNEL_TYPE.OUTPUT) -> {

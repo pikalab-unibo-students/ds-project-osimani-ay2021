@@ -6,12 +6,18 @@ import java.io.IOException
 
 
 /** TO-DO
- * Add stream-like listeners to input/output channels
  * CustomStore implementation from solution
  * ?
  * Handling of stream-like outputs channels
  * Handling of generic Stream-Observer
  * Operators for initialization of solver
+ */
+
+/**
+ * - Reimplement channels deque collectors as extensions of inputchannelabstract ecc.
+ * - Put neutral element to close stream from server after closing channel
+ * - Change generic handling client-side
+ * - Implement Solver Interface client-side creating a different extension of extisting
  */
 
 class Service {

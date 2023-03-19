@@ -33,8 +33,7 @@ object SolversCollection {
     }
 
     fun addSolver(unificator: Unificator, runtime: Runtime, flagStore: FlagStore,
-                  staticKb: Theory, dynamicKb: Theory,
-                  /*/operatorSet: OperatorSet,*/ inputs: Map<String, String>,
+                  staticKb: Theory, dynamicKb: Theory, inputs: Map<String, String>,
                   outputs: Set<String>, mutable: Boolean, defaultBuiltIns: Boolean): String {
         var id: String
         do {id = idGenerator()+ SOLVER_CODE

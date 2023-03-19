@@ -4,6 +4,8 @@ import io.grpc.ManagedChannel
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.*
+import it.unibo.tuprolog.solve.data.CustomData
+import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.lpaas.SolverGrpc
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolutionID
@@ -46,7 +48,7 @@ class SolutionsSequence(private val solverID: String, private val computationID:
                             .logicStackTraceList.map { Struct.parse(it) }
                         override val startTime: TimeInstant = reply.error.startTime
                         override val maxDuration: TimeDuration = reply.error.maxDuration
-                        //override val customData: CustomDataStore = CustomDataStore(reply.error.customDataStore)
+                        override val customData: CustomDataStore = CustomDataStore.empty().copy()
                     }))
         }
         return solutionsCache[index]!!

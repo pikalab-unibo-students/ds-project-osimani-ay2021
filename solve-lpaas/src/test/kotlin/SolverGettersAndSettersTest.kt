@@ -27,7 +27,8 @@ class SolverGettersAndSettersTest {
         server.start()
         clients[BASIC] = ClientSolver.prolog.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"))
         clients[MUTABLE] = ClientSolver.prolog
-            .mutableSolverOf(dynamicKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"), defaultBuiltins = true)
+            .mutableSolverOf(dynamicKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"),
+                inputChannels = mapOf(Pair("stdin","miiii")), defaultBuiltins = true)
     }
 
     @AfterTest
@@ -74,11 +75,11 @@ class SolverGettersAndSettersTest {
     @Throws(Exception::class)
     fun useSetStdIn() {
         (clients[MUTABLE]!! as ClientMutableSolver)
-            .setStandardInput("\$current", "hello")
+            .setStandardInput("bye", "hello")
         val result = mutableListOf<String>()
         for (i in 0 until "hello".length ) {
-            clients[MUTABLE]!!.solveOnce("get_char(X), write(X)")
-            result.add(clients[MUTABLE]!!.readOnOutputChannel("\$current"))
+            clients[MUTABLE]!!.solveOnce("get_char(stdin, X), write(stdout, X)")
+            result.add(clients[MUTABLE]!!.readOnOutputChannel("stdout"))
         }
         /** Solve closing stream, write on demand, etc **/
         clients[BASIC]!!.closeClient()
@@ -90,11 +91,11 @@ class SolverGettersAndSettersTest {
     @Test
     @Throws(Exception::class)
     fun testInAndOutChannel() {
-        clients[BASIC]!!.writeOnInputChannel("\$current").onNext("message")
+        clients[BASIC]!!.writeOnInputChannel("stdin").onNext("message")
         val result = mutableListOf<String>()
         for (i in 0 until "message".length ) {
-            clients[BASIC]!!.solveOnce("get_char(X), write(X)")
-            result.add(clients[BASIC]!!.readOnOutputChannel("\$current"))
+            clients[BASIC]!!.solveOnce("get_char(stdin, X), write(stdout, X)")
+            result.add(clients[BASIC]!!.readOnOutputChannel("stdout"))
         }
         /** Solve closing stream, write on demand, etc **/
         clients[BASIC]!!.closeClient()
@@ -106,10 +107,10 @@ class SolverGettersAndSettersTest {
     @Test
     @Throws(Exception::class)
     fun testInAndOutStreamChannel() {
-        clients[BASIC]!!.writeOnInputChannel("\$current").onNext("message")
-        val result = clients[BASIC]!!.readStreamOnOutputChannel("\$current")
+        clients[BASIC]!!.writeOnInputChannel("stdin").onNext("message")
+        val result = clients[BASIC]!!.readStreamOnOutputChannel("stdout")
         for (i in 0 until "message".length ) {
-            clients[BASIC]!!.solveOnce("get_char(X), write(X)")
+            clients[BASIC]!!.solveOnce("get_char(stdin, X), write(stdout, X)")
         }
         /** Solve closing stream, write on demand, etc **/
         clients[BASIC]!!.closeClient()

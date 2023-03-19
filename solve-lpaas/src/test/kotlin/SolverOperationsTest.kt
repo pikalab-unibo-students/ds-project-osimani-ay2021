@@ -97,7 +97,6 @@ class SolverOperationsTest {
     }
 
     @Test
-    @Ignore
     @Throws(Exception::class)
     fun failingRequest() {
         clients[BLOCKING] = ClientSolver.prolog.solverOf(staticKb = """

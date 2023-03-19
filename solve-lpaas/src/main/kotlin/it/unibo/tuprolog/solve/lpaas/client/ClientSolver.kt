@@ -14,6 +14,10 @@ import java.util.concurrent.BlockingDeque
 
 interface ClientSolver  {
     fun solve(goal: String): SolutionsSequence
+
+    fun solve2(goal: String): Sequence<Solution> =
+        solve(goal).asSequence()
+
     fun solve(goal: String, timeout: TimeDuration): SolutionsSequence
     fun solve(goal: String, options: SolveOptions): SolutionsSequence
     fun solveList(goal: String, timeout: TimeDuration): List<Solution>
