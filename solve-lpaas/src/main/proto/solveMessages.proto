@@ -40,6 +40,7 @@ message SolutionReply {
   bool isHalt = 6;
   string query = 1;
   repeated SubstitutionMsg substitution = 3;
+  bool hasNext = 8;
 
   message ErrorMsg {
     string message = 1;

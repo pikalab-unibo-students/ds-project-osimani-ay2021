@@ -1,6 +1,12 @@
 package it.unibo.tuprolog.solve.lpaas.util.parsers
 
+import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.serialize.MimeType
+import it.unibo.tuprolog.serialize.TermDeserializer
+import it.unibo.tuprolog.serialize.TermSerializer
+import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableClause
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableLibrary
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
@@ -8,13 +14,18 @@ import it.unibo.tuprolog.solve.lpaas.solveMessage.Channels.ChannelID
 import it.unibo.tuprolog.solve.lpaas.solveMessage.FlagsMsg.FlagMsg
 import it.unibo.tuprolog.solve.lpaas.solveMessage.OperatorSetMsg.OperatorMsg
 import it.unibo.tuprolog.theory.Theory
+import it.unibo.tuprolog.unify.Unificator
 
 /** Basic messages **/
 
-fun fromUnificatorToMsg(unificator: Map<String, String>): UnificatorMsg {
+val deserializer = TermDeserializer.of(MimeType.Json)
+val serializer = TermSerializer.of(MimeType.Json)
+
+fun fromUnificatorToMsg(unificator: Unificator): UnificatorMsg {
     return UnificatorMsg.newBuilder()
-        .addAllSubstitution(unificator.map { SubstitutionMsg.newBuilder()
-            .setVar(it.key).setTerm(it.value).build() })
+        .addAllSubstitution(unificator.context.map { SubstitutionMsg.newBuilder()
+            .setVar(serializer.serialize(it.key))
+            .setTerm(serializer.serialize(it.value)).build() })
         .build()
 }
 
@@ -29,27 +40,20 @@ fun fromLibrariesToMsg(libraries: Set<String>): RuntimeMsg {
         .build()
 }
 
-fun fromFlagToMsg(key: String, value: String): FlagsMsg.FlagMsg {
+fun fromFlagToMsg(key: String, value: Term): FlagsMsg.FlagMsg {
     return FlagMsg.newBuilder().setName(key)
-            .setValue(value).build()
+            .setValue(serializer.serialize(value)).build()
 }
 
-fun fromFlagsToMsg(flags: Map<String, String>): FlagsMsg {
+fun fromFlagsToMsg(flags: FlagStore): FlagsMsg {
     return FlagsMsg.newBuilder()
         .addAllFlags(flags.map { fromFlagToMsg(it.key, it.value) })
         .build()
 }
 
-fun fromOperatorSetToMsg(operators: Map<String, Pair<String, Int>>): OperatorSetMsg {
-    return OperatorSetMsg.newBuilder()
-        .addAllOperator(operators.map { OperatorMsg.newBuilder().setFunctor(it.key)
-            .setSpecifier(it.value.first).setPriority(it.value.second).build() })
-        .build()
-}
-
-fun fromClauseToMsg(struct: Struct): TheoryMsg.ClauseMsg {
+fun fromClauseToMsg(struct: Clause): TheoryMsg.ClauseMsg {
     return TheoryMsg.ClauseMsg.newBuilder()
-        .setContent(struct.toString()).build()
+        .setContent(serializer.serialize(struct)).build()
 }
 
 fun fromTheoryToMsg(theory: Theory): TheoryMsg {
@@ -79,7 +83,8 @@ fun fromChannelsToMsg(channels: Set<String>): Channels {
 
 fun fromClauseToMutableMsg(solverID: String, struct: Struct): MutableClause {
     return MutableClause.newBuilder()
-        .setSolverID(solverID).setClause(TheoryMsg.ClauseMsg.newBuilder().setContent(struct.toString())).build()
+        .setSolverID(solverID).setClause(TheoryMsg.ClauseMsg.newBuilder()
+            .setContent(serializer.serialize(struct))).build()
 }
 
 fun fromLibraryToMutableMsg(solverID: String, libraryName: String): MutableLibrary {

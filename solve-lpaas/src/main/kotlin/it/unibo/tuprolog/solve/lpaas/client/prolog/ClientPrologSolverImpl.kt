@@ -7,6 +7,8 @@ import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.operators.Operator
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.serialize.MimeType
+import it.unibo.tuprolog.serialize.TermSerializer
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.TimeDuration
@@ -26,33 +28,36 @@ import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
-open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
-                                  flags: Map<String, String>, staticKb: Theory, dynamicKb: Theory,
-                                  operators: Map<String, Pair<String, Int>>, inputChannels: Map<String, String>,
-                                  outputChannels: Set<String>, defaultBuiltins: Boolean):
+open class ClientPrologSolverImpl(unificator: Unificator, libraries: Set<String>,
+                                  flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
+                                  inputChannels: Map<String, String>, outputChannels: Set<String>,
+                                  defaultBuiltins: Boolean):
     ClientSolver {
-
-    protected var solverID: String
 
     protected val channel: ManagedChannel = ManagedChannelBuilder.forAddress("localhost", 8080)
         .usePlaintext()
         .build()
 
-    private val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
+    protected val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
     private val solverFutureStub: SolverGrpc.SolverFutureStub = SolverGrpc.newFutureStub(channel)
 
-    init {
+    protected var solverID: String = generateSolverID(unificator, libraries, flags, staticKb,
+        dynamicKb, inputChannels, outputChannels, defaultBuiltins)
+
+    protected open fun generateSolverID(unificator: Unificator, libraries: Set<String>,
+                                        flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
+                                        inputChannels: Map<String, String>, outputChannels: Set<String>,
+                                        defaultBuiltins: Boolean): String {
         val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
             .setUnificator(fromUnificatorToMsg(unificator))
             .setRuntime(fromLibrariesToMsg(libraries))
             .setFlags(fromFlagsToMsg(flags))
-            .setOperators(fromOperatorSetToMsg(operators))
             .setStaticKb(fromTheoryToMsg(staticKb))
             .setDynamicKb(fromTheoryToMsg(dynamicKb))
             .setInputStore(fromChannelsToMsg(inputChannels))
             .setOutputStore(fromChannelsToMsg(outputChannels))
             .setDefaultBuiltIns(defaultBuiltins).build()
-        solverID = SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
+        return SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
     }
 
     override fun closeClient() {
@@ -63,48 +68,16 @@ open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Se
         }
     }
 
-    override fun solve(goal: String): SolutionsSequence {
-        return solve(goal, SolveOptions.DEFAULT)
-    }
-
-    override fun solve(goal: String, timeout: TimeDuration): SolutionsSequence {
-        return solve(goal, SolveOptions.allLazilyWithTimeout(timeout))
-    }
-
-    override fun solve(goal: String, options: SolveOptions): SolutionsSequence {
+    override fun solve(goal: Struct, options: SolveOptions): SolutionsSequence {
         val reply = solverFutureStub.solve(buildRequestWithOptionsMessage(goal, options)).get()
         if(solverID != reply.solverID) solverID = reply.solverID
-        return SolutionsSequence(solverID, reply.computationID, reply.query, channel)
-    }
-
-    override fun solveList(goal: String): List<Solution> {
-        return solve(goal).asSequence().toList()
-    }
-
-    override fun solveList(goal: String, timeout: TimeDuration): List<Solution> {
-        return solve(goal, timeout).asSequence().toList()
-    }
-
-    override fun solveList(goal: String, options: SolveOptions): List<Solution> {
-        return solve(goal, options).asSequence().toList()
-    }
-
-    override fun solveOnce(goal: String): Solution {
-        return solve(goal, SolveOptions.someLazily(1)).getSolution(0)
-    }
-
-    override fun solveOnce(goal: String, timeout: TimeDuration): Solution {
-        return solve(goal, SolveOptions.someLazilyWithTimeout(1, timeout)).getSolution(0)
-    }
-
-    override fun solveOnce(goal: String, options: SolveOptions): Solution {
-        return solve(goal, options.setLimit(1)).getSolution(0)
+        return SolutionsSequence(solverID, reply.computationID, goal, channel)
     }
 
     override fun getFlags(): FlagStore {
         val flagsMap = mutableMapOf<String, Term>()
         solverFutureStub.getFlags(buildSolverId()).get().flagsList.forEach {
-            flagsMap[it.name] = Term.parse(it.value)
+            flagsMap[it.name] = deserializer.deserialize(it.value)
         }
         return FlagStore.of(flagsMap)
     }
@@ -123,7 +96,7 @@ open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Se
         op(buildSolverId(), object: StreamObserver<ClauseMsg> {
             val clauseList = mutableListOf<Clause>()
             override fun onNext(value: ClauseMsg) {
-                clauseList.add(Clause.parse(value.content))
+                clauseList.add(deserializer.deserialize(value.content).castToClause())
             }
             override fun onError(t: Throwable?) {}
             override fun onCompleted() { future.complete(clauseList) }
@@ -142,7 +115,8 @@ open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Se
     override fun getUnificator(): Unificator {
         val substitution = mutableMapOf<Var, Term>()
         solverFutureStub.getUnificator(buildSolverId()).get().substitutionList.map {
-            substitution[Var.of(it.`var`)] = Term.parse(it.term)
+            substitution[deserializer.deserialize(it.`var`).castToVar()] =
+                deserializer.deserialize((it.term))
         }
         return Unificator.naive(Substitution.of(substitution))
     }
@@ -150,7 +124,9 @@ open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Se
     override fun getOperators(): OperatorSet {
         val operators = mutableListOf<Operator>()
         solverFutureStub.getOperators(buildSolverId()).get().operatorList.map {
-            val operator = Operator.fromTerms(Integer.of(it.priority), Atom.of(it.specifier), Atom.of(it.functor))
+            val operator = Operator.fromTerms(Integer.of(it.priority),
+                Atom.of(it.specifier),
+                Atom.of(it.functor))
             if(operator != null) operators.add(operator)
         }
         return OperatorSet(operators)
@@ -166,7 +142,7 @@ open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Se
             .channelList.map { it.name }
     }
 
-    private val openStreamObservers: MutableList<GenericStreamObserver> = mutableListOf()
+    protected val openStreamObservers: MutableList<StreamObserver<*>> = mutableListOf()
 
     override fun writeOnInputChannel(channelID: String): StreamObserver<String> {
         val stub = solverStub.writeOnInputChannel(object: StreamObserver<OperationResult> {
@@ -174,7 +150,7 @@ open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Se
             override fun onError(t: Throwable?) {}
             override fun onCompleted() {}
         })
-        openStreamObservers.add(GenericStreamObserver.OfLineEvent(stub))
+        openStreamObservers.add(stub)
         return object: StreamObserver<String> {
             override fun onNext(value: String) {
                 stub.onNext(
@@ -207,13 +183,14 @@ open class ClientPrologSolverImpl(unificator: Map<String, String>, libraries: Se
         stub.onNext(OutputChannelEvent.newBuilder()
             .setChannelID(fromChannelIDToMsg(channelID))
             .setSolverID(solverID).build())
-        openStreamObservers.add(GenericStreamObserver.OfOutputChannelEvent(stub))
+        openStreamObservers.add(stub)
         return deque
     }
 
-    private fun buildRequestWithOptionsMessage(goal:String, options: SolveOptions): SolveRequest {
+    private fun buildRequestWithOptionsMessage(goal:Struct, options: SolveOptions): SolveRequest {
+        val serializer = TermSerializer.of(MimeType.Json)
         val request = SolveRequest.newBuilder()
-            .setSolverID(solverID).setStruct(goal)
+            .setSolverID(solverID).setStruct(serializer.serialize(goal))
             .addOptions(buildOption(TIMEOUT_OPTION, options.timeout))
             .addOptions(buildOption(LIMIT_OPTION, options.limit.toLong()))
         if(options.isEager) request.addOptions(buildOption(EAGER_OPTION))

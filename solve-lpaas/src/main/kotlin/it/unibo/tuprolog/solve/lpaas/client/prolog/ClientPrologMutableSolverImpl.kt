@@ -3,23 +3,32 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.solve.DummyInstances
+import it.unibo.tuprolog.solve.ExecutionContext
+import it.unibo.tuprolog.solve.channel.OutputChannel
+import it.unibo.tuprolog.solve.channel.OutputStore
+import it.unibo.tuprolog.solve.exception.Warning
+import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
+import it.unibo.tuprolog.solve.lpaas.server.collections.ChannelsDequesCollector
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
 import it.unibo.tuprolog.solve.lpaas.util.parsers.*
 import it.unibo.tuprolog.solve.lpaas.util.parsers.fromTheoryToMsg
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
+import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
+import java.util.concurrent.LinkedBlockingDeque
 
-class ClientPrologMutableSolverImpl(unificator: Map<String, String>, libraries: Set<String>,
-                                             flags: Map<String, String>, staticKb: Theory, dynamicKb: Theory,
-                                             operators: Map<String, Pair<String, Int>>, inputChannels: Map<String, String>,
-                                             outputChannels: Set<String>, defaultBuiltins: Boolean):
+class ClientPrologMutableSolverImpl(unificator: Unificator, libraries: Set<String>,
+                                    flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
+                                    inputChannels: Map<String, String>, outputChannels: Set<String>,
+                                    defaultBuiltins: Boolean):
     ClientPrologSolverImpl(unificator, libraries, flags, staticKb, dynamicKb,
-        operators, inputChannels, outputChannels, defaultBuiltins), ClientMutableSolver {
+        inputChannels, outputChannels, defaultBuiltins), ClientMutableSolver {
 
     private val mutableSolverFutureStub: MutableSolverGrpc.MutableSolverFutureStub = MutableSolverGrpc
         .newFutureStub(channel)
@@ -27,19 +36,21 @@ class ClientPrologMutableSolverImpl(unificator: Map<String, String>, libraries: 
     private val mutableSolverStub: MutableSolverGrpc.MutableSolverStub = MutableSolverGrpc
         .newStub(channel)
 
-    init {
+    override fun generateSolverID(unificator: Unificator, libraries: Set<String>,
+                                  flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
+                                  inputChannels: Map<String, String>, outputChannels: Set<String>,
+                                  defaultBuiltins: Boolean): String {
         val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
             .setUnificator(fromUnificatorToMsg(unificator))
             .setRuntime(fromLibrariesToMsg(libraries))
             .setFlags(fromFlagsToMsg(flags))
-            .setOperators(fromOperatorSetToMsg(operators))
             .setStaticKb(fromTheoryToMsg(staticKb))
             .setDynamicKb(fromTheoryToMsg(dynamicKb))
             .setInputStore(fromChannelsToMsg(inputChannels))
             .setOutputStore(fromChannelsToMsg(outputChannels))
             .setDefaultBuiltIns(defaultBuiltins)
             .setMutable(true).build()
-        solverID = SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
+        return SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
     }
 
     private fun operationWithResult(op: () -> OperationResult) {
@@ -151,8 +162,10 @@ class ClientPrologMutableSolverImpl(unificator: Map<String, String>, libraries: 
 
     private fun genericRetract(op: () -> RetractResultMsg): RetractResult<Theory> {
         val result = op()
-        val theory = Theory.of(result.theory.clauseList.map { Clause.parse(it.content) })
-        val clauses = result.clausesList.map { Clause.parse(it.content) }
+        val theory = Theory.of(result.theory.clauseList.map {
+            deserializer.deserialize(it.content).castToClause() })
+        val clauses = result.clausesList.map {
+            deserializer.deserialize(it.content).castToClause() }
         return if(result.isSuccess) {
             RetractResult.Success(theory, clauses)
         } else RetractResult.Failure(theory)
@@ -161,31 +174,53 @@ class ClientPrologMutableSolverImpl(unificator: Map<String, String>, libraries: 
     override fun setFlag(name: String, value: Term) {
         operationWithResult {
             mutableSolverFutureStub.setFlag(MutableFlag.newBuilder().setSolverID(solverID)
-                .setFlag(fromFlagToMsg(name, value.toString())).build()).get()
+                .setFlag(fromFlagToMsg(name, value)).build()).get()
         }
     }
 
-    private fun setChannel(name: String, content: String, type: MutableChannelID.CHANNEL_TYPE) {
+    private fun setChannel(content: String, type: MutableChannelID.CHANNEL_TYPE) {
         operationWithResult {
             mutableSolverFutureStub.setChannel(MutableChannelID.newBuilder().setSolverID(solverID)
                 .setType(type)
-                .setChannel(fromChannelIDToMsg(name, content)).build()).get()
+                .setChannel(fromChannelIDToMsg("", content)).build()).get()
         }
     }
 
-    override fun setStandardInput(name: String, content: String) {
-        setChannel(name, content, MutableChannelID.CHANNEL_TYPE.INPUT)
+    override fun setStandardInput(content: String) {
+        setChannel(content, MutableChannelID.CHANNEL_TYPE.INPUT)
     }
 
-    override fun setStandardError(name: String) {
-        setChannel(name, "", MutableChannelID.CHANNEL_TYPE.ERROR)
+    override fun setStandardOutput(stdOut: OutputChannel<String>) {
+        setOutChannel(OutputStore.STDOUT) { stdOut.write(it) }
     }
 
-    override fun setStandardOutput(name: String) {
-        setChannel(name, "", MutableChannelID.CHANNEL_TYPE.OUTPUT)
+    override fun setStandardError(stdErr: OutputChannel<String>) {
+       setOutChannel(OutputStore.STDERR) { stdErr.write(it) }
     }
 
-    override fun setWarnings(name: String) {
-        setChannel(name, "", MutableChannelID.CHANNEL_TYPE.WARNING)
+    override fun setWarnings(stdWarn: OutputChannel<Warning>) {
+        setOutChannel(ChannelsDequesCollector.STDWARN) { stdWarn.write(
+            object: Warning(it, null, DummyInstances.executionContext) {
+                //does nothing
+                override fun updateContext(newContext: ExecutionContext, index: Int): Warning = this
+                //does nothing
+                override fun updateLastContext(newContext: ExecutionContext): Warning = this
+                //does nothing
+                override fun pushContext(newContext: ExecutionContext): Warning = this
+        })}
+    }
+
+    private fun setOutChannel(type: String, op: (String)->Unit) {
+        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<LineEvent> {
+            override fun onNext(value: LineEvent) {
+                op(value.line)
+            }
+            override fun onError(t: Throwable?) {}
+            override fun onCompleted() {}
+        })
+        stub.onNext(OutputChannelEvent.newBuilder()
+            .setChannelID(fromChannelIDToMsg(type))
+            .setSolverID(solverID).build())
+        openStreamObservers.add(stub)
     }
 }

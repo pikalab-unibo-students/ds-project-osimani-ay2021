@@ -12,6 +12,7 @@ import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
 import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
+import it.unibo.tuprolog.solve.lpaas.util.parsers.deserializer
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
@@ -48,7 +49,7 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
     private fun parseUnificator(msg: List<SubstitutionMsg>): Unificator {
         val scope = Scope.empty()
         return Unificator.strict(
-            Substitution.of( msg.map { Pair(scope.varOf(it.`var`), Term.parse(it.term))}))
+            Substitution.of( msg.map { Pair(scope.varOf(it.`var`), deserializer.deserialize(it.term))}))
     }
 
     private fun parseRuntime(msg: List<RuntimeMsg.LibraryMsg>): Runtime {
@@ -58,12 +59,12 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
 
     private fun parseFlagStore(msg: List<FlagsMsg.FlagMsg>): FlagStore {
         val flagMap = mutableMapOf<String, Term>()
-        msg.forEach { flagMap[it.name] = Term.parse(it.value) }
+        msg.forEach { flagMap[it.name] = deserializer.deserialize(it.value) }
         return FlagStore.of(flagMap)
     }
 
     private fun parseTheory(msg: List<TheoryMsg.ClauseMsg>): Theory {
-        return Theory.of(msg.map { Clause.parse(it.content) })
+        return Theory.of(msg.map { deserializer.deserialize(it.content).castToClause() })
     }
 
     private fun parseInputChannels(msg: List<Channels.ChannelID>): Map<String, String> {

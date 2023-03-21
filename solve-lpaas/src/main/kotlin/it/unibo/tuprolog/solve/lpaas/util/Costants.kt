@@ -3,6 +3,7 @@ package it.unibo.tuprolog.solve.lpaas.util
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.solve.classic.stdlib.DefaultBuiltins
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.libs.io.IOLib
 import it.unibo.tuprolog.solve.libs.oop.OOPLib
@@ -39,6 +40,7 @@ fun convertStringToKnownLibrary(libName: String): Library {
     return when(libName) {
         "IOLib" -> IOLib
         "OOPLib" -> OOPLib
+        "prolog.lang" -> DefaultBuiltins
         else -> throw IllegalArgumentException()
     }
 }

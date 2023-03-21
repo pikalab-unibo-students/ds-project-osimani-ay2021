@@ -4,6 +4,7 @@ import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputStore
+import it.unibo.tuprolog.solve.classic.stdlib.DefaultBuiltins
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.theory.Theory
@@ -42,7 +43,9 @@ object SolversCollection {
         val channelsDeque = ChannelsDequesCollector.of(inputs, outputs)
         solversDeques[id] = channelsDeque
 
-        val libraries = if(defaultBuiltIns) runtime + Solver.prolog.defaultBuiltins else runtime
+        val libraries = if(defaultBuiltIns && !runtime.containsKey(DefaultBuiltins.alias))
+            runtime + Solver.prolog.defaultBuiltins
+        else runtime
 
         solvers[id] = if(mutable) {
             Solver.prolog.mutableSolverOf(
@@ -52,7 +55,7 @@ object SolversCollection {
                 staticKb = staticKb,
                 dynamicKb = dynamicKb,
                 inputs = InputStore.of(channelsDeque.getInputChannels()),
-                outputs = OutputStore.of(channelsDeque.getOutputChannels()))
+                outputs = OutputStore.of(channelsDeque.getOutputChannels(), channelsDeque.getWarningChannel()))
         } else {
             Solver.prolog.solverOf(
             unificator = unificator,
@@ -61,7 +64,7 @@ object SolversCollection {
             staticKb = staticKb,
             dynamicKb = dynamicKb,
             inputs = InputStore.of(channelsDeque.getInputChannels()),
-            outputs = OutputStore.of(channelsDeque.getOutputChannels()))
+            outputs = OutputStore.of(channelsDeque.getOutputChannels(), channelsDeque.getWarningChannel()))
         }
 
         return id

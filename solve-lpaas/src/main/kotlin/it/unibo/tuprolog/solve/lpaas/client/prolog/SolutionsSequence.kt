@@ -3,20 +3,23 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 import io.grpc.ManagedChannel
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.serialize.MimeType
+import it.unibo.tuprolog.serialize.TermSerializer
 import it.unibo.tuprolog.solve.*
-import it.unibo.tuprolog.solve.data.CustomData
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.lpaas.SolverGrpc
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolutionID
+import it.unibo.tuprolog.solve.lpaas.util.parsers.deserializer
+import it.unibo.tuprolog.solve.lpaas.util.parsers.serializer
 
-class SolutionsSequence(private val solverID: String, private val computationID: String, private val query: String,
+class SolutionsSequence(private val solverID: String, private val computationID: String, private val struct: Struct,
     channel: ManagedChannel
 ): Iterator<Solution> {
 
     private val solutionsCache: MutableMap<Int, Solution> = mutableMapOf()
     private val stub = SolverGrpc.newFutureStub(channel)
-    private val struct = Struct.parse(query)
+    private var hasNext = false
 
     /**
      * @param index the index of the requested solution
@@ -26,13 +29,15 @@ class SolutionsSequence(private val solverID: String, private val computationID:
         if(!solutionsCache.containsKey(index)) {
             val reply = stub.getSolution(
                 SolutionID.newBuilder().setSolverID(solverID).setComputationID(computationID)
-                    .setQuery(query).setIndex(index).build()
+                    .setQuery(serializer.serialize(struct)).setIndex(index).build()
             ).get()
 
-            val scope = Scope.of(struct.args.filter { it.isVar }.map { it.castToVar() })
             val unifiers: MutableMap<Var, Term> = mutableMapOf()
+            val scope = Scope.of(struct)
             reply.substitutionList.forEach { pair ->
-                unifiers[scope.varOf(pair.`var`)] = Term.parse(pair.term)
+                val variable = deserializer.deserialize(pair.`var`).castToVar()
+                val term = deserializer.deserialize(pair.term)
+                unifiers[scope.varOf(variable.name)] = term
             }
 
             solutionsCache[index] = if (reply.isYes) {
@@ -42,18 +47,18 @@ class SolutionsSequence(private val solverID: String, private val computationID:
             } else
                 Solution.halt(struct, ResolutionException(
                     Throwable(reply.error.message), object : ExecutionContext by DummyInstances.executionContext {
-                        override val procedure: Struct = Struct.parse(reply.query)
+                        override val procedure: Struct = struct
                         override val substitution: Substitution.Unifier = Substitution.unifier(unifiers)
                         override val logicStackTrace: List<Struct> = reply.error
-                            .logicStackTraceList.map { Struct.parse(it) }
+                            .logicStackTraceList.map { deserializer.deserialize(it).castToStruct() }
                         override val startTime: TimeInstant = reply.error.startTime
                         override val maxDuration: TimeDuration = reply.error.maxDuration
                         override val customData: CustomDataStore = CustomDataStore.empty().copy()
                     }))
+            hasNext = reply.hasNext
         }
         return solutionsCache[index]!!
     }
-
 
     private var iteratorIndex = -1
     /**
@@ -66,7 +71,7 @@ class SolutionsSequence(private val solverID: String, private val computationID:
     }
 
     override fun hasNext(): Boolean {
-        return solutionsCache.isEmpty() || getCurrentElement()!!.isYes
+        return solutionsCache.isEmpty() || hasNext
     }
 
     override fun next(): Solution {

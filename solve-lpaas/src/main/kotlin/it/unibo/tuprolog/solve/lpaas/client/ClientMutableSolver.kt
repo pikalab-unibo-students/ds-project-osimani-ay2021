@@ -2,6 +2,9 @@ package it.unibo.tuprolog.solve.lpaas.client
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.solve.MutableSolver
+import it.unibo.tuprolog.solve.channel.OutputChannel
+import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
 
@@ -20,8 +23,8 @@ interface ClientMutableSolver: ClientSolver  {
     fun retract(fact: Struct): RetractResult<Theory>
     fun retractAll(fact: Struct): RetractResult<Theory>
     fun setFlag(name: String, value: Term)
-    fun setStandardInput(name: String, content: String)
-    fun setStandardError(name: String)
-    fun setStandardOutput(name: String)
-    fun setWarnings(name: String)
+    fun setStandardInput(content: String)
+    fun setStandardOutput(stdOut: OutputChannel<String>)
+    fun setStandardError(stdErr: OutputChannel<String>)
+    fun setWarnings(stdWarn: OutputChannel<Warning>)
 }

@@ -13,7 +13,6 @@ message SolverRequest {
   optional FlagsMsg flags = 3;
   optional TheoryMsg staticKb = 4;
   optional TheoryMsg dynamicKb = 5;
-  optional OperatorSetMsg operators = 6;
   optional Channels inputStore = 7;
   optional Channels outputStore = 8;
   optional bool mutable = 9;

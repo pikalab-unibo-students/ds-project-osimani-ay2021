@@ -1,9 +1,12 @@
 package it.unibo.tuprolog.solve.lpaas.client
 
 import io.grpc.stub.StreamObserver
+import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.operators.OperatorSet
+import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
+import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
@@ -12,20 +15,28 @@ import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import java.util.concurrent.BlockingDeque
 
-interface ClientSolver  {
-    fun solve(goal: String): SolutionsSequence
+interface ClientSolver {
 
-    fun solve2(goal: String): Sequence<Solution> =
-        solve(goal).asSequence()
+    fun solve(goal: Struct, options: SolveOptions): SolutionsSequence
 
-    fun solve(goal: String, timeout: TimeDuration): SolutionsSequence
-    fun solve(goal: String, options: SolveOptions): SolutionsSequence
-    fun solveList(goal: String, timeout: TimeDuration): List<Solution>
-    fun solveList(goal: String): List<Solution>
-    fun solveList(goal: String, options: SolveOptions): List<Solution>
-    fun solveOnce(goal: String, timeout: TimeDuration): Solution
-    fun solveOnce(goal: String): Solution
-    fun solveOnce(goal: String, options: SolveOptions): Solution
+    fun solve(goal: String, options: SolveOptions): SolutionsSequence =
+        solve(Struct.parse(goal), options)
+    fun solve(goal: String): SolutionsSequence =
+        solve(goal, SolveOptions.DEFAULT)
+    fun solve(goal: String, timeout: TimeDuration): SolutionsSequence =
+        solve(goal, SolveOptions.allLazilyWithTimeout(timeout))
+    fun solveList(goal: String, timeout: TimeDuration): List<Solution> =
+        solveList(goal, SolveOptions.allLazilyWithTimeout(timeout))
+    fun solveList(goal: String): List<Solution> =
+        solveList(goal, SolveOptions.DEFAULT)
+    fun solveList(goal: String, options: SolveOptions): List<Solution> =
+        solve(goal, options).asSequence().toList()
+    fun solveOnce(goal: String): Solution =
+        solveOnce(goal, SolveOptions.DEFAULT)
+    fun solveOnce(goal: String, timeout: TimeDuration): Solution =
+        solveOnce(goal, SolveOptions.someLazilyWithTimeout(1, timeout))
+    fun solveOnce(goal: String, options: SolveOptions): Solution =
+        solve(goal, options.setLimit(1)).getSolution(0)
 
     fun getFlags(): FlagStore
     fun getStaticKB(): Theory

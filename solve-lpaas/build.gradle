@@ -19,6 +19,8 @@ dependencies {
     implementation project(path: ':io-lib')
     implementation project(path: ':oop-lib')
     implementation project(path: ':test-solve')
+    implementation project(path: ':serialize-core')
+    testImplementation 'org.testng:testng:7.1.0'
 
     compileOnly(libs.tomcat.annotations)
 

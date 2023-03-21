@@ -13,14 +13,12 @@ class OutputChannelObserver<T : Any>(
     val eventType: KClass<T>
 ) : OutputChannel<T>, AbstractOutputChannel<T>() {
 
-    data class Event<T>(val item: T?, val isOver: Boolean)
-
-    val queue: BlockingDeque<Event<T>> = LinkedBlockingDeque()
+    val queue: BlockingDeque<T> = LinkedBlockingDeque()
 
     private val observers: MutableMap<StreamObserver<LineEvent>, Listener<T?>> = mutableMapOf()
 
     override fun writeActually(value: T) {
-        queue.add(Event(value, false))
+        queue.putLast(value)
     }
 
     override fun flushActually() {
@@ -29,7 +27,7 @@ class OutputChannelObserver<T : Any>(
 
     override fun close() {
         super.close()
-        queue.add(Event(null, true))
+        this.observers.forEach { it.key.onCompleted() }
     }
 
     fun addObserverListener(observer: StreamObserver<LineEvent>) {
@@ -39,12 +37,13 @@ class OutputChannelObserver<T : Any>(
         }
         observers[observer] = listener
         this.addListener(listener)
-        queue.forEach { sendOutput(it.item, observer) }
+        queue.forEach { sendOutput(it, observer) }
     }
 
     fun removeObserverListener(observer: StreamObserver<LineEvent>) {
         if(observers.containsKey(observer))
             this.removeListener(observers[observer]!!)
+        observer.onCompleted()
     }
 
     private fun sendOutput(line: T?, observer: StreamObserver<LineEvent>) {
