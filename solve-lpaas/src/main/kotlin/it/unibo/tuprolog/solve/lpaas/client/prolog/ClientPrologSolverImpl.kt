@@ -144,24 +144,14 @@ open class ClientPrologSolverImpl(unificator: Unificator, libraries: Set<String>
 
     protected val openStreamObservers: MutableList<StreamObserver<*>> = mutableListOf()
 
-    override fun writeOnInputChannel(channelID: String): StreamObserver<String> {
-        val stub = solverStub.writeOnInputChannel(object: StreamObserver<OperationResult> {
-            override fun onNext(value: OperationResult) {}
+    override fun writeOnInputChannel(channelID: String, vararg terms: String) {
+        solverStub.writeOnInputChannel(InputChannelEvent.newBuilder().setSolverID(solverID).setChannelID(
+            Channels.ChannelID.newBuilder().setName(channelID)
+        ).addAllLine(terms.toList()).build(), object: StreamObserver<OperationResult> {
+            override fun onNext(value: OperationResult?) {}
             override fun onError(t: Throwable?) {}
             override fun onCompleted() {}
         })
-        openStreamObservers.add(stub)
-        return object: StreamObserver<String> {
-            override fun onNext(value: String) {
-                stub.onNext(
-                    LineEvent.newBuilder().setSolverID(solverID).setChannelID(
-                        Channels.ChannelID.newBuilder().setName(channelID)
-                    ).setLine(value).build()
-                )
-            }
-            override fun onError(t: Throwable?) {}
-            override fun onCompleted() { stub.onCompleted() }
-        }
     }
 
     override fun readOnOutputChannel(channelID: String): String {
@@ -173,8 +163,8 @@ open class ClientPrologSolverImpl(unificator: Unificator, libraries: Set<String>
 
     override fun readStreamOnOutputChannel(channelID: String): BlockingDeque<String> {
         val deque = LinkedBlockingDeque<String>()
-        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<LineEvent> {
-            override fun onNext(value: LineEvent) {
+        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<ReadLine> {
+            override fun onNext(value: ReadLine) {
                 deque.putLast(value.line)
             }
             override fun onError(t: Throwable?) {}

@@ -16,10 +16,10 @@ import java.io.IOException
 /**
  * - Reimplement channels deque collectors as extensions of inputchannelabstract ecc. DONE
  * - Put neutral element to close stream from server after closing channel DONE?
- * - Fix name in setStandardInput
+ * - Fix name in setStandardInput DONE
  * - Che senso ha cambiare stdErr e stdOut da client
- * - Change generic handling client-side
- * - Implement Solver Interface client-side creating a different extension of extisting .....
+ * - Change generic handling client-side DONE
+ * - Implement Solver Interface client-side creating a different extension of extisting ..... DONE
  */
 
 class Service {

@@ -13,9 +13,9 @@ import "solveMessages.proto";
 service Solver {
   rpc Solve(SolveRequest) returns (SolutionSequence) {}
   rpc GetSolution(SolutionID) returns (SolutionReply) {}
-  rpc WriteOnInputChannel(stream LineEvent) returns (OperationResult) {}
-  rpc ReadFromOutputChannel(OutputChannelEvent) returns (LineEvent) {}
-  rpc ReadStreamFromOutputChannel(stream OutputChannelEvent) returns (stream LineEvent) {}
+  rpc WriteOnInputChannel(InputChannelEvent) returns (OperationResult) {}
+  rpc ReadFromOutputChannel(OutputChannelEvent) returns (ReadLine) {}
+  rpc ReadStreamFromOutputChannel(stream OutputChannelEvent) returns (stream ReadLine) {}
   rpc GetFlags(SolverID) returns (FlagsMsg) {}
   rpc GetStaticKB(SolverID) returns (stream TheoryMsg.ClauseMsg) {}
   rpc GetDynamicKB(SolverID) returns (stream TheoryMsg.ClauseMsg) {}

@@ -6,11 +6,13 @@ import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.serialize.MimeType
 import it.unibo.tuprolog.serialize.TermSerializer
 import it.unibo.tuprolog.solve.*
+import it.unibo.tuprolog.solve.data.CustomData
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.lpaas.SolverGrpc
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolutionID
 import it.unibo.tuprolog.solve.lpaas.util.parsers.deserializer
+import it.unibo.tuprolog.solve.lpaas.util.parsers.fromCustomDataStoreToMsg
 import it.unibo.tuprolog.solve.lpaas.util.parsers.serializer
 
 class SolutionsSequence(private val solverID: String, private val computationID: String, private val struct: Struct,
@@ -53,7 +55,9 @@ class SolutionsSequence(private val solverID: String, private val computationID:
                             .logicStackTraceList.map { deserializer.deserialize(it).castToStruct() }
                         override val startTime: TimeInstant = reply.error.startTime
                         override val maxDuration: TimeDuration = reply.error.maxDuration
-                        override val customData: CustomDataStore = CustomDataStore.empty().copy()
+                        override val customData: CustomDataStore = CustomDataStore.empty().copy(reply.error.customDataStoreList.associate {
+                            Pair(it.name, it.value)
+                        })
                     }))
             hasNext = reply.hasNext
         }
@@ -76,7 +80,8 @@ class SolutionsSequence(private val solverID: String, private val computationID:
 
     override fun next(): Solution {
         return if(hasNext()) {
-            return getSolution(++iteratorIndex)
+            iteratorIndex += 1
+            return getSolution(iteratorIndex)
         } else getCurrentElement()!!
     }
 }

@@ -46,7 +46,7 @@ interface ClientSolver {
     fun getOperators(): OperatorSet
     fun getInputChannels(): List<String>
     fun getOutputChannels(): List<String>
-    fun writeOnInputChannel(channelID: String): StreamObserver<String>
+    fun writeOnInputChannel(channelID: String, vararg terms: String)
     fun readOnOutputChannel(channelID: String): String
     fun readStreamOnOutputChannel(channelID: String): BlockingDeque<String>
     fun closeClient()

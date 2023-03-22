@@ -211,8 +211,8 @@ class ClientPrologMutableSolverImpl(unificator: Unificator, libraries: Set<Strin
     }
 
     private fun setOutChannel(type: String, op: (String)->Unit) {
-        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<LineEvent> {
-            override fun onNext(value: LineEvent) {
+        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<ReadLine> {
+            override fun onNext(value: ReadLine) {
                 op(value.line)
             }
             override fun onError(t: Throwable?) {}

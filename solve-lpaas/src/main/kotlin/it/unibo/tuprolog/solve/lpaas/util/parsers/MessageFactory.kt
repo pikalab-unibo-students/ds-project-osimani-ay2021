@@ -6,6 +6,8 @@ import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.serialize.MimeType
 import it.unibo.tuprolog.serialize.TermDeserializer
 import it.unibo.tuprolog.serialize.TermSerializer
+import it.unibo.tuprolog.solve.data.CustomData
+import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableClause
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableLibrary
@@ -13,6 +15,7 @@ import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.Channels.ChannelID
 import it.unibo.tuprolog.solve.lpaas.solveMessage.FlagsMsg.FlagMsg
 import it.unibo.tuprolog.solve.lpaas.solveMessage.OperatorSetMsg.OperatorMsg
+import it.unibo.tuprolog.solve.lpaas.solveMessage.SolutionReply.CustomDataMsg
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
@@ -92,8 +95,13 @@ fun fromLibraryToMutableMsg(solverID: String, libraryName: String): MutableLibra
         .setLibrary(fromLibraryToMsg(libraryName)).build()
 }
 
-fun fromLineEventToMsg(solverID: String = "", channelID: String = "", content: String): LineEvent {
-    return LineEvent.newBuilder().setLine(content)
-        .setSolverID(solverID).setChannelID(fromChannelIDToMsg(channelID)).build()
+fun fromReadLineToMsg(content: String): ReadLine {
+    return ReadLine.newBuilder().setLine(content).build()
+}
+
+fun fromCustomDataStoreToMsg(customStore: CustomDataStore): List<CustomDataMsg> {
+    return customStore.persistent.map {
+        CustomDataMsg.newBuilder().setName(it.key).setValue(it.value.toString()).build()
+    }
 }
 

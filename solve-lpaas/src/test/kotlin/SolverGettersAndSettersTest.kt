@@ -1,7 +1,12 @@
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.solve.SolveOptions
+import it.unibo.tuprolog.solve.channel.InputStore
+import it.unibo.tuprolog.solve.channel.OutputStore
+import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.server.Service
@@ -25,8 +30,7 @@ class SolverGettersAndSettersTest {
         server.start()
         clients[BASIC] = ClientSolver.prolog.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"))
         clients[MUTABLE] = ClientSolver.prolog
-            .mutableSolverOf(dynamicKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"),
-                inputs = mapOf(Pair("stdin","miiii")), defaultBuiltins = true)
+            .mutableSolverOf(dynamicKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"), defaultBuiltins = true)
     }
 
     @AfterTest
@@ -69,6 +73,32 @@ class SolverGettersAndSettersTest {
             result.clauses)
     }
 
+    @Test
+    @Throws(Exception::class)
+    fun writeOnStdIn() {
+        clients[BASIC]!!.writeOnInputChannel("stdin", "h", "e", "l", "l", "o")
+        val result = mutableListOf<String>()
+        for(i in 0 until "hello".length) {
+            result.add(clients[BASIC]!!.solveOnce(
+                "get_char(${InputStore.STDIN}, X)").solvedQuery.toString())
+        }
+        clients[BASIC]!!.solveOnce("close(${InputStore.STDIN})")
+        assertContentEquals(
+            "hello".toCharArray().map { "get_char(${InputStore.STDIN}, $it)" },
+            result)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun readFromStdOut() {
+        val result = clients[BASIC]!!.readStreamOnOutputChannel(OutputStore.STDOUT)
+        clients[BASIC]!!.solve("f(X), write(${OutputStore.STDOUT}, X)", SolveOptions.allEagerly())
+        clients[BASIC]!!.solveOnce("close(${OutputStore.STDOUT})")
+        assertContentEquals(
+            listOf("b","d"),
+            result)
+    }
+
     /**This Test fails because the stdin is not changed in actuality**/
     @Test
     @Ignore
@@ -82,7 +112,6 @@ class SolverGettersAndSettersTest {
             result.add(clients[MUTABLE]!!.readOnOutputChannel("stdout"))
         }
         /** Solve closing stream, write on demand, etc **/
-        clients[BASIC]!!.closeClient()
         assertContentEquals(
             listOf("h","e","l","l","o"),
             result)
@@ -90,29 +119,8 @@ class SolverGettersAndSettersTest {
 
     @Test
     @Throws(Exception::class)
-    fun testInAndOutChannel() {
-        "message".toCharArray().forEach {
-            clients[BASIC]!!.writeOnInputChannel("stdin").onNext(it.toString())
-        }
-        val result = mutableListOf<String>()
-        for (i in 0 until "message".length ) {
-            clients[BASIC]!!.solveOnce("get_char(stdin, X), write(stdout, X)")
-            result.add(clients[BASIC]!!.readOnOutputChannel("stdout"))
-        }
-        /** Solve closing stream, write on demand, etc **/
-        clients[BASIC]!!.closeClient()
-        assertContentEquals(
-            listOf("m","e","s","s","a","g","e"),
-            result)
-    }
-
-    /** Error, sending each element on its own doesn't respect order **/
-    @Test
-    @Throws(Exception::class)
     fun testInAndOutStreamChannel() {
-        "message".toCharArray().forEach {
-            clients[BASIC]!!.writeOnInputChannel("stdin").onNext(it.toString())
-        }
+        clients[BASIC]!!.writeOnInputChannel("stdin", "m", "e", "s", "s", "a", "g", "e")
         val result = clients[BASIC]!!.readStreamOnOutputChannel("stdout")
         for (i in 0 until "message".length ) {
             clients[BASIC]!!.solveOnce("get_char(stdin, X), write(stdout, X)")

@@ -10,9 +10,13 @@ class InputChannelObserver<T : Any> (
     private val deque: BlockingDeque<T>
 ) : AbstractInputChannel<T>() {
 
-    override fun readActually(): T? = deque.takeFirst()
+    override fun readActually(): T? {
+        return deque.takeFirst()
+    }
 
-    fun writeOnChannel(obj: T) = deque.putLast(obj)
+    fun writeOnChannel(obj: T) {
+        deque.putLast(obj)
+    }
 
     companion object {
         inline fun <reified X: Any> of(content: List<X> = emptyList()): InputChannelObserver<X> {

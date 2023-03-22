@@ -3,11 +3,9 @@ package it.unibo.tuprolog.solve.lpaas.server.collections
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
-import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.exception.Warning
-import it.unibo.tuprolog.solve.libs.oop.identifier
-import it.unibo.tuprolog.solve.lpaas.solveMessage.LineEvent
-import kotlin.reflect.cast
+import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
+import it.unibo.tuprolog.solve.lpaas.solveMessage.ReadLine
 
 class ChannelsDequesCollector {
     private val inputs: MutableMap<String, InputChannelObserver<String>> = mutableMapOf()
@@ -52,11 +50,11 @@ class ChannelsDequesCollector {
         return outputs[STDWARN]!! as OutputChannel<Warning>
     }
 
-    fun addListener(channelID: String, observer: StreamObserver<LineEvent>) {
+    fun addListener(channelID: String, observer: StreamObserver<ReadLine>) {
         outputs[channelID]?.addObserverListener(observer)
     }
 
-    fun removeListener(channelID: String, observer: StreamObserver<LineEvent>) {
+    fun removeListener(channelID: String, observer: StreamObserver<ReadLine>) {
         outputs[channelID]?.removeObserverListener(observer)
     }
 
@@ -66,7 +64,7 @@ class ChannelsDequesCollector {
 
     fun readOnOutputChannel(name: String): String {
         if(outputs.containsKey(name))
-           return outputs[name]!!.queue.takeFirst().toString()
+            return outputs[name]!!.queue.takeFirst().toString()
         else throw IllegalArgumentException()
     }
 

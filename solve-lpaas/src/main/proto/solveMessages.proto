@@ -42,12 +42,17 @@ message SolutionReply {
   repeated SubstitutionMsg substitution = 3;
   bool hasNext = 8;
 
+  message CustomDataMsg {
+    string name = 1;
+    string value = 2;
+  }
+
   message ErrorMsg {
     string message = 1;
     repeated string logicStackTrace = 2;
     int64 startTime = 3;
     int64 maxDuration = 4;
-    string customDataStore = 5;
+    repeated CustomDataMsg customDataStore = 5;
   }
 
   optional ErrorMsg error = 7;
@@ -112,10 +117,15 @@ message Channels {
   repeated ChannelID channel = 1;
 }
 
-message LineEvent {
+message InputChannelEvent {
   string solverID = 1;
   Channels.ChannelID channelID = 2;
-  string line = 3;
+  repeated string line = 3;
+}
+
+message OperationResult {
+  bool result = 1;
+  optional string error = 2;
 }
 
 message OutputChannelEvent {
@@ -123,9 +133,8 @@ message OutputChannelEvent {
   Channels.ChannelID channelID = 2;
 }
 
-message OperationResult {
-  bool result = 1;
-  optional string error = 2;
+message ReadLine {
+  string line = 3;
 }
 
 

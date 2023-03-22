@@ -44,26 +44,24 @@ object SolverService : SolverGrpc.SolverImplBase() {
         responseObserver.onCompleted()
     }
 
-    override fun writeOnInputChannel(responseObserver: StreamObserver<OperationResult>): StreamObserver<LineEvent> {
-        return object: StreamObserver<LineEvent> {
-            override fun onNext(value: LineEvent) {
-                SolversCollection.getChannelDequesOfSolver(value.solverID)
-                    .writeOnInputChannel(value.channelID.name, value.line)
-                responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
-            }
-            override fun onError(t: Throwable?) {}
-            override fun onCompleted() { responseObserver.onCompleted() }
+    override fun writeOnInputChannel(request: InputChannelEvent, responseObserver: StreamObserver<OperationResult>) {
+        request.lineList.forEach {
+            SolversCollection.getChannelDequesOfSolver(request.solverID)
+                .writeOnInputChannel(request.channelID.name, it)
         }
-    }
-
-    override fun readFromOutputChannel(request: OutputChannelEvent, responseObserver: StreamObserver<LineEvent>) {
-        val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
-            .readOnOutputChannel(request.channelID.name)
-        responseObserver.onNext(fromLineEventToMsg(request.solverID, request.channelID.name, outputValue))
+        responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
         responseObserver.onCompleted()
     }
 
-    override fun readStreamFromOutputChannel(responseObserver: StreamObserver<LineEvent>): StreamObserver<OutputChannelEvent> {
+    override fun readFromOutputChannel(request: OutputChannelEvent, responseObserver: StreamObserver<ReadLine>) {
+        val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
+            .readOnOutputChannel(request.channelID.name)
+        responseObserver.onNext(fromReadLineToMsg(outputValue))
+        responseObserver.onCompleted()
+    }
+
+    override fun readStreamFromOutputChannel(responseObserver: StreamObserver<ReadLine>):
+        StreamObserver<OutputChannelEvent> {
         return object: StreamObserver<OutputChannelEvent> {
             var solverID = ""
             var channelID = ""
@@ -184,7 +182,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
             solutionBuilder.error = SolutionReply.ErrorMsg.newBuilder()
                 .setMessage(error.toString())
                 .addAllLogicStackTrace(error.logicStackTrace.map { serializer.serialize(it)})
-                .setCustomDataStore(error.context.customData.toString())
+                .addAllCustomDataStore(fromCustomDataStoreToMsg(error.context.customData))
                 .setStartTime(error.context.startTime)
                 .setMaxDuration(error.context.maxDuration)
                 .build()
