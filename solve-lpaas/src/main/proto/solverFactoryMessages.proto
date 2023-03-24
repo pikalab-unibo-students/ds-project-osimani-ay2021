@@ -24,7 +24,7 @@ message InputChannelMsg {
   string content = 2;
 }
 
-message SolverReply {
+message SolverId {
   string id = 1;
 }
 

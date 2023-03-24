@@ -23,35 +23,13 @@ import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
 import java.util.concurrent.LinkedBlockingDeque
 
-class ClientPrologMutableSolverImpl(unificator: Unificator, libraries: Set<String>,
-                                    flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
-                                    inputChannels: Map<String, String>, outputChannels: Set<String>,
-                                    defaultBuiltins: Boolean):
-    ClientPrologSolverImpl(unificator, libraries, flags, staticKb, dynamicKb,
-        inputChannels, outputChannels, defaultBuiltins), ClientMutableSolver {
+class ClientPrologMutableSolverImpl(solverID: String):
+    ClientPrologSolverImpl(solverID), ClientMutableSolver {
 
     private val mutableSolverFutureStub: MutableSolverGrpc.MutableSolverFutureStub = MutableSolverGrpc
         .newFutureStub(channel)
-
     private val mutableSolverStub: MutableSolverGrpc.MutableSolverStub = MutableSolverGrpc
         .newStub(channel)
-
-    override fun generateSolverID(unificator: Unificator, libraries: Set<String>,
-                                  flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
-                                  inputChannels: Map<String, String>, outputChannels: Set<String>,
-                                  defaultBuiltins: Boolean): String {
-        val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
-            .setUnificator(fromUnificatorToMsg(unificator))
-            .setRuntime(fromLibrariesToMsg(libraries))
-            .setFlags(fromFlagsToMsg(flags))
-            .setStaticKb(fromTheoryToMsg(staticKb))
-            .setDynamicKb(fromTheoryToMsg(dynamicKb))
-            .setInputStore(fromChannelsToMsg(inputChannels))
-            .setOutputStore(fromChannelsToMsg(outputChannels))
-            .setDefaultBuiltIns(defaultBuiltins)
-            .setMutable(true).build()
-        return SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
-    }
 
     private fun operationWithResult(op: () -> OperationResult) {
         val result = op()

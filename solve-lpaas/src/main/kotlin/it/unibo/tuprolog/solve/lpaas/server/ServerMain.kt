@@ -22,12 +22,12 @@ import java.io.IOException
  * - Implement Solver Interface client-side creating a different extension of extisting ..... DONE
  */
 
-class Service {
+class Service(private val port: Int) {
 
     private var serviceSolver: Server? = null
 
     fun start() {
-        serviceSolver = ServerBuilder.forPort(8080)
+        serviceSolver = ServerBuilder.forPort(port)
             .addService(SolverService)
             .addService(MutableSolverService)
             .addService(SolverFactoryService)
@@ -51,10 +51,14 @@ class Service {
 
 }
 
-fun main() {
-    val service = Service()
+fun main(args: Array<String>) {
+    val port =
+        try {
+            args.asSequence().filter { it.startsWith("port:") }.first().removePrefix("port:").toInt()
+        } catch (e: Exception) { 8080 }
+    val service = Service(port)
     service.start()
-    println("Listening on port " + 8080)
+    println("Listening on port $port")
     service.awaitTermination()
     Runtime.getRuntime().addShutdownHook( Thread { service.shutdownNow() })
 }

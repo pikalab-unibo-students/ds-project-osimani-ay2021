@@ -24,8 +24,6 @@ service Solver {
   rpc GetOperators(SolverID) returns (OperatorSetMsg) {}
   rpc GetInputChannels(SolverID) returns (Channels) {}
   rpc GetOutputChannels(SolverID) returns (Channels) {}
-
-
 }
 
 /* Solver Factory Service*/
@@ -33,7 +31,8 @@ service Solver {
 import "solverFactoryMessages.proto";
 
 service SolverFactory {
-  rpc SolverOf(SolverRequest) returns (SolverReply) { }
+  rpc SolverOf(SolverRequest) returns (SolverId) { }
+  rpc connectToSolver(SolverId) returns (OperationResult) { }
 }
 
 /* Solver service to modify at dynamically a server */

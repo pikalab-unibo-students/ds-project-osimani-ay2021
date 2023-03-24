@@ -9,6 +9,7 @@ import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
+import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
@@ -129,5 +130,16 @@ class SolverGettersAndSettersTest {
         println(result)
         clients[BASIC]!!.closeClient()
         assert(listOf("m","e","s","s","a","g","e").containsAll(result))
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testMultipleConnectionsToSameSolver() {
+        clients[BASIC]!!.solveOnce("assert(p(c))")
+        clients["temp"] = PrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())!!
+        assertEquals(
+            "p(c)",
+            clients["temp"]!!.solveOnce("p(X)").solvedQuery.toString()
+        )
     }
 }

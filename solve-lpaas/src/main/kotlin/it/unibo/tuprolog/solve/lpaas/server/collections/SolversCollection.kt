@@ -19,7 +19,6 @@ object SolversCollection {
 
     private val solversDeques: MutableMap<String, ChannelsDequesCollector> = mutableMapOf()
 
-
     /** Include error instead of default? **/
     fun getSolver(id: String): Solver {
         return solvers[id]!!
@@ -32,6 +31,8 @@ object SolversCollection {
     fun getChannelDequesOfSolver(id: String): ChannelsDequesCollector {
         return solversDeques[id]!!
     }
+
+    fun contains(solverId: String): Boolean = solvers.containsKey(solverId)
 
     fun addSolver(unificator: Unificator, runtime: Runtime, flagStore: FlagStore,
                   staticKb: Theory, dynamicKb: Theory, inputs: Map<String, String>,

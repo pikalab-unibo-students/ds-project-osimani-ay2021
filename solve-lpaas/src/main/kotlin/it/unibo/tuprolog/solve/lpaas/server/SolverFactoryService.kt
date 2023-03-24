@@ -2,7 +2,6 @@ package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.*
-import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.*
 import it.unibo.tuprolog.solve.flags.FlagStore
@@ -22,7 +21,7 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
 
     private val solvers = SolversCollection
 
-    override fun solverOf(request: SolverRequest, responseObserver: StreamObserver<SolverReply>) {
+    override fun solverOf(request: SolverRequest, responseObserver: StreamObserver<SolverId>) {
         val id = solvers.addSolver(
             ifEmptyUseDefault(request.unificator.substitutionList,
                 { parseUnificator(it) }, Solver.prolog.defaultUnificator),
@@ -39,9 +38,17 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
             ifEmptyUseDefault(request.outputStore.channelList,
                 { parseOutputChannels(it) }, OutputStore.fromStandard().map { it.key }.toSet()),
             request.mutable, request.defaultBuiltIns)
-        responseObserver.onNext(buildSolverReply(id))
+        responseObserver.onNext(buildSolverId(id))
         responseObserver.onCompleted()
     }
+
+    override fun connectToSolver(request: SolverId, responseObserver: StreamObserver<OperationResult>) {
+        responseObserver.onNext(
+            OperationResult.newBuilder().setResult(solvers.contains(request.id)).build()
+        )
+        responseObserver.onCompleted()
+    }
+
     private fun <A, B> ifEmptyUseDefault(value: List<A>, parser: (List<A>) -> B, default: B): B {
         return if(value.isEmpty()) default else parser(value)
     }
@@ -75,7 +82,7 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
         return msg.map { it.name }.toSet()
     }
 
-    private fun buildSolverReply(id: String): SolverReply {
-        return SolverReply.newBuilder().setId(id).build()
+    private fun buildSolverId(id: String): SolverId {
+        return SolverId.newBuilder().setId(id).build()
     }
 }

@@ -28,10 +28,7 @@ import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
-open class ClientPrologSolverImpl(unificator: Unificator, libraries: Set<String>,
-                                  flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
-                                  inputChannels: Map<String, String>, outputChannels: Set<String>,
-                                  defaultBuiltins: Boolean):
+open class ClientPrologSolverImpl(protected var solverID: String):
     ClientSolver {
 
     protected val channel: ManagedChannel = ManagedChannelBuilder.forAddress("localhost", 8080)
@@ -41,23 +38,8 @@ open class ClientPrologSolverImpl(unificator: Unificator, libraries: Set<String>
     protected val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
     private val solverFutureStub: SolverGrpc.SolverFutureStub = SolverGrpc.newFutureStub(channel)
 
-    protected var solverID: String = generateSolverID(unificator, libraries, flags, staticKb,
-        dynamicKb, inputChannels, outputChannels, defaultBuiltins)
-
-    protected open fun generateSolverID(unificator: Unificator, libraries: Set<String>,
-                                        flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
-                                        inputChannels: Map<String, String>, outputChannels: Set<String>,
-                                        defaultBuiltins: Boolean): String {
-        val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
-            .setUnificator(fromUnificatorToMsg(unificator))
-            .setRuntime(fromLibrariesToMsg(libraries))
-            .setFlags(fromFlagsToMsg(flags))
-            .setStaticKb(fromTheoryToMsg(staticKb))
-            .setDynamicKb(fromTheoryToMsg(dynamicKb))
-            .setInputStore(fromChannelsToMsg(inputChannels))
-            .setOutputStore(fromChannelsToMsg(outputChannels))
-            .setDefaultBuiltIns(defaultBuiltins).build()
-        return SolverFactoryGrpc.newFutureStub(channel).solverOf(createSolverRequest).get().id
+    override fun getId(): String {
+        return solverID
     }
 
     override fun closeClient() {
