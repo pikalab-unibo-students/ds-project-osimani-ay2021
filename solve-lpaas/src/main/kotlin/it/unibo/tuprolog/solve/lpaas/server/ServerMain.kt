@@ -22,7 +22,7 @@ import java.io.IOException
  * - Implement Solver Interface client-side creating a different extension of extisting ..... DONE
  */
 
-class Service(private val port: Int) {
+class Service(private val port: Int = 8080) {
 
     private var serviceSolver: Server? = null
 
