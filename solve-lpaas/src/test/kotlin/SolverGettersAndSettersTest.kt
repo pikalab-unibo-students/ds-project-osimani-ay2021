@@ -102,7 +102,6 @@ class SolverGettersAndSettersTest {
 
     /**This Test fails because the stdin is not changed in actuality**/
     @Test
-    @Ignore
     @Throws(Exception::class)
     fun useSetStdIn() {
         (clients[MUTABLE]!! as ClientMutableSolver)

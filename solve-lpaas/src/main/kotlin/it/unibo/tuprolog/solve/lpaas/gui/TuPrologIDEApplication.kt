@@ -1,5 +1,6 @@
 package it.unibo.tuprolog.solve.lpaas.gui
 
+import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
 import javafx.application.Application
 import javafx.stage.Stage
 import kotlin.system.exitProcess

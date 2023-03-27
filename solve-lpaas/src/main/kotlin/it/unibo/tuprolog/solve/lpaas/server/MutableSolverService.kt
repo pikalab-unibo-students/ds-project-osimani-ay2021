@@ -153,7 +153,9 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
                 (MutableChannelID.CHANNEL_TYPE.INPUT) -> {
                     val channel = collection.addInputChannel(InputStore.STDIN, request.channel.content)
                     it.setStandardInput(channel)
+                    println(it.standardInput.peek())
                 }
+                /*
                 (MutableChannelID.CHANNEL_TYPE.OUTPUT) -> {
                     it.setStandardOutput(collection.addOutputChannel(OutputStore.STDOUT))
                 }
@@ -162,7 +164,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
                 }
                 (MutableChannelID.CHANNEL_TYPE.ERROR) -> {
                     it.setStandardError(collection.addOutputChannel(OutputStore.STDERR))
-                }
+                }*/
                 else -> {}
             }}, responseObserver)
     }

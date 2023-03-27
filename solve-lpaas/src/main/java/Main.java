@@ -1,6 +1,3 @@
-package it.unibo.tuprolog.solve.lpaas.gui
-
-
 import it.unibo.tuprolog.solve.lpaas.gui.TuPrologIDEApplication;
 
 /**
