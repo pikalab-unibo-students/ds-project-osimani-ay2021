@@ -1,5 +1,6 @@
 package it.unibo.tuprolog.solve.lpaas.client.prolog
 
+import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.parsing.parse
@@ -23,8 +24,8 @@ import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
 import java.util.concurrent.LinkedBlockingDeque
 
-class ClientPrologMutableSolverImpl(solverID: String):
-    ClientPrologSolverImpl(solverID), ClientMutableSolver {
+class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
+    ClientPrologSolverImpl(solverID, channel), ClientMutableSolver {
 
     private val mutableSolverFutureStub: MutableSolverGrpc.MutableSolverFutureStub = MutableSolverGrpc
         .newFutureStub(channel)

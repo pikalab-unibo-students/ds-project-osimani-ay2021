@@ -38,8 +38,8 @@ fun <A, B> List<Pair<A, B>>.toMap(): MutableMap<A, B> {
 
 fun convertStringToKnownLibrary(libName: String): Library {
     return when(libName) {
-        "IOLib" -> IOLib
-        "OOPLib" -> OOPLib
+        "prolog.io" -> IOLib
+        "prolog.oop" -> OOPLib
         "prolog.lang" -> DefaultBuiltins
         else -> throw IllegalArgumentException()
     }

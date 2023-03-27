@@ -29,9 +29,9 @@ class SolverGettersAndSettersTest {
     fun beforeEach() {
         server = Service()
         server.start()
-        clients[BASIC] = ClientSolver.prolog.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"))
+        clients[BASIC] = ClientSolver.prolog.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("prolog.io"))
         clients[MUTABLE] = ClientSolver.prolog
-            .mutableSolverOf(dynamicKb = DEFAULT_STATIC_THEORY, libraries = setOf("IOLib"), defaultBuiltins = true)
+            .mutableSolverOf(dynamicKb = DEFAULT_STATIC_THEORY, libraries = setOf("prolog.io"), defaultBuiltins = true)
     }
 
     @AfterTest

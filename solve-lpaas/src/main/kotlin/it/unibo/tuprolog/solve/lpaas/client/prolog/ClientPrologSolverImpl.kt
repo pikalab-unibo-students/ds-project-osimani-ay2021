@@ -28,12 +28,8 @@ import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
-open class ClientPrologSolverImpl(protected var solverID: String):
+open class ClientPrologSolverImpl(protected var solverID: String, protected var channel: ManagedChannel):
     ClientSolver {
-
-    protected val channel: ManagedChannel = ManagedChannelBuilder.forAddress("localhost", 8080)
-        .usePlaintext()
-        .build()
 
     protected val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
     private val solverFutureStub: SolverGrpc.SolverFutureStub = SolverGrpc.newFutureStub(channel)
@@ -43,11 +39,7 @@ open class ClientPrologSolverImpl(protected var solverID: String):
     }
 
     override fun closeClient() {
-        if(!channel.isTerminated) {
-            openStreamObservers.forEach { it.onCompleted() }
-            channel.shutdown()
-            channel.awaitTermination(1, TimeUnit.SECONDS)
-        }
+        openStreamObservers.forEach { it.onCompleted() }
     }
 
     override fun solve(goal: Struct, options: SolveOptions): SolutionsSequence {

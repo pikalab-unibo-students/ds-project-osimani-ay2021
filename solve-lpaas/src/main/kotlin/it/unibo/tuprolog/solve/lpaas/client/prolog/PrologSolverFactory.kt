@@ -39,7 +39,7 @@ object PrologSolverFactory  {
                  outputs: Set<String> = emptySet(), defaultBuiltins: Boolean = true): ClientSolver {
         return ClientPrologSolverImpl(
             generateSolverID(unificator, libraries, flags, staticKb, dynamicKb,
-            inputs, outputs, defaultBuiltins)
+            inputs, outputs, defaultBuiltins), channel
         )
     }
 
@@ -49,7 +49,7 @@ object PrologSolverFactory  {
                  outputs: Set<String> = emptySet(), defaultBuiltins: Boolean = true): ClientSolver {
         return ClientPrologSolverImpl(
             generateSolverID(unificator, libraries, flags, Theory.parse(staticKb),
-            Theory.parse(dynamicKb), inputs, outputs, defaultBuiltins)
+            Theory.parse(dynamicKb), inputs, outputs, defaultBuiltins), channel
         )
     }
 
@@ -59,14 +59,14 @@ object PrologSolverFactory  {
                          outputs: Set<String> = emptySet(), defaultBuiltins: Boolean = true): ClientMutableSolver {
         return ClientPrologMutableSolverImpl(
             generateSolverID(unificator, libraries, flags, staticKb, dynamicKb,
-                inputs, outputs, defaultBuiltins, true)
+                inputs, outputs, defaultBuiltins, true), channel
         )
     }
 
     fun connectToSolver(solverId: String): ClientSolver? {
         val result = stub.connectToSolver(SolverId.newBuilder().setId(solverId).build()).get()
         return if(result.result) {
-            ClientPrologSolverImpl(solverId)
+            ClientPrologSolverImpl(solverId, channel)
         } else {
             null
         }
