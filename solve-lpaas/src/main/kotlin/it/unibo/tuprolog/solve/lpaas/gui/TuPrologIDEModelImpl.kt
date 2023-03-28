@@ -15,13 +15,13 @@ import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.libs.io.IOLib
 import it.unibo.tuprolog.solve.libs.oop.OOPLib
 import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentFactory
+import it.unibo.tuprolog.solve.lpaas.gui.TuPrologIDEModel.State
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.parseAsTheory
-import it.unibo.tuprolog.solve.lpaas.gui.TuPrologIDEModel.State
 import it.unibo.tuprolog.utils.Cached
 import org.reactfx.EventSource
 import java.io.File
-import java.util.EnumSet
+import java.util.*
 import java.util.concurrent.ExecutorService
 
 internal class TuPrologIDEModelImpl(
@@ -116,7 +116,7 @@ internal class TuPrologIDEModelImpl(
         ensuringStateIs(State.IDLE) {
             stdin = content
             solver.invalidate()
-            // solver.regenerate()
+            solver.regenerate()
         }
     }
 
@@ -142,17 +142,23 @@ internal class TuPrologIDEModelImpl(
         }
     }
 
+    private var solverToLoad: MutableList<MutableSolver> = mutableListOf()
+
     private val solver = Cached.of {
-        var newSolver = TrasparentFactory.mutableSolverWithDefaultBuiltins(
-            otherLibraries = Runtime.of(OOPLib, IOLib),
-            stdIn = InputChannel.of(stdin),
-            stdOut = OutputChannel.of { onStdoutPrinted.push(it) },
-            stdErr = OutputChannel.of { onStderrPrinted.push(it) },
-            warnings = OutputChannel.of { onWarning.push(it) },
-        )
-        if (this.customizer != null) {
-            newSolver = this.customizer!!(newSolver)
+        val newSolver: MutableSolver = if(solverToLoad.isEmpty()) {
+            val temp = TrasparentFactory.mutableSolverWithDefaultBuiltins(
+                otherLibraries = Runtime.of(OOPLib, IOLib),
+                stdIn = InputChannel.of(stdin)
+            )
+            if (this.customizer != null) {
+                this.customizer!!(temp)
+            } else { temp }
+        } else {
+            solverToLoad.removeFirst()
         }
+        newSolver.setStandardOutput(OutputChannel.of { onStdoutPrinted.push(it) })
+        newSolver.setStandardError(OutputChannel.of { onStderrPrinted.push(it) })
+        newSolver.setWarnings(OutputChannel.of { onWarning.push(it) })
         newSolver.also {
             onNewSolver.push(SolverEvent(Unit, it))
         }
@@ -177,6 +183,13 @@ internal class TuPrologIDEModelImpl(
                 onError.push(e)
             }
         }
+    }
+
+    override fun loadSolver(solver: MutableSolver) {
+        println("hello")
+        solverToLoad.add(solver)
+        this.solver.invalidate()
+        this.solver.regenerate()
     }
 
     override fun solve() {

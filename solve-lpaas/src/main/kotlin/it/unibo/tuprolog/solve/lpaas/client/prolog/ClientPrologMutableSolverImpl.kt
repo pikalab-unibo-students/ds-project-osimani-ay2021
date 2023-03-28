@@ -73,8 +73,12 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
             override fun onCompleted() {}
         })
 
-        theory.clauses.forEach {
-            stream.onNext(fromClauseToMutableMsg(solverID, it))
+        if(theory.isEmpty) {
+            stream.onNext(MutableClause.newBuilder().setSolverID(solverID).build())
+        } else {
+            theory.clauses.forEach {
+                stream.onNext(fromClauseToMutableMsg(solverID, it))
+            }
         }
         stream.onCompleted()
 

@@ -6,6 +6,7 @@ import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
+import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentClient
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
@@ -18,7 +19,8 @@ data class SolverEvent<T>(
     override val staticKb: Theory,
     override val dynamicKb: Theory,
     override val inputChannels: InputStore,
-    override val outputChannels: OutputStore
+    override val outputChannels: OutputStore,
+    val solverId: String
 ) : ExecutionContextAware {
     constructor(event: T, other: ExecutionContextAware) :
         this(
@@ -30,6 +32,7 @@ data class SolverEvent<T>(
             libraries = other.libraries,
             operators = other.operators,
             outputChannels = other.outputChannels,
-            staticKb = other.staticKb.toImmutableTheory()
+            staticKb = other.staticKb.toImmutableTheory(),
+            solverId = (other as TrasparentClient).solverId
         )
 }

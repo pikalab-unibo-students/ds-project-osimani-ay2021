@@ -8,6 +8,7 @@ import it.unibo.tuprolog.core.operators.Operator
 import it.unibo.tuprolog.core.operators.Specifier
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
+import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.lpaas.gui.*
@@ -16,24 +17,12 @@ import javafx.application.Platform
 import javafx.event.ActionEvent
 import javafx.event.Event
 import javafx.fxml.FXML
+import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable
 import javafx.scene.Node
 import javafx.scene.Parent
-import javafx.scene.control.Alert
-import javafx.scene.control.Button
-import javafx.scene.control.Label
-import javafx.scene.control.ListView
-import javafx.scene.control.MenuItem
-import javafx.scene.control.ProgressBar
-import javafx.scene.control.Slider
-import javafx.scene.control.Tab
-import javafx.scene.control.TabPane
-import javafx.scene.control.TableColumn
-import javafx.scene.control.TableView
-import javafx.scene.control.TextArea
-import javafx.scene.control.TextField
-import javafx.scene.control.TreeItem
-import javafx.scene.control.TreeView
+import javafx.scene.Scene
+import javafx.scene.control.*
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.input.KeyEvent
 import javafx.scene.input.MouseEvent
@@ -45,11 +34,11 @@ import org.fxmisc.richtext.CodeArea
 import java.io.File
 import java.net.URL
 import java.time.Duration
-import java.util.Locale
-import java.util.ResourceBundle
+import java.util.*
 import kotlin.math.pow
 import kotlin.math.round
 import kotlin.system.exitProcess
+
 
 @Suppress("UNUSED_PARAMETER", "unused")
 class TuPrologIDEController : Initializable {
@@ -71,6 +60,9 @@ class TuPrologIDEController : Initializable {
 
     @FXML
     private lateinit var lblStatus: Label
+
+    @FXML
+    private lateinit var lblSolverId: Label
 
     @FXML
     private lateinit var lblCaret: Label
@@ -110,6 +102,9 @@ class TuPrologIDEController : Initializable {
 
     @FXML
     private lateinit var btnSettings: MenuItem
+
+    @FXML
+    private lateinit var btnConnectTo: MenuItem
 
     @FXML
     private lateinit var btnQuit: MenuItem
@@ -440,6 +435,8 @@ class TuPrologIDEController : Initializable {
             txaDynamicKb.text = event.dynamicKb.pretty()
             tabDynamicKb.showNotification()
         }
+
+        lblSolverId.text = event.solverId
         lastEvent = event
     }
 
@@ -759,6 +756,19 @@ class TuPrologIDEController : Initializable {
 
     @FXML
     fun onSettingsPressed(e: ActionEvent) {
+    }
+
+    @FXML
+    fun onConnectToPressed(e: ActionEvent) {
+        val loader = FXMLLoader(javaClass.getResource("ConnectView.fxml"))
+        val root = loader.load<Parent>()
+        val stage = Stage()
+        stage.title = "Connect To Existing Solver"
+        stage.scene = Scene(root)
+        stage.show()
+        val controller = loader.getController() as ConnectView
+        controller.setListener {solver -> model.loadSolver(solver) }
+        controller.setOnClose { stage.close() }
     }
 
     @FXML

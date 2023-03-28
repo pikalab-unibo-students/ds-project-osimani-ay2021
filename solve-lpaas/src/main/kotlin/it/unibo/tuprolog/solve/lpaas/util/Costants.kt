@@ -7,9 +7,11 @@ import it.unibo.tuprolog.solve.classic.stdlib.DefaultBuiltins
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.libs.io.IOLib
 import it.unibo.tuprolog.solve.libs.oop.OOPLib
+import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentClient
 import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.parse
+import it.unibo.tuprolog.utils.Cached
 import kotlinx.coroutines.CompletableDeferred
 
 const val EAGER_OPTION = "eagerness"
@@ -44,4 +46,5 @@ fun convertStringToKnownLibrary(libName: String): Library {
         else -> throw IllegalArgumentException()
     }
 }
+
 

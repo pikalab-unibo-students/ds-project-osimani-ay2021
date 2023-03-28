@@ -39,7 +39,10 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
     }
 
     override fun closeClient() {
-        openStreamObservers.forEach { it.onCompleted() }
+        openStreamObservers.forEach {
+            try {
+                it.onCompleted()
+            } catch (_: Exception) {} }
     }
 
     override fun solve(goal: Struct, options: SolveOptions): SolutionsSequence {
@@ -142,7 +145,8 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
                 deque.putLast(value.line)
             }
             override fun onError(t: Throwable?) {}
-            override fun onCompleted() {}
+            override fun onCompleted() {
+            }
         })
         stub.onNext(OutputChannelEvent.newBuilder()
             .setChannelID(fromChannelIDToMsg(channelID))

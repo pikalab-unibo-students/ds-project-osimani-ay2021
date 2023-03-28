@@ -1,3 +1,5 @@
+package it.unibo.tuprolog.solve.lpaas.client;
+
 import it.unibo.tuprolog.solve.lpaas.gui.TuPrologIDEApplication;
 
 /**

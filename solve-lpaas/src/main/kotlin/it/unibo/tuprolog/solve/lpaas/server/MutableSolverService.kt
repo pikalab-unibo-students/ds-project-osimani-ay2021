@@ -48,7 +48,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             var solverID = ""
             val clauseList = mutableListOf<Clause>()
             override fun onNext(value: MutableClause) {
-                clauseList.add(deserializer.deserialize(value.clause.content).castToClause())
+                if(!value.clause.content.isEmpty()) clauseList.add(deserializer.deserialize(value.clause.content).castToClause())
                 if(solverID.isEmpty()) solverID = value.solverID
             }
             override fun onError(t: Throwable?) {}
@@ -153,7 +153,6 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
                 (MutableChannelID.CHANNEL_TYPE.INPUT) -> {
                     val channel = collection.addInputChannel(InputStore.STDIN, request.channel.content)
                     it.setStandardInput(channel)
-                    println(it.standardInput.peek())
                 }
                 /*
                 (MutableChannelID.CHANNEL_TYPE.OUTPUT) -> {

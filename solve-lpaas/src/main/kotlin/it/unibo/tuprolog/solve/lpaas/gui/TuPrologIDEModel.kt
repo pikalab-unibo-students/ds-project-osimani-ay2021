@@ -5,6 +5,7 @@ import it.unibo.tuprolog.core.exception.TuPrologException
 import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
+import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.exception.Warning
 import org.reactfx.EventStream
 import java.io.File
@@ -68,6 +69,8 @@ interface TuPrologIDEModel {
     fun stop()
 
     fun reset()
+
+    fun loadSolver(solver: MutableSolver)
 
     var query: String
 
