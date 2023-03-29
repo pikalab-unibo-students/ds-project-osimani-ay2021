@@ -5,42 +5,26 @@ import it.unibo.tuprolog.core.exception.TuPrologException
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.core.parsing.ParseException
 import it.unibo.tuprolog.core.parsing.parseAsStruct
-import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
+import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.exception.Warning
-import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.libs.io.IOLib
 import it.unibo.tuprolog.solve.libs.oop.OOPLib
-import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentFactory
+import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
+import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
+import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.gui.TuPrologIDEModel.State
 import it.unibo.tuprolog.theory.Theory
-import it.unibo.tuprolog.theory.parsing.parseAsTheory
-import it.unibo.tuprolog.utils.Cached
 import org.reactfx.EventSource
-import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService
 
 internal class TuPrologIDEModelImpl(
     override val executor: ExecutorService,
-    var customizer: ((MutableSolver) -> MutableSolver)? = { it }
+    var customizer: ((ClientMutableSolver) -> ClientMutableSolver)? = { it }
 ) : TuPrologIDEModel {
-
-    private data class FileContent(var text: String, var changed: Boolean = true) {
-        fun text(text: String) {
-            if (text != this.text) changed = true
-            this.text = text
-        }
-
-        fun text(): String = text.also { changed = false }
-    }
-
-    private var tempFiles = 0
-
-    private val files = mutableMapOf<File, FileContent>()
 
     private var solutions: Iterator<Solution>? = null
 
@@ -48,17 +32,11 @@ internal class TuPrologIDEModelImpl(
 
     private var lastGoal: Struct? = null
 
-    private var stdin: String = ""
-
     override var query: String = ""
 
-    override var currentFile: File? = null
-        set(value) {
-            if (field != null && field != value) {
-                files[field]?.changed = true
-            }
-            field = value
-        }
+    private var currentSolver: ClientMutableSolver? = null
+
+    private var stdin = ""
 
     override var solveOptions: SolveOptions = SolveOptions.DEFAULT.setTimeout(5000)
         set(value) {
@@ -69,70 +47,44 @@ internal class TuPrologIDEModelImpl(
             }
         }
 
-    override fun newFile(): File =
-        File.createTempFile("untitled-${++tempFiles}-", ".pl").also {
-            onFileCreated.push(it)
-            loadFile(it)
-        }
-
-    override fun loadFile(file: File) {
-        val text = file.readText()
-        setFile(file, text)
-        onFileLoaded.push(file to text)
-        selectFile(file)
+    override fun newSolver(theory: Theory): String {
+        val solver = PrologSolverFactory.mutableSolverOf(
+        staticKb = theory,
+        libraries = setOf(OOPLib, IOLib).map { it.alias }.toSet())
+        solver.setStandardInput(stdin)
+        solver.setStandardOutput( OutputChannel.of { onStdoutPrinted.push(it) } )
+        solver.setStandardError( OutputChannel.of { onStderrPrinted.push(it) } )
+        solver.setWarnings( OutputChannel.of { onWarning.push(it) } )
+        return solver.getId().also { loadSolver(it) }
     }
 
-    override fun saveFile(file: File) {
-        file.writeText(getFile(file))
+    override fun loadSolver(solverId: String) {
+        currentSolver = PrologSolverFactory.connectToMutableSolver(solverId)
+        if(customizer != null) customizer?.invoke(currentSolver!!)
+        onSolverLoaded.push(SolverEvent(Unit, currentSolver!!))
     }
 
-    override fun selectFile(file: File) {
-        currentFile = file
-        onFileSelected.push(file)
-    }
+    override fun getCurrentSolver(): ClientMutableSolver? = currentSolver
 
-    override fun getFile(file: File): String {
-        return files[file]!!.text
-    }
-
-    override fun setFile(file: File, theory: String) {
-        if (file in files) {
-            files[file]?.text(theory)
-        } else {
-            files[file] = FileContent(theory, true)
-        }
-    }
-
-    override fun renameFile(file: File, newFile: File) {
-        files[newFile] = files[file]!!
-        files -= file
-    }
-
-    override fun setCurrentFile(theory: String) {
-        setFile(currentFile!!, theory)
+    override fun customizeSolver(customizer: (ClientMutableSolver) -> ClientMutableSolver) {
+        this.customizer = customizer
     }
 
     override fun setStdin(content: String) {
         ensuringStateIs(State.IDLE) {
             stdin = content
-            solver.invalidate()
-            solver.regenerate()
+            if(currentSolver != null) currentSolver!!.setStandardInput(content)
         }
     }
 
     override fun quit() {
+        this.closeSolver()
         onQuit.push(Unit)
     }
 
     @Volatile
     override var state: State = State.IDLE
         private set
-
-    override fun customizeSolver(customizer: (MutableSolver) -> MutableSolver) {
-        this.customizer = customizer
-        this.solver.invalidate()
-        this.solver.regenerate()
-    }
 
     private inline fun <T> ensuringStateIs(state: State, vararg states: State, action: () -> T): T {
         if (EnumSet.of(state, *states).contains(this.state)) {
@@ -142,31 +94,9 @@ internal class TuPrologIDEModelImpl(
         }
     }
 
-    private var solverToLoad: MutableList<MutableSolver> = mutableListOf()
-
-    private val solver = Cached.of {
-        val newSolver: MutableSolver = if(solverToLoad.isEmpty()) {
-            val temp = TrasparentFactory.mutableSolverWithDefaultBuiltins(
-                otherLibraries = Runtime.of(OOPLib, IOLib),
-                stdIn = InputChannel.of(stdin)
-            )
-            if (this.customizer != null) {
-                this.customizer!!(temp)
-            } else { temp }
-        } else {
-            solverToLoad.removeFirst()
-        }
-        newSolver.setStandardOutput(OutputChannel.of { onStdoutPrinted.push(it) })
-        newSolver.setStandardError(OutputChannel.of { onStderrPrinted.push(it) })
-        newSolver.setWarnings(OutputChannel.of { onWarning.push(it) })
-        newSolver.also {
-            onNewSolver.push(SolverEvent(Unit, it))
-        }
-    }
-
-    override fun closeFile(file: File) {
-        files -= file
-        onFileClosed.push(file)
+    override fun closeSolver() {
+        onSolverClosed.push(currentSolver!!.getId())
+        currentSolver?.closeClient()
     }
 
     override fun reset() {
@@ -174,22 +104,13 @@ internal class TuPrologIDEModelImpl(
             if (state == State.SOLUTION) {
                 stop()
             }
-            solver.invalidate()
-            solver.regenerate()
-            onReset.push(SolverEvent(Unit, solver.value))
             try {
-                loadCurrentFileAsStaticKB(onlyIfChanged = false)
+                currentSolver!!.resetDynamicKb()
+                onReset.push(SolverEvent(Unit, currentSolver!!))
             } catch (e: SyntaxException) {
                 onError.push(e)
             }
         }
-    }
-
-    override fun loadSolver(solver: MutableSolver) {
-        println("hello")
-        solverToLoad.add(solver)
-        this.solver.invalidate()
-        this.solver.regenerate()
     }
 
     override fun solve() {
@@ -202,7 +123,7 @@ internal class TuPrologIDEModelImpl(
     override fun solveAll() {
         solveImpl {
             state = State.COMPUTING
-            onResolutionStarted.push(SolverEvent(++solutionCount, solver.value))
+            onResolutionStarted.push(SolverEvent(++solutionCount, currentSolver!!))
             nextAllImpl()
         }
     }
@@ -212,7 +133,7 @@ internal class TuPrologIDEModelImpl(
             try {
                 solutions = newResolution()
                 solutionCount = 0
-                onNewQuery.push(SolverEvent(lastGoal!!, solver.value))
+                onNewQuery.push(SolverEvent(lastGoal!!, currentSolver!!))
                 continuation()
             } catch (e: SyntaxException) {
                 onError.push(e)
@@ -221,9 +142,8 @@ internal class TuPrologIDEModelImpl(
     }
 
     private fun newResolution(): Iterator<Solution> {
-        loadCurrentFileAsStaticKB()
-        solver.value.let {
-            lastGoal = parseQueryAsStruct(it.operators)
+        currentSolver!!.let {
+            lastGoal = parseQueryAsStruct(it.getOperators())
             return it.solve(lastGoal!!, solveOptions).iterator()
         }
     }
@@ -236,34 +156,14 @@ internal class TuPrologIDEModelImpl(
         }
     }
 
-    private fun loadCurrentFileAsStaticKB(onlyIfChanged: Boolean = true) {
-        solver.value.let { solver ->
-            currentFile?.let { file ->
-                files[file].let { content ->
-                    if (!onlyIfChanged || content?.changed != false) {
-                        try {
-                            val theory = content?.text()?.parseAsTheory(solver.operators) ?: Theory.empty(solver.unificator)
-                            solver.resetDynamicKb()
-                            solver.loadStaticKb(theory)
-                            onNewStaticKb.push(SolverEvent(Unit, solver))
-                        } catch (e: ParseException) {
-                            content?.changed = true
-                            throw SyntaxException.InTheorySyntaxError(file, e)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private fun nextImpl() {
         executor.execute {
-            onResolutionStarted.push(SolverEvent(++solutionCount, solver.value))
+            onResolutionStarted.push(SolverEvent(++solutionCount, currentSolver!!))
             val sol = solutions!!.next()
-            onResolutionOver.push(SolverEvent(solutionCount, solver.value))
-            onNewSolution.push(SolverEvent(sol, solver.value))
+            onResolutionOver.push(SolverEvent(solutionCount, currentSolver!!))
+            onNewSolution.push(SolverEvent(sol, currentSolver!!))
             state = if (!sol.isYes || !solutions!!.hasNext()) {
-                onQueryOver.push(SolverEvent(sol.query, solver.value))
+                onQueryOver.push(SolverEvent(sol.query, currentSolver!!))
                 State.IDLE
             } else {
                 State.SOLUTION
@@ -276,10 +176,10 @@ internal class TuPrologIDEModelImpl(
             val sol = solutions!!.next()
 //            onResolutionOver.push(solutionCount)
             solutionCount++
-            onNewSolution.push(SolverEvent(sol, solver.value))
+            onNewSolution.push(SolverEvent(sol, currentSolver!!))
             if (!solutions!!.hasNext() || state != State.COMPUTING) {
-                onResolutionOver.push(SolverEvent(solutionCount, solver.value))
-                onQueryOver.push(SolverEvent(sol.query, solver.value))
+                onResolutionOver.push(SolverEvent(solutionCount, currentSolver!!))
+                onQueryOver.push(SolverEvent(sol.query, currentSolver!!))
                 state = State.IDLE
             } else {
                 nextAllImpl()
@@ -297,7 +197,7 @@ internal class TuPrologIDEModelImpl(
     override fun nextAll() {
         ensuringStateIs(State.SOLUTION) {
             state = State.COMPUTING
-            onResolutionStarted.push(SolverEvent(solutionCount, solver.value))
+            onResolutionStarted.push(SolverEvent(solutionCount, currentSolver!!))
             nextAllImpl()
         }
     }
@@ -305,7 +205,7 @@ internal class TuPrologIDEModelImpl(
     override fun stop() {
         ensuringStateIs(State.SOLUTION) {
             state = State.IDLE
-            onQueryOver.push(SolverEvent(lastGoal!!, solver.value))
+            onQueryOver.push(SolverEvent(lastGoal!!, currentSolver!!))
         }
     }
 
@@ -315,21 +215,15 @@ internal class TuPrologIDEModelImpl(
 
     override val onSolveOptionsChanged: EventSource<SolveOptions> = EventSource()
 
-    override val onFileSelected: EventSource<File> = EventSource()
+    override val onSolverLoaded: EventSource<SolverEvent<Unit>> = EventSource()
 
-    override val onFileCreated: EventSource<File> = EventSource()
-
-    override val onFileLoaded: EventSource<Pair<File, String>> = EventSource()
-
-    override val onFileClosed: EventSource<File> = EventSource()
+    override val onSolverClosed: EventSource<String> = EventSource()
 
     override val onQueryChanged: EventSource<String> = EventSource()
 
     override val onNewQuery: EventSource<SolverEvent<Struct>> = EventSource()
 
     override val onNewSolver: EventSource<SolverEvent<Unit>> = EventSource()
-
-    override val onNewStaticKb: EventSource<SolverEvent<Unit>> = EventSource()
 
     override val onResolutionStarted: EventSource<SolverEvent<Int>> = EventSource()
 

@@ -1,7 +1,6 @@
 package it.unibo.tuprolog.solve.lpaas.gui
 
 import it.unibo.tuprolog.core.operators.OperatorSet
-import it.unibo.tuprolog.ui.gui.*
 import it.unibo.tuprolog.utils.Cached
 import javafx.application.Platform
 import javafx.concurrent.Task

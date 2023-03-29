@@ -2,11 +2,15 @@ package it.unibo.tuprolog.solve.lpaas.gui
 
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.solve.ExecutionContextAware
+import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
+import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
+import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentClient
+import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
@@ -22,17 +26,19 @@ data class SolverEvent<T>(
     override val outputChannels: OutputStore,
     val solverId: String
 ) : ExecutionContextAware {
-    constructor(event: T, other: ExecutionContextAware) :
+    constructor(event: T, other: ClientMutableSolver) :
         this(
             event = event,
-            unificator = other.unificator,
-            dynamicKb = other.dynamicKb.toImmutableTheory(),
-            flags = other.flags,
-            inputChannels = other.inputChannels,
-            libraries = other.libraries,
-            operators = other.operators,
-            outputChannels = other.outputChannels,
-            staticKb = other.staticKb.toImmutableTheory(),
-            solverId = (other as TrasparentClient).solverId
+            unificator = other.getUnificator(),
+            dynamicKb = other.getDynamicKB().toImmutableTheory(),
+            flags = other.getFlags(),
+            inputChannels = InputStore.of(other.getInputChannels()
+                .associateWith { InputChannel.of("") }),
+            libraries = Runtime.of(other.getLibraries().map { convertStringToKnownLibrary(it) }),
+            operators = other.getOperators(),
+            outputChannels = OutputStore.of(other.getOutputChannels()
+                .associateWith { OutputChannel.of {  } }),
+            staticKb = other.getStaticKB().toImmutableTheory(),
+            solverId = other.getId()
         )
 }

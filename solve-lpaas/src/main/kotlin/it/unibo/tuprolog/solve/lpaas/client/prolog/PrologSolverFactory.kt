@@ -72,6 +72,16 @@ object PrologSolverFactory  {
         }
     }
 
+    /**Add check if its is mutable*/
+    fun connectToMutableSolver(solverId: String): ClientMutableSolver? {
+        val result = stub.connectToSolver(SolverId.newBuilder().setId(solverId).build()).get()
+        return if(result.result) {
+            ClientPrologMutableSolverImpl(solverId, channel)
+        } else {
+            null
+        }
+    }
+
     private fun generateSolverID(unificator: Unificator, libraries: Set<String>,
                                      flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
                                      inputChannels: Map<String, String>, outputChannels: Set<String>,

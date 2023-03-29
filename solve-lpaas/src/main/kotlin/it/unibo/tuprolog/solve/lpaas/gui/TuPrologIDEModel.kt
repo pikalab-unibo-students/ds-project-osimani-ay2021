@@ -5,10 +5,11 @@ import it.unibo.tuprolog.core.exception.TuPrologException
 import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.exception.Warning
+import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
+import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
+import it.unibo.tuprolog.theory.Theory
 import org.reactfx.EventStream
-import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
 
@@ -28,33 +29,17 @@ interface TuPrologIDEModel {
 
     val executor: ExecutorService
 
-    fun customizeSolver(customizer: (MutableSolver) -> MutableSolver)
+    fun newSolver(theory: Theory): String
 
-    fun newFile(): File
+    fun loadSolver(solverId: String)
 
-    fun loadFile(file: File)
+    fun closeSolver()
 
-    fun saveFile(file: File)
+    fun getCurrentSolver(): ClientMutableSolver?
 
-    val currentFile: File?
-
-    fun selectFile(file: File)
-
-    fun closeFile(file: File)
-
-    fun getFile(file: File): String
-
-    fun setFile(file: File, theory: String)
-
-    fun renameFile(file: File, newFile: File)
-
-    fun setCurrentFile(theory: String)
+    fun customizeSolver(customizer: (ClientMutableSolver) -> ClientMutableSolver)
 
     fun setStdin(content: String)
-
-//    fun getTheory(file: File): Theory
-//
-//    fun setTheory(file: File, theory: Theory)
 
     fun quit()
 
@@ -70,8 +55,6 @@ interface TuPrologIDEModel {
 
     fun reset()
 
-    fun loadSolver(solver: MutableSolver)
-
     var query: String
 
 //    var goal: Struct
@@ -82,19 +65,13 @@ interface TuPrologIDEModel {
 
     val onSolveOptionsChanged: EventStream<SolveOptions>
 
-    val onFileSelected: EventStream<File>
+    val onSolverLoaded: EventStream<SolverEvent<Unit>>
 
-    val onFileCreated: EventStream<File>
-
-    val onFileLoaded: EventStream<Pair<File, String>>
-
-    val onFileClosed: EventStream<File>
+    val onSolverClosed: EventStream<String>
 
     val onQueryChanged: EventStream<String>
 
     val onNewSolver: EventStream<SolverEvent<Unit>>
-
-    val onNewStaticKb: EventStream<SolverEvent<Unit>>
 
     val onNewQuery: EventStream<SolverEvent<Struct>>
 

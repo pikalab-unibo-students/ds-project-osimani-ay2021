@@ -116,7 +116,7 @@ data class TuPrologIDEBuilder(
 
         controller.customizeModel { model ->
             model.customizeSolver { solver ->
-                customLibraries.forEach { solver.loadLibrary(it) }
+                customLibraries.forEach { solver.loadLibrary(it.alias) }
                 solver
             }
             customTabs.forEach { it.modelConfigurator(model) }
