@@ -1,17 +1,13 @@
 package it.unibo.tuprolog.solve.lpaas.client.prolog
 
 import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.core.operators.Operator
 import it.unibo.tuprolog.core.operators.OperatorSet
-import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.serialize.MimeType
 import it.unibo.tuprolog.serialize.TermSerializer
-import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
@@ -20,13 +16,11 @@ import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg.ClauseMsg
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
 import it.unibo.tuprolog.solve.lpaas.util.*
 import it.unibo.tuprolog.solve.lpaas.util.parsers.*
-import it.unibo.tuprolog.solve.lpaas.util.parsers.fromTheoryToMsg
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
 import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.TimeUnit
 
 open class ClientPrologSolverImpl(protected var solverID: String, protected var channel: ManagedChannel):
     ClientSolver {
@@ -109,14 +103,14 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
         return OperatorSet(operators)
     }
 
-    override fun getInputChannels(): List<String> {
+    override fun getInputChannels(): List<Pair<String, String>> {
         return solverFutureStub.getInputChannels(buildSolverId()).get()
-            .channelList.map { it.name }
+            .channelList.map { Pair(it.name, it.content) }
     }
 
-    override fun getOutputChannels(): List<String> {
+    override fun getOutputChannels(): List<Pair<String, String>> {
         return solverFutureStub.getOutputChannels(buildSolverId()).get()
-            .channelList.map { it.name }
+            .channelList.map { Pair(it.name, it.content) }
     }
 
     protected val openStreamObservers: MutableList<StreamObserver<*>> = mutableListOf()

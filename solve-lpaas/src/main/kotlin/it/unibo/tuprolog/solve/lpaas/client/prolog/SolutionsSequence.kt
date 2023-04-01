@@ -2,17 +2,12 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 
 import io.grpc.ManagedChannel
 import it.unibo.tuprolog.core.*
-import it.unibo.tuprolog.core.parsing.parse
-import it.unibo.tuprolog.serialize.MimeType
-import it.unibo.tuprolog.serialize.TermSerializer
 import it.unibo.tuprolog.solve.*
-import it.unibo.tuprolog.solve.data.CustomData
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.lpaas.SolverGrpc
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolutionID
 import it.unibo.tuprolog.solve.lpaas.util.parsers.deserializer
-import it.unibo.tuprolog.solve.lpaas.util.parsers.fromCustomDataStoreToMsg
 import it.unibo.tuprolog.solve.lpaas.util.parsers.serializer
 
 class SolutionsSequence(private val solverID: String, private val computationID: String, private val struct: Struct,

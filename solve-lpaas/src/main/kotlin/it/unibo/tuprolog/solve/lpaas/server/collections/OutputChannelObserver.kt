@@ -31,6 +31,8 @@ class OutputChannelObserver<T : Any>(
         this.observers.forEach { it.key.onCompleted() }
     }
 
+    fun getCurrentContent(): List<T> = queue.toList()
+
     fun addObserverListener(observer: StreamObserver<ReadLine>) {
         val listener: Listener<T?> = {
             sendOutput(it, observer)

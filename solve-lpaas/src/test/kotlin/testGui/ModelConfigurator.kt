@@ -1,3 +1,3 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 typealias ModelConfigurator = (TuPrologIDEModel) -> Unit

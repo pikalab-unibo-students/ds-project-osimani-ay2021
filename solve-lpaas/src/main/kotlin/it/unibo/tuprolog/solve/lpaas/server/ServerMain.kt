@@ -48,16 +48,20 @@ class Service(private val port: Int = 8080) {
         serviceSolver!!.shutdownNow()
     }
 
-}
+    companion object {
+        fun main(args: Array<String>) {
+            val port =
+                try {
+                    args.asSequence().filter { it.startsWith("port:") }.first().removePrefix("port:").toInt()
+                } catch (e: Exception) {
+                    8080
+                }
+            val service = Service(port)
+            service.start()
+            println("Listening on port $port")
+            service.awaitTermination()
+            Runtime.getRuntime().addShutdownHook(Thread { service.shutdownNow() })
+        }
+    }
 
-fun main(args: Array<String>) {
-    val port =
-        try {
-            args.asSequence().filter { it.startsWith("port:") }.first().removePrefix("port:").toInt()
-        } catch (e: Exception) { 8080 }
-    val service = Service(port)
-    service.start()
-    println("Listening on port $port")
-    service.awaitTermination()
-    Runtime.getRuntime().addShutdownHook( Thread { service.shutdownNow() })
 }

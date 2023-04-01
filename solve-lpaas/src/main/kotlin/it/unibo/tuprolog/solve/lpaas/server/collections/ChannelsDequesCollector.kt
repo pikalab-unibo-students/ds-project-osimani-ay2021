@@ -4,7 +4,6 @@ import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.exception.Warning
-import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
 import it.unibo.tuprolog.solve.lpaas.solveMessage.ReadLine
 
 class ChannelsDequesCollector {
@@ -33,12 +32,12 @@ class ChannelsDequesCollector {
         return channel
     }
 
-    fun getInputChannels(): Map<String, InputChannel<String>> {
+    fun getInputChannels(): Map<String, InputChannelObserver<String>> {
         return inputs
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun getOutputChannels(): Map<String, OutputChannel<String>> {
+    fun getOutputChannels(): Map<String, OutputChannelObserver<String>> {
         return outputs.mapNotNull {
             if(it.value.eventType == String::class)
                 Pair(it.key, it.value as OutputChannelObserver<String>)

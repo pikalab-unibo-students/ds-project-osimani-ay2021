@@ -9,11 +9,9 @@ import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.channel.OutputStore
-import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
 import it.unibo.tuprolog.solve.lpaas.util.toMap
 import it.unibo.tuprolog.theory.Theory
@@ -40,8 +38,10 @@ abstract class TrasparentClient: Solver {
     override val operators: OperatorSet
         get() = solver.getOperators()
     override val inputChannels: InputStore
-        get() = InputStore.of(solver.getInputChannels().map { Pair(it, InputChannel.of("")) }.toMap())
+        get() = InputStore.of(solver.getInputChannels().map {
+            Pair(it.first, InputChannel.of(it.second)) }.toMap())
     override val outputChannels: OutputStore
-        get() = OutputStore.of(solver.getOutputChannels().map { Pair(it, OutputChannel.stdOut<String>()) }.toMap())
+        get() = OutputStore.of(solver.getOutputChannels().map { pair ->
+            Pair(pair.first, OutputChannel.of<String> {  println(pair.second) }) }.toMap())
     val solverId: String get() = solver.getId()
 }

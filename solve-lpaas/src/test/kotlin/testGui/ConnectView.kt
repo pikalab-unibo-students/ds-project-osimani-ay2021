@@ -1,8 +1,6 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
-import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
-import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentFactory
 import javafx.application.Platform
 import javafx.fxml.FXML
 import javafx.scene.control.Button

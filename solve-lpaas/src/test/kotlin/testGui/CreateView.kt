@@ -1,8 +1,5 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
-import it.unibo.tuprolog.solve.MutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
-import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentFactory
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.parse
 import javafx.application.Platform
@@ -10,7 +7,6 @@ import javafx.fxml.FXML
 import javafx.scene.control.Button
 import javafx.scene.control.ProgressIndicator
 import javafx.scene.control.TextArea
-import javafx.scene.control.TextField
 import javafx.scene.layout.BorderPane
 import javafx.scene.text.Text
 

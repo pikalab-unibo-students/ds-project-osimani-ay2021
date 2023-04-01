@@ -6,6 +6,8 @@ import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
+import it.unibo.tuprolog.theory.Theory
+import it.unibo.tuprolog.theory.parsing.parse
 import kotlin.test.*
 
 class SolverOperationsTest {
@@ -66,9 +68,9 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun createSolver() {
-        clients[BLOCKING] = ClientSolver.prolog.solverOf(staticKb = """
+        clients[BLOCKING] = ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
                    p(a, b).
-                   """.trimIndent())
+                   """.trimIndent()))
         val sequence = clients[BLOCKING]!!.solve("p(X, Y)")
         assertEquals(
             Struct.of("p", Term.parse("a"), Term.parse("b")),
@@ -99,9 +101,9 @@ class SolverOperationsTest {
     @Ignore
     @Throws(Exception::class)
     fun failingRequest() {
-        clients[BLOCKING] = ClientSolver.prolog.solverOf(staticKb = """
+        clients[BLOCKING] = ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
                    p(X):-p(X).
-                   """.trimIndent())
+                   """.trimIndent()))
         val sequence = clients[BLOCKING]!!.solve("p(X)")
         assert( sequence.next().isNo )
     }
@@ -110,9 +112,9 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun multipleConcurrentRequests() {
-        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = """
+        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
                       p(X):-p(X).
-                      """.trimIndent()))
+                      """.trimIndent())))
         clients[BLOCKING]!!.solve("p(X)")
         val sequence = clients[BASIC]!!.solve("f(X)")
         assertEquals(
@@ -147,9 +149,9 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun solveQueryWithTimeout() {
-        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = """
+        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
                       p(a):- sleep(3000).
-                      """.trimIndent()))
+                      """.trimIndent())))
         val result = clients[BLOCKING]!!.solve("p(X)", 1000).getSolution(0)
         assertContains(
             result.exception.toString(), "TimeOutException"
@@ -161,11 +163,11 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun solveQueryWithLimit() {
-        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = """
+        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
                       p(a).
                       p(b).
                       p(c).
-                      """.trimIndent()))
+                      """.trimIndent())))
         val result = clients[BLOCKING]!!.solve("p(X)", SolveOptions.someLazily(2)).asSequence().toList()
         assertContentEquals(
             listOf(
@@ -179,11 +181,11 @@ class SolverOperationsTest {
     @Test
     @Throws(Exception::class)
     fun solveQueryAsListWithTimeout() {
-        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = """
+        clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
                       p(a).
                       p(b).
                       p(c):- sleep(3000).
-                      """.trimIndent()))
+                      """.trimIndent())))
         val result = clients[BLOCKING]!!.solveList("p(X)", 1000)
         assertContentEquals(
             listOf(

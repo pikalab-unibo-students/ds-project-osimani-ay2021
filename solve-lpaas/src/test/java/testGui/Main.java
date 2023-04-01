@@ -1,6 +1,6 @@
-package it.unibo.tuprolog.solve.lpaas.client;
+package testGui;
 
-import it.unibo.tuprolog.solve.lpaas.gui.TuPrologIDEApplication;
+import testGui.TuPrologIDEApplication;
 
 /**
  * https://stackoverflow.com/questions/52569724/javafx-11-create-a-jar-file-with-gradle

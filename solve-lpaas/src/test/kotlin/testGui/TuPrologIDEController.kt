@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
@@ -10,7 +10,6 @@ import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.exception.Warning
-import it.unibo.tuprolog.solve.lpaas.gui.*
 import it.unibo.tuprolog.theory.Theory
 import javafx.application.Platform
 import javafx.event.ActionEvent

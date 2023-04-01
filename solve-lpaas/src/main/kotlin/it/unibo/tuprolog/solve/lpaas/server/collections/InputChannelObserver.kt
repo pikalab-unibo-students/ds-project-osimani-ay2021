@@ -18,6 +18,8 @@ class InputChannelObserver<T : Any> (
         deque.putLast(obj)
     }
 
+    fun getCurrentContent(): List<T> = deque.toList()
+
     companion object {
         inline fun <reified X: Any> of(content: List<X> = emptyList()): InputChannelObserver<X> {
             val deque = LinkedBlockingDeque(content)

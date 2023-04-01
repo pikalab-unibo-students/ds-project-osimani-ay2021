@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.TermFormatter

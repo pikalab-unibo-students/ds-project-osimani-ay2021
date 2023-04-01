@@ -1,13 +1,11 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.exception.TuPrologException
-import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.theory.Theory
 import org.reactfx.EventStream
 import java.util.concurrent.ExecutorService

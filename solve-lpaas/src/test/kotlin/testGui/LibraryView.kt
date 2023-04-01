@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import it.unibo.tuprolog.core.Rule
 import it.unibo.tuprolog.solve.library.Library

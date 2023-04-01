@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.exception.TuPrologException
@@ -8,14 +8,12 @@ import it.unibo.tuprolog.core.parsing.parseAsStruct
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.channel.OutputChannel
-import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.libs.io.IOLib
 import it.unibo.tuprolog.solve.libs.oop.OOPLib
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
-import it.unibo.tuprolog.solve.lpaas.gui.TuPrologIDEModel.State
+import testGui.TuPrologIDEModel.State
 import it.unibo.tuprolog.theory.Theory
 import org.reactfx.EventSource
 import java.util.*

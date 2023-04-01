@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import it.unibo.tuprolog.core.exception.TuPrologException
 import it.unibo.tuprolog.core.parsing.ParseException

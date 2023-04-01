@@ -1,6 +1,6 @@
 @file:JvmName("Resources")
 
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import javafx.scene.image.Image
 

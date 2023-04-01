@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import javafx.scene.Node
 import javafx.scene.control.ListCell

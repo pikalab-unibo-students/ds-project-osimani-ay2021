@@ -129,8 +129,9 @@ object SolverService : SolverGrpc.SolverImplBase() {
 
     override fun getInputChannels(request: SolverID, responseObserver: StreamObserver<Channels>) {
         val messageBuilder = Channels.newBuilder()
-        SolversCollection.getSolver(request.solverID).inputChannels.forEach {
-            messageBuilder.addChannel(fromChannelIDToMsg(it.key))
+        SolversCollection.getChannelDequesOfSolver(request.solverID).getInputChannels().forEach {
+            messageBuilder.addChannel(
+                fromChannelIDToMsg(it.key, it.value.getCurrentContent().joinToString { string -> string }))
         }
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()
@@ -138,8 +139,9 @@ object SolverService : SolverGrpc.SolverImplBase() {
 
     override fun getOutputChannels(request: SolverID, responseObserver: StreamObserver<Channels>) {
         val messageBuilder = Channels.newBuilder()
-        SolversCollection.getSolver(request.solverID).outputChannels.forEach {
-            messageBuilder.addChannel(fromChannelIDToMsg(it.key))
+        SolversCollection.getChannelDequesOfSolver(request.solverID).getOutputChannels().forEach {
+            messageBuilder.addChannel(
+                fromChannelIDToMsg(it.key, it.value.getCurrentContent().joinToString { string -> string }))
         }
         responseObserver.onNext(messageBuilder.build())
         responseObserver.onCompleted()

@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.solve.ExecutionContextAware
@@ -9,7 +9,6 @@ import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentClient
 import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
@@ -33,11 +32,11 @@ data class SolverEvent<T>(
             dynamicKb = other.getDynamicKB().toImmutableTheory(),
             flags = other.getFlags(),
             inputChannels = InputStore.of(other.getInputChannels()
-                .associateWith { InputChannel.of("") }),
+                .associate { Pair(it.first, InputChannel.of(it.second)) }),
             libraries = Runtime.of(other.getLibraries().map { convertStringToKnownLibrary(it) }),
             operators = other.getOperators(),
             outputChannels = OutputStore.of(other.getOutputChannels()
-                .associateWith { OutputChannel.of {  } }),
+                .associate { Pair(it.first, OutputChannel.of { }) }),
             staticKb = other.getStaticKB().toImmutableTheory(),
             solverId = other.getId()
         )

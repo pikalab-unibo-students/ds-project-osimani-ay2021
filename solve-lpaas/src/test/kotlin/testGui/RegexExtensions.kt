@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.gui
+package testGui
 
 infix fun Regex.or(other: Regex): Regex =
     anyOf(this, other)

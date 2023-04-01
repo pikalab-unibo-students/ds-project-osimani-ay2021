@@ -2,27 +2,26 @@ package it.unibo.tuprolog.solve.lpaas.client.prolog
 
 import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver
-import it.unibo.tuprolog.core.*
-import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.core.Struct
+import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.solve.DummyInstances
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.exception.Warning
-import it.unibo.tuprolog.solve.flags.FlagStore
-import it.unibo.tuprolog.solve.lpaas.*
+import it.unibo.tuprolog.solve.lpaas.MutableSolverGrpc
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
 import it.unibo.tuprolog.solve.lpaas.server.collections.ChannelsDequesCollector
-import it.unibo.tuprolog.solve.lpaas.solveMessage.*
-import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
+import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
+import it.unibo.tuprolog.solve.lpaas.solveMessage.OutputChannelEvent
+import it.unibo.tuprolog.solve.lpaas.solveMessage.ReadLine
+import it.unibo.tuprolog.solve.lpaas.solveMessage.SolverID
 import it.unibo.tuprolog.solve.lpaas.util.parsers.*
-import it.unibo.tuprolog.solve.lpaas.util.parsers.fromTheoryToMsg
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
-import it.unibo.tuprolog.unify.Unificator
-import kotlinx.coroutines.*
-import java.util.concurrent.LinkedBlockingDeque
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
 
 class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
     ClientPrologSolverImpl(solverID, channel), ClientMutableSolver {

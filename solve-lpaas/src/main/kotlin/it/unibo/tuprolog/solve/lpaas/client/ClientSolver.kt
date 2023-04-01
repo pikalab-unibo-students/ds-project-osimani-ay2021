@@ -1,12 +1,10 @@
 package it.unibo.tuprolog.solve.lpaas.client
 
-import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
@@ -44,8 +42,8 @@ interface ClientSolver {
     fun getLibraries(): List<String>
     fun getUnificator(): Unificator
     fun getOperators(): OperatorSet
-    fun getInputChannels(): List<String>
-    fun getOutputChannels(): List<String>
+    fun getInputChannels(): List<Pair<String, String>>
+    fun getOutputChannels(): List<Pair<String, String>>
     fun getId(): String
     fun writeOnInputChannel(channelID: String, vararg terms: String)
     fun readOnOutputChannel(channelID: String): String

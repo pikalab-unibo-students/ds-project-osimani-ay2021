@@ -3,7 +3,7 @@ package it.unibo.tuprolog.solve.lpaas.client.trasparent
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
-import it.unibo.tuprolog.solve.*
+import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputChannel
@@ -14,7 +14,6 @@ import it.unibo.tuprolog.solve.flags.NotableFlag
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.util.toMap
 import it.unibo.tuprolog.theory.RetractResult
