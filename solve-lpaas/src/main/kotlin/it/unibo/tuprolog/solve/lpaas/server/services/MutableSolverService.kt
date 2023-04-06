@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server
+package it.unibo.tuprolog.solve.lpaas.server.services
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Clause
@@ -106,7 +106,8 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
                                responseObserver: StreamObserver<RetractResultMsg>,
                                operation: (MutableSolver, Struct) -> RetractResult<Theory>) {
         try {
-            val result = operation(solvers.getMutableSolver(solverID)!!,
+            val result = operation(
+                solvers.getMutableSolver(solverID)!!,
                 deserializer.deserialize(structToRetract).castToStruct())
             val responseBuilder = RetractResultMsg.newBuilder().setTheory(fromTheoryToMsg(result.theory))
                 .addAllClauses(result.clauses?.map { fromClauseToMsg(it) })
@@ -149,16 +150,6 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
                     val channel = collection.addInputChannel(InputStore.STDIN, request.channel.content)
                     it.setStandardInput(channel)
                 }
-                /*
-                (MutableChannelID.CHANNEL_TYPE.OUTPUT) -> {
-                    it.setStandardOutput(collection.addOutputChannel(OutputStore.STDOUT))
-                }
-                (MutableChannelID.CHANNEL_TYPE.WARNING) -> {
-                    it.setWarnings(collection.addWarningChannel(ChannelsDequesCollector.STDWARN))
-                }
-                (MutableChannelID.CHANNEL_TYPE.ERROR) -> {
-                    it.setStandardError(collection.addOutputChannel(OutputStore.STDERR))
-                }*/
                 else -> {}
             }}, responseObserver)
     }

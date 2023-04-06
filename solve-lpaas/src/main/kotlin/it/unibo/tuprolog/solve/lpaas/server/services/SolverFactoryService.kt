@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server
+package it.unibo.tuprolog.solve.lpaas.server.services
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.*
@@ -30,9 +30,9 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
             ifEmptyUseDefault(request.flags.flagsList,
                 { parseFlagStore(it) }, Solver.prolog.defaultFlags),
             ifEmptyUseDefault(request.staticKb.clauseList,
-                { parseTheory(it)}, Solver.prolog.defaultStaticKb),
+                { parseTheory(it) }, Solver.prolog.defaultStaticKb),
             ifEmptyUseDefault(request.dynamicKb.clauseList,
-                { parseTheory(it)}, Solver.prolog.defaultDynamicKb),
+                { parseTheory(it) }, Solver.prolog.defaultDynamicKb),
             ifEmptyUseDefault(request.inputStore.channelList,
                 { parseInputChannels(it) }, InputStore.fromStandard().map { Pair(it.key, "") }.toMap()),
             ifEmptyUseDefault(request.outputStore.channelList,

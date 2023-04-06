@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server
+package it.unibo.tuprolog.solve.lpaas.server.services
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.Solution
@@ -19,7 +19,8 @@ object SolverService : SolverGrpc.SolverImplBase() {
     override fun solve(request: SolveRequest, responseObserver: StreamObserver<SolutionSequence>) {
         val computationID = ComputationsCollection.addIterator(request.solverID,
             deserializer.deserialize(request.struct).castToStruct(),
-            parseOptions(request.optionsList))
+            parseOptions(request.optionsList)
+        )
         responseObserver.onNext(
             SolutionSequence.newBuilder().setSolverID(request.solverID)
                 .setComputationID(computationID).setQuery(request.struct).build()

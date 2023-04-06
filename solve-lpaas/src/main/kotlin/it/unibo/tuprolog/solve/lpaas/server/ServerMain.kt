@@ -2,6 +2,9 @@ package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.Server
 import io.grpc.ServerBuilder
+import it.unibo.tuprolog.solve.lpaas.server.services.MutableSolverService
+import it.unibo.tuprolog.solve.lpaas.server.services.SolverFactoryService
+import it.unibo.tuprolog.solve.lpaas.server.services.SolverService
 
 
 /** TO-DO

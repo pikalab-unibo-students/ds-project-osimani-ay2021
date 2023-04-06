@@ -37,7 +37,6 @@ object ComputationsCollection {
                     val iterator = computations[solverID]?.second?.get(computationID)!!
                     val solution = iterator.getSolution(index)
                     if (!solution.isYes || !iterator.hasNext()) {
-                        //computations[solverID]?.second?.remove(computationID)
                         return Pair(solution, false)
                     }
                     return Pair(solution, true)
