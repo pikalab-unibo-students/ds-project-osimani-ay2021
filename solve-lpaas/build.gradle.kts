@@ -1,14 +1,14 @@
 import com.google.protobuf.gradle.id
-import com.bmuschko.gradle.docker.tasks.image.*
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 
 plugins {
     `kotlin-jvm-only`
     `kotlin-doc`
     `publish-on-maven`
-    alias(libs.plugins.protobuf)
-    alias(libs.plugins.javafx)
     application
     id("com.bmuschko.docker-java-application") version "9.3.0"
+    alias(libs.plugins.protobuf)
+    alias(libs.plugins.javafx)
 }
 
 kotlin {
@@ -51,13 +51,6 @@ kotlin {
     java {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
-    }
-}
-
-sourceSets.main {
-    java {
-        srcDirs("build/generated/source/proto/main/grpc")
-        srcDirs("build/generated/source/proto/main/java")
     }
 }
 

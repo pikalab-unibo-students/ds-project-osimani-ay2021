@@ -43,7 +43,7 @@ fun fromLibrariesToMsg(libraries: Set<String>): RuntimeMsg {
         .build()
 }
 
-fun fromFlagToMsg(key: String, value: Term): FlagsMsg.FlagMsg {
+fun fromFlagToMsg(key: String, value: Term): FlagMsg {
     return FlagMsg.newBuilder().setName(key)
             .setValue(serializer.serialize(value)).build()
 }
@@ -65,7 +65,7 @@ fun fromTheoryToMsg(theory: Theory): TheoryMsg {
         .build()
 }
 
-fun fromChannelIDToMsg(name: String, content: String = ""): Channels.ChannelID {
+fun fromChannelIDToMsg(name: String, content: String = ""): ChannelID {
     return ChannelID.newBuilder().setName(name)
             .setContent(content).build()
 }

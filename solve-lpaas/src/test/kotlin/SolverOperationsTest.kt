@@ -97,17 +97,6 @@ class SolverOperationsTest {
         assert(!sequence.hasNext())
     }
 
-    @Test
-    @Ignore
-    @Throws(Exception::class)
-    fun failingRequest() {
-        clients[BLOCKING] = ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
-                   p(X):-p(X).
-                   """.trimIndent()))
-        val sequence = clients[BLOCKING]!!.solve("p(X)")
-        assert( sequence.next().isNo )
-    }
-
     /** Testing async-nature of requests FIX Lazy is not default **/
     @Test
     @Throws(Exception::class)
