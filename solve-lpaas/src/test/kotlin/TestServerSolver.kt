@@ -72,8 +72,6 @@ class TestServerSolver : TestSolver, SolverFactory by TrasparentFactory {
         logicProgramming {
             val solver = ClientPrologSolverFactory.solverOf(defaultBuiltins = true)
 
-            val deque = solver.readStreamOnOutputChannel("\$current")
-
             val terms = ktListOf(
                 atomOf("atom"),
                 atomOf("a string"),
@@ -92,7 +90,7 @@ class TestServerSolver : TestSolver, SolverFactory by TrasparentFactory {
                 solutions
             )
 
-            outputs.addAll(deque)
+            outputs.addAll(solver.getOutputChannels()["\$current"]!!)
 
             assertEquals(
                 terms.map { it.format(TermFormatter.default()) }.append("\n"),

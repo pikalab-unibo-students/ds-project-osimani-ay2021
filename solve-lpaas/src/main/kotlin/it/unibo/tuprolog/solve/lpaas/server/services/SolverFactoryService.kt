@@ -6,6 +6,7 @@ import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.lpaas.SolverFactoryGrpc
 import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
+import it.unibo.tuprolog.solve.lpaas.server.database.DbManager
 import it.unibo.tuprolog.solve.lpaas.solveMessage.Channels
 import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
 import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.SolverId

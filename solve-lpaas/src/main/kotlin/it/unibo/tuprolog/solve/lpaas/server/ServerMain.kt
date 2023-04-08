@@ -2,6 +2,7 @@ package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.Server
 import io.grpc.ServerBuilder
+import it.unibo.tuprolog.solve.lpaas.server.database.DbManager
 import it.unibo.tuprolog.solve.lpaas.server.services.MutableSolverService
 import it.unibo.tuprolog.solve.lpaas.server.services.SolverFactoryService
 import it.unibo.tuprolog.solve.lpaas.server.services.SolverService
@@ -29,6 +30,7 @@ class Service(private val port: Int = 8080) {
     private var serviceSolver: Server? = null
 
     fun start() {
+        DbManager.init(DbManager.URL_LOCAL)
         serviceSolver = ServerBuilder.forPort(port)
             .addService(SolverService)
             .addService(MutableSolverService)

@@ -127,6 +127,6 @@ tasks.create("testGui", JavaExec::class.java) {
 
 tasks.create("buildDockerImage", DockerBuildImage::class) {
     group = "application"
-    inputDir.set(file("./"))
+    inputDir.set(file("../"))
     images.add("lpaas")
 }

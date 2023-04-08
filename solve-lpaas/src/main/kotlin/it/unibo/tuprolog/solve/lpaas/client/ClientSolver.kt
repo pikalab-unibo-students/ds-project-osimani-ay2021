@@ -48,7 +48,7 @@ interface ClientSolver {
     fun writeOnInputChannel(channelID: String, vararg terms: String)
     fun readOnOutputChannel(channelID: String): String
     fun readStreamOnOutputChannel(channelID: String): BlockingDeque<String>
-    fun closeClient()
+    fun closeClient(withDeletion: Boolean = false)
 
     companion object {
         @JvmStatic

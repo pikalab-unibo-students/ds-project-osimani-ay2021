@@ -24,6 +24,7 @@ service Solver {
   rpc GetOperators(SolverID) returns (OperatorSetMsg) {}
   rpc GetInputChannels(SolverID) returns (Channels) {}
   rpc GetOutputChannels(SolverID) returns (Channels) {}
+  rpc DeleteSolver(SolverID) returns (OperationResult) {}
 }
 
 /* Solver Factory Service*/

@@ -33,11 +33,14 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
         return solverID
     }
 
-    override fun closeClient() {
+    override fun closeClient(withDeletion: Boolean) {
         openStreamObservers.forEach {
             try {
                 it.onCompleted()
             } catch (_: Exception) {} }
+        if(withDeletion) {
+            solverFutureStub.deleteSolver(buildSolverId()).get()
+        }
     }
 
     override fun solve(goal: Struct, options: SolveOptions): SolutionsSequence {

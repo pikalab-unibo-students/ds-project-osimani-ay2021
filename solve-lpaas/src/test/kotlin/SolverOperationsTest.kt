@@ -32,8 +32,8 @@ class SolverOperationsTest {
     /** Shuts down the server and closes all client **/
     @AfterTest
     fun afterEach() {
+        clients.values.forEach { it.closeClient(true) }
         server.stop()
-        clients.values.forEach { it.closeClient() }
     }
 
     /** Testing Simple Solve **/

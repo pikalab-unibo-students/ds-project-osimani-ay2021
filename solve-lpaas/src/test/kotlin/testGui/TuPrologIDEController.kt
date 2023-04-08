@@ -217,8 +217,13 @@ class TuPrologIDEController : Initializable {
 
         trvLibraries.root = TreeItem("Loaded libraries:")
 
-        model.newSolver(Theory.empty())
-        model.reset()
+        //model.newSolver(Theory.empty())
+        btnNext.isDisable = true
+        btnNextAll.isDisable = true
+        btnReset.isDisable = true
+        btnStop.isDisable = true
+        btnRefresh.isDisable = true
+        lblSolverId.text = "... connect to a Solver ..."
 
         Platform.runLater {
             streamsTabs.forEach { it.hideNotification() }
@@ -534,7 +539,14 @@ class TuPrologIDEController : Initializable {
         stage.scene = Scene(root)
         stage.show()
         val controller = loader.getController() as CreateView
-        controller.setListener {theory -> model.newSolver(theory) }
+        controller.setListener {theory ->
+            model.newSolver(theory)
+            btnNext.isDisable = false
+            btnNextAll.isDisable = false
+            btnReset.isDisable = false
+            btnStop.isDisable = false
+            btnRefresh.isDisable = false
+        }
         controller.setOnClose { stage.close() }
 
     }

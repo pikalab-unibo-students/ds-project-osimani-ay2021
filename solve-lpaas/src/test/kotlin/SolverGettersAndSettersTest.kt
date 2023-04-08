@@ -33,8 +33,9 @@ class SolverGettersAndSettersTest {
 
     @AfterTest
     fun afterEach() {
+        clients.values.forEach { it.closeClient(true) }
         server.stop()
-        clients.values.forEach { it.closeClient() }
+
     }
 
     @Test
@@ -97,7 +98,38 @@ class SolverGettersAndSettersTest {
             result)
     }
 
-    /**This Test fails because the stdin is not changed in actuality**/
+    @Test
+    @Throws(Exception::class)
+    fun readFromStdOutWithLaterJoin() {
+        clients[BASIC]!!.solve("f(X), write(${OutputStore.STDOUT}, X)", SolveOptions.allEagerly())
+        val result = clients[BASIC]!!.readStreamOnOutputChannel(OutputStore.STDOUT)
+        clients[BASIC]!!.solveOnce("close(${OutputStore.STDOUT})")
+        assertContentEquals(
+            listOf("b","d"),
+            result)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectAndReadFromStdOutWithLaterJoin() {
+        clients[BASIC]!!.solve("f(X), write(${OutputStore.STDOUT}, X)", SolveOptions.allEagerly())
+        server.stop()
+        server.awaitTermination()
+        assertFails {
+            ClientPrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())
+            println("THIS SHOULD NOT BE PRINTED")
+        }
+        server.start()
+        println("Waiting for service to start again...")
+        Thread.sleep(3000)
+        val solver = ClientPrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())!!
+        val result = solver.readStreamOnOutputChannel(OutputStore.STDOUT)
+        solver.solveOnce("close(${OutputStore.STDOUT})")
+        assertContentEquals(
+            listOf("b","d"),
+            result)
+    }
+
     @Test
     @Throws(Exception::class)
     fun useSetStdIn() {

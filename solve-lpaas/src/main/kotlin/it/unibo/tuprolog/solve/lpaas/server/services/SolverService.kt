@@ -6,6 +6,7 @@ import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.SolverGrpc
 import it.unibo.tuprolog.solve.lpaas.server.collections.ComputationsCollection
 import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
+import it.unibo.tuprolog.solve.lpaas.server.database.DbManager
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.util.EAGER_OPTION
 import it.unibo.tuprolog.solve.lpaas.util.LAZY_OPTION
@@ -29,6 +30,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
                 .setComputationID(computationID).setQuery(request.struct).build()
         )
         responseObserver.onCompleted()
+        DbManager.get().updateSolver(request.solverID)
     }
 
     override fun getSolution(request: SolutionID, responseObserver: StreamObserver<SolutionReply>) {
@@ -46,6 +48,7 @@ object SolverService : SolverGrpc.SolverImplBase() {
         }
         responseObserver.onNext( message )
         responseObserver.onCompleted()
+        DbManager.get().updateSolver(request.solverID)
     }
 
     override fun writeOnInputChannel(request: InputChannelEvent, responseObserver: StreamObserver<OperationResult>) {
@@ -55,13 +58,15 @@ object SolverService : SolverGrpc.SolverImplBase() {
         }
         responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
         responseObserver.onCompleted()
+        DbManager.get().updateSolver(request.solverID)
     }
 
     override fun readFromOutputChannel(request: OutputChannelEvent, responseObserver: StreamObserver<ReadLine>) {
         val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
-            .readOnOutputChannel(request.channelID.name)
+            .consumeFromOutputChannel(request.channelID.name)
         responseObserver.onNext(MessageBuilder.fromReadLineToMsg(outputValue))
         responseObserver.onCompleted()
+        DbManager.get().updateSolver(request.solverID)
     }
 
     override fun readStreamFromOutputChannel(responseObserver: StreamObserver<ReadLine>):
@@ -181,5 +186,11 @@ object SolverService : SolverGrpc.SolverImplBase() {
                 .build()
         }
         return solutionBuilder.build()
+    }
+
+    override fun deleteSolver(request: SolverID, responseObserver: StreamObserver<OperationResult>) {
+        SolversCollection.deleteSolver(request.solverID)
+        responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
+        responseObserver.onCompleted()
     }
 }

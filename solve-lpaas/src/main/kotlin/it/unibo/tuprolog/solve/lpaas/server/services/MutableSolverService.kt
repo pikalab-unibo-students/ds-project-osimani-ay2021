@@ -5,19 +5,16 @@ import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.solve.MutableSolver
 import it.unibo.tuprolog.solve.channel.InputStore
-import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.MutableSolverGrpc
 import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
 import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
+import it.unibo.tuprolog.solve.lpaas.server.database.DbManager
 import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolverID
 import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg
-import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
-import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.deserializer
 import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parse
 import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parseToClause
 import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parseToStruct
-import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverSerializer.serialize
 import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverSerializer.toMsg
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
@@ -60,6 +57,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
                     responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
                 }
                 responseObserver.onCompleted()
+                DbManager.get().updateSolver(solverID)
             }
         }
     }
@@ -124,6 +122,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             println(e)
         }
         responseObserver.onCompleted()
+        DbManager.get().updateSolver(solverID)
     }
 
     override fun setFlag(request: MutableFlag, responseObserver: StreamObserver<OperationResult>) {
@@ -164,6 +163,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
         }
         responseObserver.onCompleted()
+        DbManager.get().updateSolver(solverID)
     }
 
     private fun buildOperationResult(error: String = ""): OperationResult {

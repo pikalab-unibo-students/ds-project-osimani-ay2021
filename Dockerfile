@@ -1,8 +1,6 @@
 FROM gradle:7.5.1 AS build
 COPY --chown=gradle:gradle . /home/gradle/project
 WORKDIR /home/gradle/project
-
-
 RUN gradle :solve-lpaas:shadowJar
 
 FROM openjdk:11-jre-slim

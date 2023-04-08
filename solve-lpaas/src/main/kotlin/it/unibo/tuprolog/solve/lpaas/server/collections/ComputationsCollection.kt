@@ -42,7 +42,7 @@ object ComputationsCollection {
                     return Pair(solution, true)
                 }
             }
-        } catch (_: Exception) { }
+        } catch (_: Exception) {}
         return Pair(Solution.no(query), false)
     }
 }

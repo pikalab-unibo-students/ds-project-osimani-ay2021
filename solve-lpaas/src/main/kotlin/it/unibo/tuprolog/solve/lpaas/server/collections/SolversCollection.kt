@@ -22,7 +22,7 @@ object SolversCollection {
     private val solversDeques: MutableMap<String, ChannelsDequesCollector> = mutableMapOf()
 
     init {
-        DbManager.loadSolvers()
+        DbManager.get().loadSolvers()
     }
 
     /** Include error instead of default? **/
@@ -59,7 +59,7 @@ object SolversCollection {
                 staticKb = staticKb,
                 dynamicKb = dynamicKb,
                 inputs = InputStore.of(channelsDeque.getInputChannels()),
-                outputs = OutputStore.of(channelsDeque.getOutputChannels(), channelsDeque.getWarningChannel()))
+                outputs = OutputStore.of(channelsDeque.getOutputChannels()))
         } else {
             Solver.prolog.solverOf(
             unificator = unificator,
@@ -68,10 +68,16 @@ object SolversCollection {
             staticKb = staticKb,
             dynamicKb = dynamicKb,
             inputs = InputStore.of(channelsDeque.getInputChannels()),
-            outputs = OutputStore.of(channelsDeque.getOutputChannels(), channelsDeque.getWarningChannel()))
+            outputs = OutputStore.of(channelsDeque.getOutputChannels()))
         }
-
+        DbManager.get().addSolver(solverID = id, mutable = mutable)
         return id
+    }
+
+    fun deleteSolver(solverID: String) {
+        solvers.remove(solverID)
+        solversDeques.remove(solverID)
+        DbManager.get().deleteSolver(solverID)
     }
 
     private fun generateId(): String {

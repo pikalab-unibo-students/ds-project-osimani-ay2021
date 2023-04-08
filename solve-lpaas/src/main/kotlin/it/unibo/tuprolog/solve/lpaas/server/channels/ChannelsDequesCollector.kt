@@ -3,16 +3,11 @@ package it.unibo.tuprolog.solve.lpaas.server.channels
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
-import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.lpaas.solveMessage.ReadLine
 
 class ChannelsDequesCollector {
     private val inputs: MutableMap<String, InputChannelObserver<String>> = mutableMapOf()
-    private val outputs: MutableMap<String, OutputChannelObserver<*>> = mutableMapOf()
-
-    init {
-        outputs[STDWARN] = OutputChannelObserver.of<Warning>()
-    }
+    private val outputs: MutableMap<String, OutputChannelObserver<String>> = mutableMapOf()
 
     fun addInputChannel(name: String, content: List<String> = emptyList()): InputChannel<String> {
         val channel = InputChannelObserver.of(content)
@@ -26,27 +21,14 @@ class ChannelsDequesCollector {
         return channel
     }
 
-    fun addWarningChannel(name: String): OutputChannel<Warning> {
-        val channel = OutputChannelObserver.of<Warning>()
-        outputs[name] = channel
-        return channel
-    }
-
     fun getInputChannels(): Map<String, InputChannelObserver<String>> {
         return inputs
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun getOutputChannels(): Map<String, OutputChannelObserver<String>> {
         return outputs.mapNotNull {
-            if(it.value.eventType == String::class)
-                Pair(it.key, it.value as OutputChannelObserver<String>)
-            else null}.toMap()
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun getWarningChannel(): OutputChannel<Warning> {
-        return outputs[STDWARN]!! as OutputChannel<Warning>
+                Pair(it.key, it.value)
+            }.toMap()
     }
 
     fun addListener(channelID: String, observer: StreamObserver<ReadLine>) {
@@ -61,9 +43,9 @@ class ChannelsDequesCollector {
         inputs[name]?.writeOnChannel(line)
     }
 
-    fun readOnOutputChannel(name: String): String {
+    fun consumeFromOutputChannel(name: String): String {
         if(outputs.containsKey(name))
-            return outputs[name]!!.consumeFirst().toString()
+            return outputs[name]!!.consumeFirst()
         else throw IllegalArgumentException()
     }
 
