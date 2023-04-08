@@ -11,10 +11,14 @@ import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
 import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolverID
+import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg
 import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
-import it.unibo.tuprolog.solve.lpaas.util.parsers.deserializer
-import it.unibo.tuprolog.solve.lpaas.util.parsers.fromClauseToMsg
-import it.unibo.tuprolog.solve.lpaas.util.parsers.fromTheoryToMsg
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.deserializer
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parse
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parseToClause
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parseToStruct
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverSerializer.serialize
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverSerializer.toMsg
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
 
@@ -43,7 +47,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             var solverID = ""
             val clauseList = mutableListOf<Clause>()
             override fun onNext(value: MutableClause) {
-                if(!value.clause.content.isEmpty()) clauseList.add(deserializer.deserialize(value.clause.content).castToClause())
+                if(value.clause.content.isNotEmpty()) clauseList.add(value.clause.parseToClause())
                 if(solverID.isEmpty()) solverID = value.solverID
             }
             override fun onError(t: Throwable?) {}
@@ -62,19 +66,19 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
 
     override fun loadLibrary(request: MutableLibrary, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
-            { it.loadLibrary(convertStringToKnownLibrary(request.library.name))},
+            { it.loadLibrary(request.library.parse())},
             responseObserver)
     }
 
     override fun assertA(request: MutableClause, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
-            { it.assertA(deserializer.deserialize(request.clause.content).castToStruct())},
+            { it.assertA(request.clause.parseToStruct())},
             responseObserver)
     }
 
     override fun assertZ(request: MutableClause, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
-            { it.assertZ(deserializer.deserialize(request.clause.content).castToStruct())},
+            { it.assertZ(request.clause.parseToStruct())},
             responseObserver)
     }
 
@@ -91,26 +95,26 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
     }
 
     override fun retract(request: MutableClause, responseObserver: StreamObserver<RetractResultMsg>) {
-        genericRetract(request.solverID, request.clause.content, responseObserver) {
+        genericRetract(request.solverID, request.clause, responseObserver) {
             solver, struct -> solver.retract(struct)
         }
     }
 
     override fun retractAll(request: MutableClause, responseObserver: StreamObserver<RetractResultMsg>) {
-        genericRetract(request.solverID, request.clause.content, responseObserver) {
+        genericRetract(request.solverID, request.clause, responseObserver) {
                 solver, struct -> solver.retractAll(struct)
         }
     }
 
-    private fun genericRetract(solverID: String, structToRetract: String,
+    private fun genericRetract(solverID: String, structToRetract: TheoryMsg.ClauseMsg,
                                responseObserver: StreamObserver<RetractResultMsg>,
                                operation: (MutableSolver, Struct) -> RetractResult<Theory>) {
         try {
             val result = operation(
                 solvers.getMutableSolver(solverID)!!,
-                deserializer.deserialize(structToRetract).castToStruct())
-            val responseBuilder = RetractResultMsg.newBuilder().setTheory(fromTheoryToMsg(result.theory))
-                .addAllClauses(result.clauses?.map { fromClauseToMsg(it) })
+                structToRetract.parseToStruct())
+            val responseBuilder = RetractResultMsg.newBuilder().setTheory(result.theory.toMsg())
+                .addAllClauses(result.clauses?.map { it.toMsg() })
             if(result.isSuccess) {
                 responseObserver.onNext(responseBuilder.setIsSuccess(true).build())
             } else {
@@ -124,21 +128,19 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
 
     override fun setFlag(request: MutableFlag, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
-            { it.setFlag( Pair(request.flag.name, deserializer.deserialize(request.flag.value)))},
+            { it.setFlag( request.flag.parse())},
             responseObserver)
     }
 
     override fun setLibraries(request: MutableRuntime, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
-            { it.setRuntime(Runtime.of(
-                request.runtime.librariesList.map { lib -> convertStringToKnownLibrary(lib.name)  })
-            )},
+            { it.setRuntime(request.runtime.parse()) },
             responseObserver)
     }
 
     override fun unloadLibrary(request: MutableLibrary, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
-            { it.unloadLibrary(convertStringToKnownLibrary(request.library.name)) },
+            { it.unloadLibrary(request.library.parse()) },
             responseObserver)
     }
 
@@ -147,7 +149,7 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
         doOperationOnMutableSolver(request.solverID,
             { when(request.type) {
                 (MutableChannelID.CHANNEL_TYPE.INPUT) -> {
-                    val channel = collection.addInputChannel(InputStore.STDIN, request.channel.content)
+                    val channel = collection.addInputChannel(InputStore.STDIN, request.channel.contentList)
                     it.setStandardInput(channel)
                 }
                 else -> {}

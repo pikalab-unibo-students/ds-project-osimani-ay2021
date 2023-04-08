@@ -10,6 +10,7 @@ import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.util.convertStringToKnownLibrary
+import it.unibo.tuprolog.solve.lpaas.util.joinAll
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
@@ -32,11 +33,10 @@ data class SolverEvent<T>(
             dynamicKb = other.getDynamicKB().toImmutableTheory(),
             flags = other.getFlags(),
             inputChannels = InputStore.of(other.getInputChannels()
-                .associate { Pair(it.first, InputChannel.of(it.second)) }),
+                .map { Pair(it.key, InputChannel.of(it.value.joinAll())) }.toMap()),
             libraries = Runtime.of(other.getLibraries().map { convertStringToKnownLibrary(it) }),
             operators = other.getOperators(),
-            outputChannels = OutputStore.of(other.getOutputChannels()
-                .associate { Pair(it.first, OutputChannel.of { }) }),
+            outputChannels = OutputStore.of(other.getOutputChannels().keys.associateWith { OutputChannel.of {  } }),
             staticKb = other.getStaticKB().toImmutableTheory(),
             solverId = other.getId()
         )

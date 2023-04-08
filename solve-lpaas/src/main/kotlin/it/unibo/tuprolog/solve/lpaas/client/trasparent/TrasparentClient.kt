@@ -39,9 +39,10 @@ abstract class TrasparentClient: Solver {
         get() = solver.getOperators()
     override val inputChannels: InputStore
         get() = InputStore.of(solver.getInputChannels().map {
-            Pair(it.first, InputChannel.of(it.second)) }.toMap())
+            Pair(it.key, InputChannel.of(it.value.joinToString { string -> string })) }.toMap())
     override val outputChannels: OutputStore
         get() = OutputStore.of(solver.getOutputChannels().map { pair ->
-            Pair(pair.first, OutputChannel.of<String> {  println(pair.second) }) }.toMap())
+            Pair(pair.key, OutputChannel.of<String> {
+                pair.value.joinToString { string -> string } }) }.toMap())
     val solverId: String get() = solver.getId()
 }

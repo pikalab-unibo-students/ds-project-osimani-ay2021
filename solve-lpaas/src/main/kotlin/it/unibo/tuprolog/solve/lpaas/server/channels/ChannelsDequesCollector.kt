@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server.collections
+package it.unibo.tuprolog.solve.lpaas.server.channels
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.InputChannel
@@ -14,14 +14,14 @@ class ChannelsDequesCollector {
         outputs[STDWARN] = OutputChannelObserver.of<Warning>()
     }
 
-    fun addInputChannel(name: String, content: String = ""): InputChannel<String> {
-        val channel = InputChannelObserver.of(content.toCharArray().map { it.toString() })
+    fun addInputChannel(name: String, content: List<String> = emptyList()): InputChannel<String> {
+        val channel = InputChannelObserver.of(content)
         inputs[name] = channel
         return channel
     }
 
-    fun addOutputChannel(name: String): OutputChannel<String> {
-        val channel = OutputChannelObserver.of<String>()
+    fun addOutputChannel(name: String, content: List<String> = emptyList()): OutputChannel<String> {
+        val channel = OutputChannelObserver.of<String>(content)
         outputs[name] = channel
         return channel
     }
@@ -63,17 +63,17 @@ class ChannelsDequesCollector {
 
     fun readOnOutputChannel(name: String): String {
         if(outputs.containsKey(name))
-            return outputs[name]!!.queue.takeFirst().toString()
+            return outputs[name]!!.consumeFirst().toString()
         else throw IllegalArgumentException()
     }
 
     companion object {
         const val STDWARN = "warning"
-        fun of(inputs: Map<String, String> = emptyMap(),
-               outputs: Set<String> = emptySet()): ChannelsDequesCollector {
+        fun of(inputs: Map<String, List<String>> = emptyMap(),
+               outputs: Map<String, List<String>> = emptyMap()): ChannelsDequesCollector {
             val collection = ChannelsDequesCollector()
             inputs.forEach { collection.addInputChannel(it.key, it.value) }
-            outputs.forEach { collection.addOutputChannel(it) }
+            outputs.forEach { collection.addOutputChannel(it.key, it.value) }
             return collection
         }
     }

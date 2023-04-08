@@ -11,19 +11,23 @@ import it.unibo.tuprolog.solve.channel.OutputStore
 import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.lpaas.MutableSolverGrpc
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.*
-import it.unibo.tuprolog.solve.lpaas.server.collections.ChannelsDequesCollector
-import it.unibo.tuprolog.solve.lpaas.solveMessage.OperationResult
-import it.unibo.tuprolog.solve.lpaas.solveMessage.OutputChannelEvent
-import it.unibo.tuprolog.solve.lpaas.solveMessage.ReadLine
-import it.unibo.tuprolog.solve.lpaas.solveMessage.SolverID
-import it.unibo.tuprolog.solve.lpaas.util.parsers.*
+import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableClause
+import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableFlag
+import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableRuntime
+import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.RetractResultMsg
+import it.unibo.tuprolog.solve.lpaas.mutableSolverMessages.MutableChannelID
+import it.unibo.tuprolog.solve.lpaas.server.channels.ChannelsDequesCollector
+import it.unibo.tuprolog.solve.lpaas.solveMessage.*
+import it.unibo.tuprolog.solve.lpaas.util.parsers.MessageBuilder
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parse
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parseToClause
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverSerializer.toFlagMsg
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 
-class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
+class ClientPrologMutableSolverImpl(solverID: String, channel: ManagedChannel) :
     ClientPrologSolverImpl(solverID, channel), ClientMutableSolver {
 
     private val mutableSolverFutureStub: MutableSolverGrpc.MutableSolverFutureStub = MutableSolverGrpc
@@ -39,7 +43,7 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
     override fun loadLibrary(libraryName: String) {
         operationWithResult {
             mutableSolverFutureStub.loadLibrary(
-                fromLibraryToMutableMsg(solverID, libraryName)
+                MessageBuilder.fromLibraryToMutableMsg(solverID, libraryName)
             ).get()
         }
     }
@@ -47,7 +51,7 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
     override fun unloadLibrary(libraryName: String) {
         operationWithResult {
             mutableSolverFutureStub.unloadLibrary(
-                fromLibraryToMutableMsg(solverID, libraryName)
+                MessageBuilder.fromLibraryToMutableMsg(solverID, libraryName)
             ).get()
         }
     }
@@ -56,7 +60,9 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
         operationWithResult {
             mutableSolverFutureStub.setLibraries(
                 MutableRuntime.newBuilder().setSolverID(solverID)
-                    .setRuntime(fromLibrariesToMsg(libraries)).build()
+                    .setRuntime(
+                        RuntimeMsg.newBuilder().addAllLibraries(
+                            libraries.map { RuntimeMsg.LibraryMsg.newBuilder().setName(it).build()})).build()
             ).get()
         }
     }
@@ -72,11 +78,11 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
             override fun onCompleted() {}
         })
 
-        if(theory.isEmpty) {
+        if (theory.isEmpty) {
             stream.onNext(MutableClause.newBuilder().setSolverID(solverID).build())
         } else {
             theory.clauses.forEach {
-                stream.onNext(fromClauseToMutableMsg(solverID, it))
+                stream.onNext(MessageBuilder.fromClauseToMutableMsg(solverID, it))
             }
         }
         stream.onCompleted()
@@ -88,13 +94,13 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
 
     override fun loadStaticKb(theory: Theory) {
         operationWithResult {
-            sendTheoryAsStream(theory) { mutableSolverStub.loadStaticKB(it)}
+            sendTheoryAsStream(theory) { mutableSolverStub.loadStaticKB(it) }
         }
     }
 
     override fun appendStaticKb(theory: Theory) {
         operationWithResult {
-            sendTheoryAsStream(theory) { mutableSolverStub.appendStaticKB(it)}
+            sendTheoryAsStream(theory) { mutableSolverStub.appendStaticKB(it) }
         }
     }
 
@@ -106,13 +112,13 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
 
     override fun loadDynamicKb(theory: Theory) {
         operationWithResult {
-            sendTheoryAsStream(theory) { mutableSolverStub.loadDynamicKB(it)}
+            sendTheoryAsStream(theory) { mutableSolverStub.loadDynamicKB(it) }
         }
     }
 
     override fun appendDynamicKb(theory: Theory) {
         operationWithResult {
-            sendTheoryAsStream(theory) { mutableSolverStub.appendDynamicKB(it)}
+            sendTheoryAsStream(theory) { mutableSolverStub.appendDynamicKB(it) }
         }
     }
 
@@ -124,30 +130,32 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
 
     override fun assertA(fact: Struct) {
         operationWithResult {
-            mutableSolverFutureStub.assertA(fromClauseToMutableMsg(solverID, fact)).get()
+            mutableSolverFutureStub.assertA(MessageBuilder.fromClauseToMutableMsg(solverID, fact)).get()
         }
     }
 
     override fun assertZ(fact: Struct) {
         operationWithResult {
-            mutableSolverFutureStub.assertZ(fromClauseToMutableMsg(solverID, fact)).get()
+            mutableSolverFutureStub.assertZ(MessageBuilder.fromClauseToMutableMsg(solverID, fact)).get()
         }
     }
 
     override fun retract(fact: Struct): RetractResult<Theory> {
-        return genericRetract { mutableSolverFutureStub.retract(fromClauseToMutableMsg(solverID, fact)).get() }
+        return genericRetract { mutableSolverFutureStub.retract(MessageBuilder.fromClauseToMutableMsg(solverID, fact)).get() }
     }
 
     override fun retractAll(fact: Struct): RetractResult<Theory> {
-        return genericRetract { mutableSolverFutureStub.retractAll(fromClauseToMutableMsg(solverID, fact)).get() }
+        return genericRetract { mutableSolverFutureStub.retractAll(MessageBuilder.fromClauseToMutableMsg(solverID, fact)).get() }
     }
 
     private fun genericRetract(op: () -> RetractResultMsg): RetractResult<Theory> {
         val result = op()
-        val theory = Theory.of(result.theory.clauseList.map {
-            deserializer.deserialize(it.content).castToClause() })
+        val theory = Theory.of(
+            result.theory.parse()
+        )
         val clauses = result.clausesList.map {
-            deserializer.deserialize(it.content).castToClause() }
+            it.parseToClause()
+        }
         return if(result.isSuccess) {
             RetractResult.Success(theory, clauses)
         } else RetractResult.Failure(theory)
@@ -155,21 +163,19 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
 
     override fun setFlag(name: String, value: Term) {
         operationWithResult {
-            mutableSolverFutureStub.setFlag(MutableFlag.newBuilder().setSolverID(solverID)
-                .setFlag(fromFlagToMsg(name, value)).build()).get()
-        }
-    }
-
-    private fun setChannel(content: String, type: MutableChannelID.CHANNEL_TYPE) {
-        operationWithResult {
-            mutableSolverFutureStub.setChannel(MutableChannelID.newBuilder().setSolverID(solverID)
-                .setType(type)
-                .setChannel(fromChannelIDToMsg("", content)).build()).get()
+            mutableSolverFutureStub.setFlag(
+                MutableFlag.newBuilder().setSolverID(solverID)
+                .setFlag(Pair(name, value).toFlagMsg()).build()).get()
         }
     }
 
     override fun setStandardInput(content: String) {
-        setChannel(content, MutableChannelID.CHANNEL_TYPE.INPUT)
+        operationWithResult {
+            mutableSolverFutureStub.setChannel(MutableChannelID.newBuilder().setSolverID(solverID)
+                .setType(MutableChannelID.CHANNEL_TYPE.INPUT)
+                .setChannel(MessageBuilder.fromChannelIDToMsg("", content.toCharArray()
+                    .map { it.toString() })).build()).get()
+        }
     }
 
     override fun setStandardOutput(stdOut: OutputChannel<String>) {
@@ -201,7 +207,7 @@ class ClientPrologMutableSolverImpl(solverID: String,channel: ManagedChannel):
             override fun onCompleted() {}
         })
         stub.onNext(OutputChannelEvent.newBuilder()
-            .setChannelID(fromChannelIDToMsg(type))
+            .setChannelID(MessageBuilder.fromChannelIDToMsg(type))
             .setSolverID(solverID).build())
         openStreamObservers.add(stub)
     }

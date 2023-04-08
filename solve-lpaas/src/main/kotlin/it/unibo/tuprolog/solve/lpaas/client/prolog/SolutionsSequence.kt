@@ -7,8 +7,9 @@ import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.lpaas.SolverGrpc
 import it.unibo.tuprolog.solve.lpaas.solveMessage.SolutionID
-import it.unibo.tuprolog.solve.lpaas.util.parsers.deserializer
-import it.unibo.tuprolog.solve.lpaas.util.parsers.serializer
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.deserializer
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverSerializer.serialize
+
 
 class SolutionsSequence(private val solverID: String, private val computationID: String, private val struct: Struct,
     channel: ManagedChannel
@@ -26,7 +27,7 @@ class SolutionsSequence(private val solverID: String, private val computationID:
         if(!solutionsCache.containsKey(index)) {
             val reply = stub.getSolution(
                 SolutionID.newBuilder().setSolverID(solverID).setComputationID(computationID)
-                    .setQuery(serializer.serialize(struct)).setIndex(index).build()
+                    .setQuery(struct.serialize()).setIndex(index).build()
             ).get()
 
             val unifiers: MutableMap<Var, Term> = mutableMapOf()

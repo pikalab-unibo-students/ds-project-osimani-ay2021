@@ -1,14 +1,17 @@
-import com.google.protobuf.gradle.id
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.protobuf.gradle.id
+
 
 plugins {
+    application
     `kotlin-jvm-only`
     `kotlin-doc`
     `publish-on-maven`
-    application
     id("com.bmuschko.docker-java-application") version "9.3.0"
-    alias(libs.plugins.protobuf)
     alias(libs.plugins.javafx)
+    alias(libs.plugins.protobuf)
+    alias(libs.plugins.shadowJar)
 }
 
 kotlin {
@@ -16,6 +19,7 @@ kotlin {
         main {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+                implementation("org.litote.kmongo:kmongo:4.8.0")
                 implementation(project(":io-lib"))
                 implementation(project(":oop-lib"))
                 implementation(project(":test-solve"))
@@ -79,10 +83,25 @@ application {
     mainClass.set(entryPoint)
 }
 
-tasks.getByName<Jar>("jar") {
+/*tasks.getByName<Jar>("jar") {
     manifest {
         attributes("Main-Class" to entryPoint)
     }
+    archiveBaseName.set("${rootProject.name}-${project.name}")
+    archiveVersion.set(project.version.toString())
+    archiveClassifier.set("redist")
+    sourceSets.main {
+        runtimeClasspath.filter { it.exists() }
+            .map { if (it.isDirectory) it else zipTree(it) }
+            .forEach { from(it) }
+    }
+    from(files("${rootProject.projectDir}/LICENSE"))
+    dependsOn("classes")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}*/
+
+val shadowJar = tasks.getByName<ShadowJar>("shadowJar") {
+    manifest { attributes("Main-Class" to entryPoint) }
     archiveBaseName.set("${rootProject.name}-${project.name}")
     archiveVersion.set(project.version.toString())
     archiveClassifier.set("redist")
@@ -106,7 +125,7 @@ tasks.create("testGui", JavaExec::class.java) {
     main = "testGui.Main"
 }
 
-tasks.create("buildMyAppImage", DockerBuildImage::class) {
+tasks.create("buildDockerImage", DockerBuildImage::class) {
     group = "application"
     inputDir.set(file("./"))
     images.add("lpaas")

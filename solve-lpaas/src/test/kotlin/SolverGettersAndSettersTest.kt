@@ -1,15 +1,13 @@
 import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
-import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputStore
-import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
@@ -18,7 +16,6 @@ import kotlin.test.*
 
 
 class SolverGettersAndSettersTest {
-
     private var clients: MutableMap<String, ClientSolver> = mutableMapOf()
     private lateinit var server: Service
 
@@ -135,7 +132,7 @@ class SolverGettersAndSettersTest {
     @Throws(Exception::class)
     fun testMultipleConnectionsToSameSolver() {
         clients[BASIC]!!.solveOnce("assert(p(c))")
-        clients["temp"] = PrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())!!
+        clients["temp"] = ClientPrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())!!
         assertEquals(
             "p(c)",
             clients["temp"]!!.solveOnce("p(X)").solvedQuery.toString()

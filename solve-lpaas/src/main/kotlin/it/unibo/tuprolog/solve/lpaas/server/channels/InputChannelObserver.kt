@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.solve.lpaas.server.collections
+package it.unibo.tuprolog.solve.lpaas.server.channels
 
 import it.unibo.tuprolog.solve.channel.impl.AbstractInputChannel
 import java.util.concurrent.BlockingDeque
@@ -8,7 +8,7 @@ import kotlin.reflect.KClass
 class InputChannelObserver<T : Any> (
     val eventType: KClass<T>,
     private val deque: BlockingDeque<T>
-) : AbstractInputChannel<T>() {
+) : ChannelObserver<T>, AbstractInputChannel<T>() {
 
     override fun readActually(): T? {
         return deque.takeFirst()
@@ -18,7 +18,7 @@ class InputChannelObserver<T : Any> (
         deque.putLast(obj)
     }
 
-    fun getCurrentContent(): List<T> = deque.toList()
+    override fun getCurrentContent(): List<T> = deque.toList()
 
     companion object {
         inline fun <reified X: Any> of(content: List<X> = emptyList()): InputChannelObserver<X> {

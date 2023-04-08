@@ -13,9 +13,10 @@ import it.unibo.tuprolog.solve.lpaas.*
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.solveMessage.*
 import it.unibo.tuprolog.solve.lpaas.solveMessage.TheoryMsg.ClauseMsg
-import it.unibo.tuprolog.solve.lpaas.solverFactoryMessage.*
 import it.unibo.tuprolog.solve.lpaas.util.*
-import it.unibo.tuprolog.solve.lpaas.util.parsers.*
+import it.unibo.tuprolog.solve.lpaas.util.parsers.MessageBuilder
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parse
+import it.unibo.tuprolog.solve.lpaas.util.parsers.SolverDeserializer.parseToClause
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import kotlinx.coroutines.*
@@ -46,11 +47,7 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
     }
 
     override fun getFlags(): FlagStore {
-        val flagsMap = mutableMapOf<String, Term>()
-        solverFutureStub.getFlags(buildSolverId()).get().flagsList.forEach {
-            flagsMap[it.name] = deserializer.deserialize(it.value)
-        }
-        return FlagStore.of(flagsMap)
+        return FlagStore.of(solverFutureStub.getFlags(buildSolverId()).get().flagsList.parse())
     }
 
     override fun getStaticKB(): Theory {
@@ -67,7 +64,7 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
         op(buildSolverId(), object: StreamObserver<ClauseMsg> {
             val clauseList = mutableListOf<Clause>()
             override fun onNext(value: ClauseMsg) {
-                clauseList.add(deserializer.deserialize(value.content).castToClause())
+                clauseList.add(value.parseToClause())
             }
             override fun onError(t: Throwable?) {}
             override fun onCompleted() { future.complete(clauseList) }
@@ -84,12 +81,7 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
     }
 
     override fun getUnificator(): Unificator {
-        val substitution = mutableMapOf<Var, Term>()
-        solverFutureStub.getUnificator(buildSolverId()).get().substitutionList.map {
-            substitution[deserializer.deserialize(it.`var`).castToVar()] =
-                deserializer.deserialize((it.term))
-        }
-        return Unificator.naive(Substitution.of(substitution))
+        return solverFutureStub.getUnificator(buildSolverId()).get().parse()
     }
 
     override fun getOperators(): OperatorSet {
@@ -103,14 +95,14 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
         return OperatorSet(operators)
     }
 
-    override fun getInputChannels(): List<Pair<String, String>> {
+    override fun getInputChannels(): Map<String, List<String>> {
         return solverFutureStub.getInputChannels(buildSolverId()).get()
-            .channelList.map { Pair(it.name, it.content) }
+            .channelList.map { Pair(it.name, it.contentList) }.toMap()
     }
 
-    override fun getOutputChannels(): List<Pair<String, String>> {
+    override fun getOutputChannels(): Map<String, List<String>> {
         return solverFutureStub.getOutputChannels(buildSolverId()).get()
-            .channelList.map { Pair(it.name, it.content) }
+            .channelList.map { Pair(it.name, it.contentList) }.toMap()
     }
 
     protected val openStreamObservers: MutableList<StreamObserver<*>> = mutableListOf()
@@ -143,7 +135,7 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
             }
         })
         stub.onNext(OutputChannelEvent.newBuilder()
-            .setChannelID(fromChannelIDToMsg(channelID))
+            .setChannelID(MessageBuilder.fromChannelIDToMsg(channelID))
             .setSolverID(solverID).build())
         openStreamObservers.add(stub)
         return deque

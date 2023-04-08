@@ -7,7 +7,7 @@ import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.flags.FlagStore
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.client.prolog.SolutionsSequence
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
@@ -42,8 +42,8 @@ interface ClientSolver {
     fun getLibraries(): List<String>
     fun getUnificator(): Unificator
     fun getOperators(): OperatorSet
-    fun getInputChannels(): List<Pair<String, String>>
-    fun getOutputChannels(): List<Pair<String, String>>
+    fun getInputChannels(): Map<String, List<String>>
+    fun getOutputChannels(): Map<String, List<String>>
     fun getId(): String
     fun writeOnInputChannel(channelID: String, vararg terms: String)
     fun readOnOutputChannel(channelID: String): String
@@ -52,6 +52,6 @@ interface ClientSolver {
 
     companion object {
         @JvmStatic
-        val prolog: PrologSolverFactory by lazy { PrologSolverFactory }
+        val prolog: ClientPrologSolverFactory by lazy { ClientPrologSolverFactory }
     }
 }

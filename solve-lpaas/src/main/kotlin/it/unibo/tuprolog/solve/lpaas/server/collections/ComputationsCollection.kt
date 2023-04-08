@@ -15,7 +15,7 @@ object ComputationsCollection {
         Pair<Mutex, MutableMap<String, CursorSolutions>>> = mutableMapOf()
 
     /** Add a new iterator of solving computation to the map, generating its id **/
-    fun addIterator(solverID: String, goal: Struct, options: SolveOptions): String{
+    fun addIterator(solverID: String, goal: Struct, options: SolveOptions): String {
         if(!computations.containsKey(solverID)) {
             computations[solverID] = Pair(Mutex(), mutableMapOf())
         }

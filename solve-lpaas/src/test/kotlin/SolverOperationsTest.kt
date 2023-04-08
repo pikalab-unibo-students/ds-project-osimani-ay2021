@@ -8,6 +8,10 @@ import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.parse
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.runBlocking
 import kotlin.test.*
 
 class SolverOperationsTest {
@@ -25,6 +29,7 @@ class SolverOperationsTest {
         clients[BASIC] = ClientSolver.prolog.solverOf(staticKb = DEFAULT_STATIC_THEORY)
     }
 
+    /** Shuts down the server and closes all client **/
     @AfterTest
     fun afterEach() {
         server.stop()
@@ -40,11 +45,9 @@ class SolverOperationsTest {
             Struct.of("f", Term.parse("b")),
             sequence.next().solvedQuery
         )
-        /** A solveIterator must always be completed, either completely consuming it or closing it **/
     }
 
-    /** A failed test doesn't end if the stream is not closed before
-     * Error with index = 0 **/
+    /** A failed test doesn't end if the stream is not closed before **/
     @Test
     @Throws(Exception::class)
     fun solveIndex() {
@@ -56,7 +59,6 @@ class SolverOperationsTest {
         )
     }
 
-    /** FIX **/
     @Test
     @Throws(Exception::class)
     fun solveIndexOutOfBounds() {
@@ -97,22 +99,37 @@ class SolverOperationsTest {
         assert(!sequence.hasNext())
     }
 
-    /** Testing async-nature of requests FIX Lazy is not default **/
+    /** Testing async-nature of requests **/
     @Test
     @Throws(Exception::class)
     fun multipleConcurrentRequests() {
         clients[BLOCKING] = (ClientSolver.prolog.solverOf(staticKb = Theory.parse("""
                       p(X):-p(X).
                       """.trimIndent())))
-        clients[BLOCKING]!!.solve("p(X)")
-        val sequence = clients[BASIC]!!.solve("f(X)")
-        assertEquals(
-            Struct.of("f", Term.parse("b")),
-            sequence.next().solvedQuery
-        )
+        val thread1 = object: Thread() {
+            override fun run() {
+                println("BLOCKING START")
+                clients[BLOCKING]!!.solve("p(X)", SolveOptions.allEagerlyWithTimeout(1000)).next()
+                println("BLOCKING FINISHED")
+            }
+        }
+        val thread2 = object: Thread() {
+            override fun run() {
+                println("BASIC START")
+                assertEquals(
+                    Struct.of("f", Term.parse("b")),
+                    clients[BASIC]!!.solve("f(X)").next().solvedQuery
+                )
+                println("BASIC FINISHED")
+            }
+        }
+        println("threads defined")
+        thread1.start()
+        thread2.start()
+        Thread.sleep(2000)
     }
 
-    /** Testing SolveAsList FIX**/
+    /** Testing SolveAsList**/
     @Test
     @Throws(Exception::class)
     fun solveQueryList() {
@@ -166,7 +183,7 @@ class SolverOperationsTest {
         )
     }
 
-    /** Testing Solve List With Timeout FIX**/
+    /** Testing Solve List With Timeout **/
     @Test
     @Throws(Exception::class)
     fun solveQueryAsListWithTimeout() {

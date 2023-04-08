@@ -9,7 +9,7 @@ import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.util.toMap
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
@@ -23,7 +23,7 @@ class TrasparentSolver(unificator: Unificator,
                                 outputChannels: OutputStore
 ) : TrasparentClient() {
 
-    override val solver: ClientSolver = PrologSolverFactory.solverOf(
+    override val solver: ClientSolver = ClientPrologSolverFactory.solverOf(
             unificator = unificator,
             libraries =  libraries.aliases.toSet(),
             flags = flags,
@@ -37,7 +37,7 @@ class TrasparentSolver(unificator: Unificator,
                 }
                 Pair(it.key, content)
             }.toMap(),
-            outputs = outputChannels.currentAliases.toSet()
+            outputs = outputChannels.currentAliases.associateBy { "" }
         )
 
     override fun copy(

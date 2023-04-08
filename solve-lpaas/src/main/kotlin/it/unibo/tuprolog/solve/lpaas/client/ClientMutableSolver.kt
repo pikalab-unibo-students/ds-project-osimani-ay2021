@@ -7,7 +7,7 @@ import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
 
-interface ClientMutableSolver: ClientSolver  {
+interface ClientMutableSolver : ClientSolver {
     fun loadLibrary(libraryName: String)
     fun unloadLibrary(libraryName: String)
     fun setRuntime(libraries: Set<String>)

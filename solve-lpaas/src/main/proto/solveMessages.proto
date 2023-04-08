@@ -111,7 +111,7 @@ message OperatorSetMsg {
 message Channels {
   message ChannelID {
     string name = 1;
-    optional string content = 2;
+    repeated string content = 2;
   }
 
   repeated ChannelID channel = 1;

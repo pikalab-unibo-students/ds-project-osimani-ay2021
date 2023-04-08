@@ -31,6 +31,10 @@ fun <A, B> List<Pair<A, B>>.toMap(): MutableMap<A, B> {
     return map
 }
 
+fun List<String>.joinAll(): String =
+    this.joinToString { it }
+
+
 fun convertStringToKnownLibrary(libName: String): Library {
     return when(libName) {
         "prolog.io" -> IOLib

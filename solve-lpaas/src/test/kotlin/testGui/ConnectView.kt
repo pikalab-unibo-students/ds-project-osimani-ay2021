@@ -1,6 +1,6 @@
 package testGui
 
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
 import javafx.application.Platform
 import javafx.fxml.FXML
 import javafx.scene.control.Button
@@ -39,7 +39,7 @@ class ConnectView {
             txtError.isVisible = false
             pgrConnection.isVisible = true
             try {
-                PrologSolverFactory.connectToSolver(txtSolverId.text)!!.closeClient()
+                ClientPrologSolverFactory.connectToSolver(txtSolverId.text)!!.closeClient()
                 listener!!(txtSolverId.text)
                 this.onClose!!()
             } catch(e: Exception) {

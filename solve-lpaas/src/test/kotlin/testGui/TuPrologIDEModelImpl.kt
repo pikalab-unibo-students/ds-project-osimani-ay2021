@@ -12,7 +12,7 @@ import it.unibo.tuprolog.solve.exception.Warning
 import it.unibo.tuprolog.solve.libs.io.IOLib
 import it.unibo.tuprolog.solve.libs.oop.OOPLib
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
 import testGui.TuPrologIDEModel.State
 import it.unibo.tuprolog.theory.Theory
 import org.reactfx.EventSource
@@ -46,7 +46,7 @@ internal class TuPrologIDEModelImpl(
         }
 
     override fun newSolver(theory: Theory): String {
-        val solver = PrologSolverFactory.mutableSolverOf(
+        val solver = ClientPrologSolverFactory.mutableSolverOf(
         staticKb = theory,
         libraries = setOf(OOPLib, IOLib).map { it.alias }.toSet())
         solver.setStandardInput(stdin)
@@ -57,7 +57,7 @@ internal class TuPrologIDEModelImpl(
     }
 
     override fun loadSolver(solverId: String) {
-        currentSolver = PrologSolverFactory.connectToMutableSolver(solverId)
+        currentSolver = ClientPrologSolverFactory.connectToMutableSolver(solverId)
         if(customizer != null) customizer?.invoke(currentSolver!!)
         onSolverLoaded.push(SolverEvent(Unit, currentSolver!!))
     }

@@ -1,20 +1,19 @@
-package it.unibo.tuprolog.solve.lpaas.server.collections
+package it.unibo.tuprolog.solve.lpaas.server.channels
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.Listener
 import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.channel.impl.AbstractOutputChannel
 import it.unibo.tuprolog.solve.lpaas.solveMessage.ReadLine
-import it.unibo.tuprolog.solve.lpaas.util.parsers.fromReadLineToMsg
+import it.unibo.tuprolog.solve.lpaas.util.parsers.MessageBuilder.fromReadLineToMsg
 import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 import kotlin.reflect.KClass
 
 class OutputChannelObserver<T : Any>(
-    val eventType: KClass<T>
-) : OutputChannel<T>, AbstractOutputChannel<T>() {
-
-    val queue: BlockingDeque<T> = LinkedBlockingDeque()
+    val eventType: KClass<T>,
+    private val queue: BlockingDeque<T> = LinkedBlockingDeque()
+) : ChannelObserver<T>, AbstractOutputChannel<T>() {
 
     private val observers: MutableMap<StreamObserver<ReadLine>, Listener<T?>> = mutableMapOf()
 
@@ -31,7 +30,9 @@ class OutputChannelObserver<T : Any>(
         this.observers.forEach { it.key.onCompleted() }
     }
 
-    fun getCurrentContent(): List<T> = queue.toList()
+    override fun getCurrentContent(): List<T> = queue.toList()
+
+    fun consumeFirst(): T = queue.takeFirst()
 
     fun addObserverListener(observer: StreamObserver<ReadLine>) {
         val listener: Listener<T?> = {
@@ -50,7 +51,6 @@ class OutputChannelObserver<T : Any>(
 
     private fun sendOutput(line: T?, observer: StreamObserver<ReadLine>) {
         if (line != null) {
-            queue.putLast(line)
             observer.onNext(
                 fromReadLineToMsg(line.toString())
             )
@@ -58,8 +58,10 @@ class OutputChannelObserver<T : Any>(
     }
 
     companion object {
-        inline fun <reified X: Any> of(): OutputChannelObserver<X> {
-            return OutputChannelObserver(X::class)
+        inline fun <reified X: Any> of(content: List<X> = emptyList()): OutputChannelObserver<X> {
+            val queue = LinkedBlockingDeque<X>()
+            queue.addAll(content)
+            return OutputChannelObserver(X::class, queue)
         }
     }
 }

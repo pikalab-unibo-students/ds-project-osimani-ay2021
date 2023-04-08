@@ -1,11 +1,8 @@
-import it.unibo.tuprolog.core.Struct
-import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.TermFormatter
 import it.unibo.tuprolog.core.format
-import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.dsl.theory.logicProgramming
 import it.unibo.tuprolog.solve.*
-import it.unibo.tuprolog.solve.lpaas.client.prolog.PrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
 import it.unibo.tuprolog.solve.lpaas.client.trasparent.TrasparentFactory
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import kotlin.test.*
@@ -73,7 +70,7 @@ class TestServerSolver : TestSolver, SolverFactory by TrasparentFactory {
     override fun testWrite() {
         val outputs = mutableListOf<String>()
         logicProgramming {
-            val solver = PrologSolverFactory.solverOf(defaultBuiltins = true)
+            val solver = ClientPrologSolverFactory.solverOf(defaultBuiltins = true)
 
             val deque = solver.readStreamOnOutputChannel("\$current")
 
