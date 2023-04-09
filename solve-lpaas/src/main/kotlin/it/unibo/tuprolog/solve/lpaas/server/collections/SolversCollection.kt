@@ -79,6 +79,12 @@ object SolversCollection {
         DbManager.get().deleteSolver(solverID)
     }
 
+    fun closeAllStreams() {
+        solversDeques.values.forEach { channels ->
+            channels.getOutputChannels().values.forEach { it.close() }
+        }
+    }
+
     private fun generateId(): String {
         var id: String
         do {id = idGenerator()+ SOLVER_CODE

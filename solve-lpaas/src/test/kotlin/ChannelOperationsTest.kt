@@ -1,18 +1,10 @@
-import it.unibo.tuprolog.core.Clause
-import it.unibo.tuprolog.core.Struct
-import it.unibo.tuprolog.core.Term
-import it.unibo.tuprolog.core.parsing.parse
-import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputStore
-import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientSolverFactory
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
-import it.unibo.tuprolog.theory.Theory
-import it.unibo.tuprolog.theory.parsing.parse
 import kotlin.test.*
 
 
@@ -22,7 +14,6 @@ class ChannelOperationsTest {
 
     private val BASIC: String = "basic"
     private val MUTABLE: String = "mutable"
-    private val BLOCKING: String = "blocking"
 
     @BeforeTest
     fun beforeEach() {
@@ -67,15 +58,16 @@ class ChannelOperationsTest {
 
     @Test
     @Throws(Exception::class)
-    fun initializeWithOutputChannels() {
-        /*val result = mutableListOf<String>()
-        clients[BASIC] = ClientPrologSolverFactory.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("prolog.io"),
+    fun initializeWithStdout() {
+        val result = mutableListOf<String>()
+        clients[BASIC] = ClientSolverFactory.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("prolog.io"),
             outputs = mapOf(Pair(OutputStore.STDOUT) { result.add(it) }))
         clients[BASIC]!!.solve("f(X), write(${OutputStore.STDOUT}, X)", SolveOptions.allEagerly())
         clients[BASIC]!!.solveOnce("close(${OutputStore.STDOUT})")
+        println(result)
         assertContentEquals(
             listOf("b","d"),
-            result)*/
+            result)
     }
 
     @Test

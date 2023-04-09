@@ -27,8 +27,9 @@ import it.unibo.tuprolog.theory.Theory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 
-class ClientPrologMutableSolverImpl(solverID: String, channel: ManagedChannel) :
-    ClientPrologSolverImpl(solverID, channel), ClientMutableSolver {
+class ClientPrologMutableSolverImpl(solverID: String, channel: ManagedChannel,
+                                    outputChannels: Map<String, (String) -> Unit> = emptyMap()) :
+    ClientPrologSolverImpl(solverID, channel, outputChannels), ClientMutableSolver {
 
     private val mutableSolverFutureStub: MutableSolverGrpc.MutableSolverFutureStub = MutableSolverGrpc
         .newFutureStub(channel)
@@ -198,19 +199,5 @@ class ClientPrologMutableSolverImpl(solverID: String, channel: ManagedChannel) :
                 //does nothing
                 override fun pushContext(newContext: ExecutionContext): Warning = this
         })}
-    }
-
-    private fun setOutChannel(type: String, op: (String)->Unit) {
-        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<ReadLine> {
-            override fun onNext(value: ReadLine) {
-                op(value.line)
-            }
-            override fun onError(t: Throwable?) { println(t) }
-            override fun onCompleted() {}
-        })
-        stub.onNext(OutputChannelEvent.newBuilder()
-            .setChannelID(MessageBuilder.fromChannelIDToMsg(type))
-            .setSolverID(solverID).build())
-        openStreamObservers.add(stub)
     }
 }

@@ -23,11 +23,20 @@ import kotlinx.coroutines.*
 import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 
-open class ClientPrologSolverImpl(protected var solverID: String, protected var channel: ManagedChannel):
+open class ClientPrologSolverImpl(protected var solverID: String, protected var channel: ManagedChannel,
+                                  outputChannels: Map<String, (String) -> Unit> = emptyMap()
+):
     ClientSolver {
 
-    protected val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
+    private val solverStub: SolverGrpc.SolverStub = SolverGrpc.newStub(channel)
     private val solverFutureStub: SolverGrpc.SolverFutureStub = SolverGrpc.newFutureStub(channel)
+    private val openStreamObservers: MutableList<StreamObserver<*>> = mutableListOf()
+
+    init {
+        outputChannels.forEach {
+            setOutChannel(it.key, it.value)
+        }
+    }
 
     override fun getId(): String {
         return solverID
@@ -110,8 +119,6 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
             .channelList.map { Pair(it.name, it.contentList) }.toMap()
     }
 
-    protected val openStreamObservers: MutableList<StreamObserver<*>> = mutableListOf()
-
     override fun writeOnInputChannel(channelID: String, vararg terms: String) {
         solverStub.writeOnInputChannel(InputChannelEvent.newBuilder().setSolverID(solverID).setChannelID(
             Channels.ChannelID.newBuilder().setName(channelID)
@@ -147,6 +154,20 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
             .setSolverID(solverID).build())
         openStreamObservers.add(stub)
         return deque
+    }
+
+    protected fun setOutChannel(type: String, op: (String)->Unit) {
+        val stub = solverStub.readStreamFromOutputChannel(object: StreamObserver<ReadLine> {
+            override fun onNext(value: ReadLine) {
+                op(value.line)
+            }
+            override fun onError(t: Throwable?) { println(t) }
+            override fun onCompleted() {}
+        })
+        stub.onNext(OutputChannelEvent.newBuilder()
+            .setChannelID(MessageBuilder.fromChannelIDToMsg(type))
+            .setSolverID(solverID).build())
+        openStreamObservers.add(stub)
     }
 
     private fun buildRequestWithOptionsMessage(goal:Struct, options: SolveOptions): SolveRequest {

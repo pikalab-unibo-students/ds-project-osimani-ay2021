@@ -7,7 +7,7 @@ import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.TimeDuration
 import it.unibo.tuprolog.solve.flags.FlagStore
-import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientSolverFactory
 import it.unibo.tuprolog.solve.lpaas.client.prolog.SolutionsSequence
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
@@ -52,6 +52,6 @@ interface ClientSolver {
 
     companion object {
         @JvmStatic
-        val prolog: ClientPrologSolverFactory by lazy { ClientPrologSolverFactory }
+        val prolog: ClientSolverFactory by lazy { ClientSolverFactory }
     }
 }

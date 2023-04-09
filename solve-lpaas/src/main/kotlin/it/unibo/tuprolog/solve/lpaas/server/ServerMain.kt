@@ -2,6 +2,7 @@ package it.unibo.tuprolog.solve.lpaas.server
 
 import io.grpc.Server
 import io.grpc.ServerBuilder
+import it.unibo.tuprolog.solve.lpaas.server.collections.SolversCollection
 import it.unibo.tuprolog.solve.lpaas.server.database.DbManager
 import it.unibo.tuprolog.solve.lpaas.server.services.MutableSolverService
 import it.unibo.tuprolog.solve.lpaas.server.services.SolverFactoryService
@@ -45,6 +46,7 @@ class Service(private val port: Int = 8080) {
             try{
                 DbManager.get().deleteAll()
             } catch (_: Exception) {}
+        SolversCollection.closeAllStreams()
         serviceSolver!!.shutdown()
         this.awaitTermination()
     }

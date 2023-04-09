@@ -14,7 +14,7 @@ import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
 
-object ClientPrologSolverFactory  {
+object ClientSolverFactory  {
 
     private val channel: ManagedChannel = ManagedChannelBuilder.forAddress("localhost", 8080)
         .usePlaintext()
@@ -24,20 +24,20 @@ object ClientPrologSolverFactory  {
     fun solverOf(unificator: Unificator = Unificator.strict(), libraries: Set<String> = emptySet(),
                  flags: FlagStore = FlagStore.empty(), staticKb: Theory = Theory.empty(),
                  dynamicKb: Theory = Theory.empty(), inputs: Map<String, String> = emptyMap(),
-                 outputs: Map<String, String> = emptyMap(), defaultBuiltins: Boolean = true): ClientSolver {
+                 outputs: Map<String, (String) -> Unit> = emptyMap(), defaultBuiltins: Boolean = true): ClientSolver {
         return ClientPrologSolverImpl(
             generateSolverID(unificator, libraries, flags, staticKb, dynamicKb,
-            inputs, outputs, defaultBuiltins), channel
+            inputs, outputs, defaultBuiltins), channel, outputs
         )
     }
 
     fun mutableSolverOf(unificator: Unificator = Unificator.strict(), libraries: Set<String> = emptySet(),
                         flags: FlagStore = FlagStore.empty(), staticKb: Theory = Theory.empty(),
                         dynamicKb: Theory = Theory.empty(), inputs: Map<String, String> = emptyMap(),
-                        outputs: Map<String, String> = emptyMap(), defaultBuiltins: Boolean = true): ClientMutableSolver {
+                        outputs: Map<String, (String) -> Unit> = emptyMap(), defaultBuiltins: Boolean = true): ClientMutableSolver {
         return ClientPrologMutableSolverImpl(
             generateSolverID(unificator, libraries, flags, staticKb, dynamicKb,
-                inputs, outputs, defaultBuiltins, true), channel
+                inputs, outputs, defaultBuiltins, true), channel, outputs
         )
     }
 
@@ -62,7 +62,8 @@ object ClientPrologSolverFactory  {
 
     private fun generateSolverID(unificator: Unificator, libraries: Set<String>,
                                      flags: FlagStore, staticKb: Theory, dynamicKb: Theory,
-                                     inputChannels: Map<String, String>, outputChannels: Map<String, String>,
+                                     inputChannels: Map<String, String>,
+                                 outputChannels: Map<String, (String) -> Unit>,
                                      defaultBuiltins: Boolean, mutable: Boolean = false): String {
         val createSolverRequest: SolverRequest = SolverRequest.newBuilder()
             .setUnificator(unificator.toMsg())
@@ -71,7 +72,7 @@ object ClientPrologSolverFactory  {
             .setStaticKb(staticKb.toMsg())
             .setDynamicKb(dynamicKb.toMsg())
             .setInputStore(MessageBuilder.fromChannelsToMsg(inputChannels))
-            .setOutputStore(MessageBuilder.fromChannelsToMsg(outputChannels))
+            .setOutputStore(MessageBuilder.fromChannelsToMsg(outputChannels.keys))
             .setDefaultBuiltIns(defaultBuiltins)
             .setMutable(mutable).build()
         return stub.solverOf(createSolverRequest).get().id

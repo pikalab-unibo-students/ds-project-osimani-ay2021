@@ -2,7 +2,6 @@ package it.unibo.tuprolog.solve.lpaas.server.channels
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.solve.channel.Listener
-import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.channel.impl.AbstractOutputChannel
 import it.unibo.tuprolog.solve.lpaas.solveMessage.ReadLine
 import it.unibo.tuprolog.solve.lpaas.util.parsers.MessageBuilder.fromReadLineToMsg
@@ -26,8 +25,12 @@ class OutputChannelObserver<T : Any>(
     }
 
     override fun close() {
-        super.close()
-        this.observers.forEach { it.key.onCompleted() }
+        try {
+            this.observers.forEach { it.key.onCompleted() }
+        } catch (_: Exception) {}
+        try {
+            super.close()
+        } catch (_: Exception) {}
     }
 
     override fun getCurrentContent(): List<T> = queue.toList()

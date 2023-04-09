@@ -10,7 +10,7 @@ import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.theory.parsing.parse
 import kotlin.test.*
 
-class SimpleSolveOperationsTest {
+class SimpleSolverOperationsTest {
 
     private var clients: MutableMap<String, ClientSolver> = mutableMapOf()
     private lateinit var server: Service
@@ -207,5 +207,24 @@ class SimpleSolveOperationsTest {
         thread1.start()
         thread2.start()
         Thread.sleep(2000)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failureOfMethods() {
+        clients[BASIC]!!.closeClient(true)
+        assertFails { clients[BASIC]!!.solve("x") }
+        assertFails { clients[BASIC]!!.getFlags() }
+        assertFails { clients[BASIC]!!.getStaticKB() }
+        assertFails { clients[BASIC]!!.getDynamicKB() }
+        assertFails { clients[BASIC]!!.getLibraries() }
+        assertFails { clients[BASIC]!!.getUnificator() }
+        assertFails { clients[BASIC]!!.getOperators() }
+        assertFails { clients[BASIC]!!.getInputChannels() }
+        assertFails { clients[BASIC]!!.getOutputChannels() }
+        assertFails { clients[BASIC]!!.readOnOutputChannel("hello") }
+        //These should print the error
+        clients[BASIC]!!.writeOnInputChannel("hello")
+        clients[BASIC]!!.readStreamOnOutputChannel("hello")
     }
 }

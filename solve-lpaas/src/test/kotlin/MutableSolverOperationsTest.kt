@@ -2,13 +2,10 @@ import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.parsing.parse
-import it.unibo.tuprolog.solve.Solution
-import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.channel.InputStore
-import it.unibo.tuprolog.solve.channel.OutputStore
+import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientSolverFactory
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
@@ -76,5 +73,32 @@ class MutableSolverOperationsTest {
         assertContentEquals(
             listOf("h","e","l","l","o"),
             result)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failureOfMutableMethods() {
+        val solver = ClientSolverFactory.mutableSolverOf()
+        solver.closeClient(true)
+        assertFails { solver.loadLibrary("x") }
+        assertFails { solver.unloadLibrary("x") }
+        assertFails { solver.setRuntime(setOf()) }
+        assertFails { solver.loadStaticKb(Theory.empty()) }
+        assertFails { solver.appendStaticKb(Theory.empty()) }
+        assertFails { solver.resetStaticKb() }
+        assertFails { solver.loadDynamicKb(Theory.empty()) }
+        assertFails { solver.appendDynamicKb(Theory.empty()) }
+        assertFails { solver.resetDynamicKb() }
+        val struct = Struct.of("f", Term.parse("a"))
+        assertFails { solver.assertA(struct) }
+        assertFails { solver.assertZ(struct) }
+        assertFails { solver.retract(struct) }
+        assertFails { solver.retractAll(struct) }
+        assertFails { solver.setFlag("f", struct) }
+        assertFails { solver.setStandardInput("hello") }
+        //These should print the error
+        solver.setStandardOutput(OutputChannel.stdOut())
+        solver.setStandardError(OutputChannel.stdOut())
+        solver.setWarnings(OutputChannel.stdOut())
     }
 }

@@ -14,7 +14,7 @@ import it.unibo.tuprolog.solve.flags.NotableFlag
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
-import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientPrologSolverFactory
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientSolverFactory
 import it.unibo.tuprolog.solve.lpaas.util.toMap
 import it.unibo.tuprolog.theory.RetractResult
 import it.unibo.tuprolog.theory.Theory
@@ -29,7 +29,7 @@ class TrasparentMutableSolver(unificator: Unificator,
                               outputChannels: OutputStore
 ) : TrasparentClient(), MutableSolver {
 
-    override val solver: ClientMutableSolver = ClientPrologSolverFactory.mutableSolverOf(
+    override val solver: ClientMutableSolver = ClientSolverFactory.mutableSolverOf(
             unificator = unificator,
             libraries =  libraries.aliases.toSet(),
             flags = flags,
@@ -43,7 +43,9 @@ class TrasparentMutableSolver(unificator: Unificator,
                 }
                 Pair(it.key, content)
             }.toMap(),
-            outputs = outputChannels.currentAliases.associateBy { "" }
+            outputs = outputChannels.map {
+                Pair(it.key) { msg: String -> it.value.write(msg)}
+            }.toMap()
         )
 
     override fun loadLibrary(library: Library) = solver.loadLibrary(library.alias)
