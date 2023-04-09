@@ -283,6 +283,11 @@ class TuPrologIDEController : Initializable {
     }
 
     private fun onSolverLoaded(e: SolverEvent<Unit>) = onUiThread {
+        btnNext.isDisable = false
+        btnNextAll.isDisable = false
+        btnReset.isDisable = false
+        btnStop.isDisable = false
+        btnRefresh.isDisable = false
         updateContextSensitiveView(e)
     }
 
@@ -541,11 +546,6 @@ class TuPrologIDEController : Initializable {
         val controller = loader.getController() as CreateView
         controller.setListener {theory ->
             model.newSolver(theory)
-            btnNext.isDisable = false
-            btnNextAll.isDisable = false
-            btnReset.isDisable = false
-            btnStop.isDisable = false
-            btnRefresh.isDisable = false
         }
         controller.setOnClose { stage.close() }
 
@@ -560,7 +560,9 @@ class TuPrologIDEController : Initializable {
         stage.scene = Scene(root)
         stage.show()
         val controller = loader.getController() as ConnectView
-        controller.setListener {solverId -> model.loadSolver(solverId) }
+        controller.setListener {solverId ->
+            model.loadSolver(solverId)
+        }
         controller.setOnClose { stage.close() }
     }
 

@@ -4,6 +4,7 @@ import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
+import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientSolverFactory
 import it.unibo.tuprolog.solve.lpaas.server.Service
 import it.unibo.tuprolog.solve.lpaas.util.DEFAULT_STATIC_THEORY
 import it.unibo.tuprolog.theory.Theory
@@ -226,5 +227,11 @@ class SimpleSolverOperationsTest {
         //These should print the error
         clients[BASIC]!!.writeOnInputChannel("hello")
         clients[BASIC]!!.readStreamOnOutputChannel("hello")
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failedConnection() {
+        assertFails { ClientSolverFactory.connectToSolver("x") }
     }
 }
