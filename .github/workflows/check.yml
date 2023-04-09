@@ -51,6 +51,11 @@ jobs:
       - name: Checkout
         uses: danysk/action-checkout@0.2.7
 
+      - name: Start MongoDB v4.2
+        uses: supercharge/mongodb-github-action@1.2.0
+        with:
+          mongodb-version: 4.2
+
       - name: Build and test
         uses: DanySK/build-check-deploy-gradle-action@2.2.1
         with:
