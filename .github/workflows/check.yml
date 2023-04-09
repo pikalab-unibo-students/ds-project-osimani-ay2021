@@ -52,7 +52,7 @@ jobs:
         uses: danysk/action-checkout@0.2.7
 
       - name: Start MongoDB v4.2
-        uses: supercharge/mongodb-github-action@1.2.0
+        uses: supercharge/mongodb-github-action@v1.9.0
         with:
           mongodb-version: 4.2
 
