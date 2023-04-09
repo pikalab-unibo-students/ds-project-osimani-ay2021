@@ -16,7 +16,7 @@ import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import org.litote.kmongo.*
 
-class DbManager(uri: String) {
+class DbManager(db: MongoDatabase) {
     data class SerializedSolver(
         val solverID: String,
         val unificator: Map<String, String>,
@@ -29,76 +29,91 @@ class DbManager(uri: String) {
         val mutable: Boolean
     )
 
-    private val database: MongoDatabase
     private val solversCol: MongoCollection<SerializedSolver>
 
     init {
-        val client = KMongo.createClient(ConnectionString(uri))
-        database = client.getDatabase("lpaas")
-        solversCol = database.getCollection<SerializedSolver>()
+        solversCol = db.getCollection<SerializedSolver>()
     }
 
     fun addSolver(solverID: String, mutable: Boolean = false) {
-        val solver = SolversCollection.getSolver(solverID)
-        val channels = SolversCollection.getChannelDequesOfSolver(solverID)
-        val inputs = serializeChannels(channels.getInputChannels())
-        val outputs = serializeChannels(channels.getOutputChannels())
-        solversCol.insertOne(SerializedSolver(
-            solverID, solver.unificator.serialize(),
-            solver.libraries.serialize(), solver.flags.serialize(),
-            solver.staticKb.serialize(), solver.dynamicKb.serialize(),
-            inputs, outputs, mutable)
-        )
-    }
-
-    fun loadSolvers() {
-        solversCol.find().forEach { doc ->
-            val scope = Scope.empty()
-            val unificator = Unificator.strict(
-                Substitution.of(doc.unificator.map {
-                    Pair(scope.varOf(it.key), deserializer.deserialize(it.value)) }
-                    .toMap()))
-            val runtime = Runtime.of(doc.runtime.map { convertStringToKnownLibrary(it) })
-            val flags = FlagStore.of(doc.flags.map { Pair(it.key, deserializer.deserialize(it.value)) }.toMap())
-            val staticKB = Theory.of(doc.staticKB.map { deserializer.deserialize(it).castToClause() }.toList())
-            val dynamicKB = Theory.of(doc.dynamicKB.map { deserializer.deserialize(it).castToClause() }.toList())
-            SolversCollection.addSolver(
-                unificator = unificator,
-                runtime = runtime,
-                flagStore = flags,
-                staticKb = staticKB,
-                dynamicKb = dynamicKB,
-                inputs = doc.inputs,
-                outputs = doc.outputs,
-                defaultBuiltIns = false,
-                mutable = doc.mutable,
-                id = doc.solverID
+        checkInitialization {
+            val solver = SolversCollection.getSolver(solverID)
+            val channels = SolversCollection.getChannelDequesOfSolver(solverID)
+            val inputs = serializeChannels(channels.getInputChannels())
+            val outputs = serializeChannels(channels.getOutputChannels())
+            solversCol.insertOne(
+                SerializedSolver(
+                    solverID, solver.unificator.serialize(),
+                    solver.libraries.serialize(), solver.flags.serialize(),
+                    solver.staticKb.serialize(), solver.dynamicKb.serialize(),
+                    inputs, outputs, mutable
+                )
             )
         }
     }
 
+    fun loadSolvers() {
+        checkInitialization {
+            solversCol.find().forEach { doc ->
+                val scope = Scope.empty()
+                val unificator = Unificator.strict(
+                    Substitution.of(doc.unificator.map {
+                        Pair(scope.varOf(it.key), deserializer.deserialize(it.value)) }
+                        .toMap()))
+                val runtime = Runtime.of(doc.runtime.map { convertStringToKnownLibrary(it) })
+                val flags = FlagStore.of(doc.flags.map { Pair(it.key, deserializer.deserialize(it.value)) }.toMap())
+                val staticKB = Theory.of(doc.staticKB.map { deserializer.deserialize(it).castToClause() }.toList())
+                val dynamicKB = Theory.of(doc.dynamicKB.map { deserializer.deserialize(it).castToClause() }.toList())
+                SolversCollection.addSolver(
+                    unificator = unificator,
+                    runtime = runtime,
+                    flagStore = flags,
+                    staticKb = staticKB,
+                    dynamicKb = dynamicKB,
+                    inputs = doc.inputs,
+                    outputs = doc.outputs,
+                    defaultBuiltIns = false,
+                    mutable = doc.mutable,
+                    id = doc.solverID
+                )
+            }
+        }
+    }
+
     fun updateSolver(solverID: String) {
-        val solver = SolversCollection.getSolver(solverID)
-        val channels = SolversCollection.getChannelDequesOfSolver(solverID)
-        val inputs = serializeChannels(channels.getInputChannels())
-        val outputs = serializeChannels(channels.getOutputChannels())
-        solversCol.updateOne(SerializedSolver::solverID eq solverID,
-            SetTo(SerializedSolver::unificator, solver.unificator.serialize()),
-            SetTo(SerializedSolver::flags, solver.flags.serialize()),
-            SetTo(SerializedSolver::runtime, solver.libraries.serialize()),
-            SetTo(SerializedSolver::staticKB, solver.staticKb.serialize()),
-            SetTo(SerializedSolver::dynamicKB, solver.dynamicKb.serialize()),
-            SetTo(SerializedSolver::inputs, inputs),
-            SetTo(SerializedSolver::outputs, outputs),
-        )
+        checkInitialization {
+            val solver = SolversCollection.getSolver(solverID)
+            val channels = SolversCollection.getChannelDequesOfSolver(solverID)
+            val inputs = serializeChannels(channels.getInputChannels())
+            val outputs = serializeChannels(channels.getOutputChannels())
+            solversCol.updateOne(SerializedSolver::solverID eq solverID,
+                SetTo(SerializedSolver::unificator, solver.unificator.serialize()),
+                SetTo(SerializedSolver::flags, solver.flags.serialize()),
+                SetTo(SerializedSolver::runtime, solver.libraries.serialize()),
+                SetTo(SerializedSolver::staticKB, solver.staticKb.serialize()),
+                SetTo(SerializedSolver::dynamicKB, solver.dynamicKb.serialize()),
+                SetTo(SerializedSolver::inputs, inputs),
+                SetTo(SerializedSolver::outputs, outputs),
+            )
+        }
     }
 
     fun deleteSolver(solverID: String) {
-        solversCol.deleteOne(SerializedSolver::solverID eq solverID)
+        checkInitialization {
+            solversCol.deleteOne(SerializedSolver::solverID eq solverID)
+        }
     }
 
     fun deleteAll() {
-        solversCol.drop()
+        checkInitialization {
+            solversCol.drop()
+        }
+    }
+
+    private fun checkInitialization(op: () -> Unit) {
+        try {
+            op()
+        } catch(_:Exception) { println("The database is not connected") }
     }
 
     private fun <T : Any> serializeChannels(channels: Map<String, ChannelObserver<T>>): Map<String, List<T>> {
@@ -106,17 +121,21 @@ class DbManager(uri: String) {
     }
 
     companion object {
-        var manager: DbManager? = null
+        private var manager: DbManager? = null
 
-        private val port = 27017
-        private val DB_USER="app_user"
+        private const val port = 27017
+        private const val DB_USER="app_user"
         private val DB_PASS="app_password"
         val URL_DOCKER = "mongodb://${DB_USER}:${DB_PASS}@mongodb"
-        val URL_LOCAL = "mongodb://localhost"
+        const val URL_LOCAL = "mongodb://localhost"
         val URL_DOCKER_LOCAL = "mongodb://${DB_USER}:${DB_PASS}@0.0.0.0"
 
         fun init(url: String, port: Int = this.port) {
-            manager = DbManager("$url:$port")
+            try {
+                val db = KMongo.createClient(ConnectionString("$url:$port"))
+                    .getDatabase("lpaas")
+                manager = DbManager(db)
+            } catch (e: Exception) { println(e) }
         }
 
         fun get(): DbManager {
