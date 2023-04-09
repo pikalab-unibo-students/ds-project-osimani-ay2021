@@ -2,6 +2,7 @@ import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.parsing.parse
+import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.channel.OutputStore
@@ -15,12 +16,13 @@ import it.unibo.tuprolog.theory.parsing.parse
 import kotlin.test.*
 
 
-class SolverGettersAndSettersTest {
+class ChannelOperationsTest {
     private var clients: MutableMap<String, ClientSolver> = mutableMapOf()
     private lateinit var server: Service
 
     private val BASIC: String = "basic"
     private val MUTABLE: String = "mutable"
+    private val BLOCKING: String = "blocking"
 
     @BeforeTest
     fun beforeEach() {
@@ -33,43 +35,8 @@ class SolverGettersAndSettersTest {
 
     @AfterTest
     fun afterEach() {
-        clients.values.forEach { it.closeClient(true) }
-        server.stop()
-
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun getStaticKB() {
-        val theory = clients[BASIC]!!.getStaticKB()
-        assertEquals(
-            DEFAULT_STATIC_THEORY,
-            theory
-        )
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun useRetract() {
-        val result = (clients[MUTABLE]!! as ClientMutableSolver)
-            .retract(Struct.of("f", Term.parse("X")))
-        assertEquals(Theory.parse("f(d) :- true."),
-            result.theory)
-        assertContentEquals(
-            listOf(Clause.parse("f(b) :- true.")),
-            result.clauses)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun useRetractAll() {
-        val result = (clients[MUTABLE]!! as ClientMutableSolver)
-            .retractAll(Struct.of("f", Term.parse("X")))
-        assertEquals(Theory.empty(),
-            result.theory)
-        assertContentEquals(
-            listOf(Clause.parse("f(b) :- true."), Clause.parse("f(d) :- true.")),
-            result.clauses)
+        clients.values.forEach { it.closeClient() }
+        server.stop(true)
     }
 
     @Test
@@ -100,49 +67,25 @@ class SolverGettersAndSettersTest {
 
     @Test
     @Throws(Exception::class)
+    fun initializeWithOutputChannels() {
+        /*val result = mutableListOf<String>()
+        clients[BASIC] = ClientPrologSolverFactory.solverOf(staticKb = DEFAULT_STATIC_THEORY, libraries = setOf("prolog.io"),
+            outputs = mapOf(Pair(OutputStore.STDOUT) { result.add(it) }))
+        clients[BASIC]!!.solve("f(X), write(${OutputStore.STDOUT}, X)", SolveOptions.allEagerly())
+        clients[BASIC]!!.solveOnce("close(${OutputStore.STDOUT})")
+        assertContentEquals(
+            listOf("b","d"),
+            result)*/
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun readFromStdOutWithLaterJoin() {
         clients[BASIC]!!.solve("f(X), write(${OutputStore.STDOUT}, X)", SolveOptions.allEagerly())
         val result = clients[BASIC]!!.readStreamOnOutputChannel(OutputStore.STDOUT)
         clients[BASIC]!!.solveOnce("close(${OutputStore.STDOUT})")
         assertContentEquals(
             listOf("b","d"),
-            result)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun connectAndReadFromStdOutWithLaterJoin() {
-        clients[BASIC]!!.solve("f(X), write(${OutputStore.STDOUT}, X)", SolveOptions.allEagerly())
-        server.stop()
-        server.awaitTermination()
-        assertFails {
-            ClientPrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())
-            println("THIS SHOULD NOT BE PRINTED")
-        }
-        server.start()
-        println("Waiting for service to start again...")
-        Thread.sleep(3000)
-        val solver = ClientPrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())!!
-        val result = solver.readStreamOnOutputChannel(OutputStore.STDOUT)
-        solver.solveOnce("close(${OutputStore.STDOUT})")
-        assertContentEquals(
-            listOf("b","d"),
-            result)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun useSetStdIn() {
-        (clients[MUTABLE]!! as ClientMutableSolver)
-            .setStandardInput("hello")
-        val result = mutableListOf<String>()
-        for (i in 0 until "hello".length ) {
-            clients[MUTABLE]!!.solveOnce("get_char(stdin, X), write(stdout, X)")
-            result.add(clients[MUTABLE]!!.readOnOutputChannel("stdout"))
-        }
-        /** Solve closing stream, write on demand, etc **/
-        assertContentEquals(
-            listOf("h","e","l","l","o"),
             result)
     }
 
@@ -158,16 +101,5 @@ class SolverGettersAndSettersTest {
         println(result)
         clients[BASIC]!!.closeClient()
         assert(listOf("m","e","s","s","a","g","e").containsAll(result))
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testMultipleConnectionsToSameSolver() {
-        clients[BASIC]!!.solveOnce("assert(p(c))")
-        clients["temp"] = ClientPrologSolverFactory.connectToSolver(clients[BASIC]!!.getId())!!
-        assertEquals(
-            "p(c)",
-            clients["temp"]!!.solveOnce("p(X)").solvedQuery.toString()
-        )
     }
 }

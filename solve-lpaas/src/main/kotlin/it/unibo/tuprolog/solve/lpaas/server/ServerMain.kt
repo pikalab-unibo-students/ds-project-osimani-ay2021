@@ -40,7 +40,11 @@ class Service(private val port: Int = 8080) {
     }
 
     @Throws(InterruptedException::class)
-    fun stop() {
+    fun stop(cleanDB: Boolean = false) {
+        if(cleanDB)
+            try{
+                DbManager.get().deleteAll()
+            } catch (_: Exception) {}
         serviceSolver!!.shutdown()
         this.awaitTermination()
     }

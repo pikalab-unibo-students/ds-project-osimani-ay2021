@@ -21,52 +21,63 @@ import kotlinx.coroutines.runBlocking
 object SolverService : SolverGrpc.SolverImplBase() {
 
     override fun solve(request: SolveRequest, responseObserver: StreamObserver<SolutionSequence>) {
-        val computationID = ComputationsCollection.addIterator(request.solverID,
-            deserializer.deserialize(request.struct).castToStruct(),
-            parseOptions(request.optionsList)
-        )
-        responseObserver.onNext(
-            SolutionSequence.newBuilder().setSolverID(request.solverID)
-                .setComputationID(computationID).setQuery(request.struct).build()
-        )
-        responseObserver.onCompleted()
-        DbManager.get().updateSolver(request.solverID)
+        checkSolverExistence(request.solverID, responseObserver) {
+            val computationID = ComputationsCollection.addIterator(
+                request.solverID,
+                deserializer.deserialize(request.struct).castToStruct(),
+                parseOptions(request.optionsList)
+            )
+            responseObserver.onNext(
+                SolutionSequence.newBuilder().setSolverID(request.solverID)
+                    .setComputationID(computationID).setQuery(request.struct).build()
+            )
+            responseObserver.onCompleted()
+            DbManager.get().updateSolver(request.solverID)
+        }
     }
 
     override fun getSolution(request: SolutionID, responseObserver: StreamObserver<SolutionReply>) {
-        val message: SolutionReply = try {
-            val solution = runBlocking {
-                ComputationsCollection.getSolution(request.solverID, request.computationID,
-                    deserializer.deserialize(request.query).castToStruct(),
-                    request.index)
+        checkSolverExistence(request.solverID, responseObserver) {
+            val message: SolutionReply = try {
+                val solution = runBlocking {
+                    ComputationsCollection.getSolution(
+                        request.solverID, request.computationID,
+                        deserializer.deserialize(request.query).castToStruct(),
+                        request.index
+                    )
+                }
+                buildSolutionReply(solution.first, solution.second)
+            } catch (e: Error) {
+                SolutionReply.newBuilder().setQuery(request.query).setIsNo(true).setError(
+                    SolutionReply.ErrorMsg.newBuilder().setMessage(e.toString())
+                ).build()
             }
-            buildSolutionReply(solution.first, solution.second)
-        } catch (e: Error) {
-            SolutionReply.newBuilder().setQuery(request.query).setIsNo(true).setError(
-                SolutionReply.ErrorMsg.newBuilder().setMessage(e.toString())
-            ).build()
+            responseObserver.onNext(message)
+            responseObserver.onCompleted()
+            DbManager.get().updateSolver(request.solverID)
         }
-        responseObserver.onNext( message )
-        responseObserver.onCompleted()
-        DbManager.get().updateSolver(request.solverID)
     }
 
     override fun writeOnInputChannel(request: InputChannelEvent, responseObserver: StreamObserver<OperationResult>) {
-        request.lineList.forEach {
-            SolversCollection.getChannelDequesOfSolver(request.solverID)
-                .writeOnInputChannel(request.channelID.name, it)
+        checkSolverExistence(request.solverID, responseObserver) {
+            request.lineList.forEach {
+                SolversCollection.getChannelDequesOfSolver(request.solverID)
+                    .writeOnInputChannel(request.channelID.name, it)
+            }
+            responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
+            responseObserver.onCompleted()
+            DbManager.get().updateSolver(request.solverID)
         }
-        responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
-        responseObserver.onCompleted()
-        DbManager.get().updateSolver(request.solverID)
     }
 
     override fun readFromOutputChannel(request: OutputChannelEvent, responseObserver: StreamObserver<ReadLine>) {
-        val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
-            .consumeFromOutputChannel(request.channelID.name)
-        responseObserver.onNext(MessageBuilder.fromReadLineToMsg(outputValue))
-        responseObserver.onCompleted()
-        DbManager.get().updateSolver(request.solverID)
+        checkSolverExistence(request.solverID, responseObserver) {
+            val outputValue = SolversCollection.getChannelDequesOfSolver(request.solverID)
+                .consumeFromOutputChannel(request.channelID.name)
+            responseObserver.onNext(MessageBuilder.fromReadLineToMsg(outputValue))
+            responseObserver.onCompleted()
+            DbManager.get().updateSolver(request.solverID)
+        }
     }
 
     override fun readStreamFromOutputChannel(responseObserver: StreamObserver<ReadLine>):
@@ -75,72 +86,104 @@ object SolverService : SolverGrpc.SolverImplBase() {
             var solverID = ""
             var channelID = ""
             override fun onNext(value: OutputChannelEvent) {
-                solverID = value.solverID
-                channelID = value.channelID.name
-                SolversCollection.getChannelDequesOfSolver(solverID)
-                    .addListener(channelID, responseObserver)
+                checkSolverExistence(value.solverID, responseObserver) {
+                    solverID = value.solverID
+                    channelID = value.channelID.name
+                    SolversCollection.getChannelDequesOfSolver(solverID)
+                        .addListener(channelID, responseObserver)
+                }
             }
             override fun onError(t: Throwable?) {}
             override fun onCompleted() {
-                SolversCollection.getChannelDequesOfSolver(solverID)
-                    .removeListener(channelID, responseObserver)
+                if(SolversCollection.contains(solverID)) {
+                    SolversCollection.getChannelDequesOfSolver(solverID)
+                        .removeListener(channelID, responseObserver)
+                }
             }
         }
     }
 
     override fun getFlags(request: SolverID, responseObserver: StreamObserver<FlagsMsg>) {
-        responseObserver.onNext(SolversCollection.getSolver(request.solverID).flags.toMsg())
-        responseObserver.onCompleted()
+        checkSolverExistence(request.solverID, responseObserver) {
+            responseObserver.onNext(SolversCollection.getSolver(request.solverID).flags.toMsg())
+            responseObserver.onCompleted()
+        }
     }
 
     override fun getStaticKB(request: SolverID, responseObserver: StreamObserver<TheoryMsg.ClauseMsg>) {
-        SolversCollection.getSolver(request.solverID).staticKb.clauses.forEach {
-            responseObserver.onNext(it.toMsg())
+        checkSolverExistence(request.solverID, responseObserver) {
+            SolversCollection.getSolver(request.solverID).staticKb.clauses.forEach {
+                responseObserver.onNext(it.toMsg())
+            }
+            responseObserver.onCompleted()
         }
-        responseObserver.onCompleted()
     }
 
     override fun getDynamicKB(request: SolverID, responseObserver: StreamObserver<TheoryMsg.ClauseMsg>) {
-        SolversCollection.getSolver(request.solverID).dynamicKb.clauses.forEach {
-            responseObserver.onNext(it.toMsg())
+        checkSolverExistence(request.solverID, responseObserver) {
+            SolversCollection.getSolver(request.solverID).dynamicKb.clauses.forEach {
+                responseObserver.onNext(it.toMsg())
+            }
+            responseObserver.onCompleted()
         }
-        responseObserver.onCompleted()
     }
 
     override fun getLibraries(request: SolverID, responseObserver: StreamObserver<RuntimeMsg>) {
-        responseObserver.onNext(SolversCollection.getSolver(request.solverID).libraries.toMsg())
-        responseObserver.onCompleted()
+        checkSolverExistence(request.solverID, responseObserver) {
+            responseObserver.onNext(SolversCollection.getSolver(request.solverID).libraries.toMsg())
+            responseObserver.onCompleted()
+        }
     }
 
     override fun getUnificator(request: SolverID, responseObserver: StreamObserver<UnificatorMsg>) {
-        responseObserver.onNext(SolversCollection.getSolver(request.solverID).unificator.toMsg())
-        responseObserver.onCompleted()
+        checkSolverExistence(request.solverID, responseObserver) {
+            responseObserver.onNext(SolversCollection.getSolver(request.solverID).unificator.toMsg())
+            responseObserver.onCompleted()
+        }
     }
 
     override fun getOperators(request: SolverID, responseObserver: StreamObserver<OperatorSetMsg>) {
-        responseObserver.onNext(SolversCollection.getSolver(request.solverID).operators.toMsg())
-        responseObserver.onCompleted()
+        checkSolverExistence(request.solverID, responseObserver) {
+                responseObserver.onNext(SolversCollection.getSolver(request.solverID).operators.toMsg())
+                responseObserver.onCompleted()
+        }
     }
 
     override fun getInputChannels(request: SolverID, responseObserver: StreamObserver<Channels>) {
-        val messageBuilder = Channels.newBuilder()
-        SolversCollection.getChannelDequesOfSolver(request.solverID).getInputChannels().forEach {
-            messageBuilder.addChannel(
-                MessageBuilder.fromChannelIDToMsg(it.key,
-                    it.value.getCurrentContent()))
+        checkSolverExistence(request.solverID, responseObserver) {
+            val messageBuilder = Channels.newBuilder()
+            SolversCollection.getChannelDequesOfSolver(request.solverID).getInputChannels().forEach {
+                messageBuilder.addChannel(
+                    MessageBuilder.fromChannelIDToMsg(
+                        it.key,
+                        it.value.getCurrentContent()
+                    )
+                )
+            }
+            responseObserver.onNext(messageBuilder.build())
+            responseObserver.onCompleted()
         }
-        responseObserver.onNext(messageBuilder.build())
-        responseObserver.onCompleted()
     }
 
     override fun getOutputChannels(request: SolverID, responseObserver: StreamObserver<Channels>) {
-        val messageBuilder = Channels.newBuilder()
-        SolversCollection.getChannelDequesOfSolver(request.solverID).getOutputChannels().forEach {
-            messageBuilder.addChannel(
-                MessageBuilder.fromChannelIDToMsg(it.key, it.value.getCurrentContent()))
+        checkSolverExistence(request.solverID, responseObserver) {
+            val messageBuilder = Channels.newBuilder()
+            SolversCollection.getChannelDequesOfSolver(request.solverID).getOutputChannels().forEach {
+                messageBuilder.addChannel(
+                    MessageBuilder.fromChannelIDToMsg(it.key, it.value.getCurrentContent())
+                )
+            }
+            responseObserver.onNext(messageBuilder.build())
+            responseObserver.onCompleted()
         }
-        responseObserver.onNext(messageBuilder.build())
-        responseObserver.onCompleted()
+    }
+
+    override fun deleteSolver(request: SolverID, responseObserver: StreamObserver<OperationResult>) {
+        checkSolverExistence(request.solverID, responseObserver) {
+            SolversCollection.deleteSolver(request.solverID)
+            responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
+            responseObserver.onCompleted()
+        }
     }
 
     private fun parseOptions(options: List<SolveRequest.Options>): SolveOptions {
@@ -186,11 +229,5 @@ object SolverService : SolverGrpc.SolverImplBase() {
                 .build()
         }
         return solutionBuilder.build()
-    }
-
-    override fun deleteSolver(request: SolverID, responseObserver: StreamObserver<OperationResult>) {
-        SolversCollection.deleteSolver(request.solverID)
-        responseObserver.onNext(OperationResult.newBuilder().setResult(true).build())
-        responseObserver.onCompleted()
     }
 }

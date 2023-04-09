@@ -37,13 +37,16 @@ object SolverFactoryService: SolverFactoryGrpc.SolverFactoryImplBase() {
             request.mutable, request.defaultBuiltIns)
         responseObserver.onNext(buildSolverId(id))
         responseObserver.onCompleted()
+        DbManager.get().addSolver(solverID = id, mutable = request.mutable)
     }
 
     override fun connectToSolver(request: SolverId, responseObserver: StreamObserver<OperationResult>) {
-        responseObserver.onNext(
-            OperationResult.newBuilder().setResult(solvers.contains(request.id)).build()
-        )
-        responseObserver.onCompleted()
+        checkSolverExistence(request.id, responseObserver) {
+            responseObserver.onNext(
+                OperationResult.newBuilder().setResult(true).build()
+            )
+            responseObserver.onCompleted()
+        }
     }
 
     private fun <A, B> ifEmptyUseDefault(value: List<A>, parser: (List<A>) -> B, default: B): B {

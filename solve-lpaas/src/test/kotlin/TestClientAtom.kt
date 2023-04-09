@@ -13,7 +13,7 @@ class TestClientAtom : TestAtom, SolverFactory by TrasparentFactory {
     @BeforeTest
     fun before() = service.start()
     @AfterTest
-    fun after() = service.stop()
+    fun after() = service.stop(true)
 
     @Test
     override fun testAtomAtom() {

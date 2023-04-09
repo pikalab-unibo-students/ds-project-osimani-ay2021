@@ -16,9 +16,9 @@ import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 import org.litote.kmongo.*
 
-class DbManager(private val uri: String) {
+class DbManager(uri: String) {
     data class SerializedSolver(
-        val id: String,
+        val solverID: String,
         val unificator: Map<String, String>,
         val runtime: Set<String>,
         val flags: Map<String, String>,
@@ -72,7 +72,7 @@ class DbManager(private val uri: String) {
                 outputs = doc.outputs,
                 defaultBuiltIns = false,
                 mutable = doc.mutable,
-                id = doc.id
+                id = doc.solverID
             )
         }
     }
@@ -82,7 +82,7 @@ class DbManager(private val uri: String) {
         val channels = SolversCollection.getChannelDequesOfSolver(solverID)
         val inputs = serializeChannels(channels.getInputChannels())
         val outputs = serializeChannels(channels.getOutputChannels())
-        solversCol.updateOne(SerializedSolver::id eq solverID,
+        solversCol.updateOne(SerializedSolver::solverID eq solverID,
             SetTo(SerializedSolver::unificator, solver.unificator.serialize()),
             SetTo(SerializedSolver::flags, solver.flags.serialize()),
             SetTo(SerializedSolver::runtime, solver.libraries.serialize()),
@@ -94,7 +94,11 @@ class DbManager(private val uri: String) {
     }
 
     fun deleteSolver(solverID: String) {
-        solversCol.deleteOne(SerializedSolver::id eq solverID)
+        solversCol.deleteOne(SerializedSolver::solverID eq solverID)
+    }
+
+    fun deleteAll() {
+        solversCol.drop()
     }
 
     private fun <T : Any> serializeChannels(channels: Map<String, ChannelObserver<T>>): Map<String, List<T>> {

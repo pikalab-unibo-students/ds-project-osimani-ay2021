@@ -34,13 +34,13 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
     }
 
     override fun closeClient(withDeletion: Boolean) {
+        if(withDeletion) {
+            solverFutureStub.deleteSolver(buildSolverId()).get()
+        }
         openStreamObservers.forEach {
             try {
                 it.onCompleted()
             } catch (_: Exception) {} }
-        if(withDeletion) {
-            solverFutureStub.deleteSolver(buildSolverId()).get()
-        }
     }
 
     override fun solve(goal: Struct, options: SolveOptions): SolutionsSequence {
@@ -69,7 +69,9 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
             override fun onNext(value: ClauseMsg) {
                 clauseList.add(value.parseToClause())
             }
-            override fun onError(t: Throwable?) {}
+            override fun onError(t: Throwable) {
+                future.completeExceptionally(t)
+            }
             override fun onCompleted() { future.complete(clauseList) }
         })
         runBlocking {
@@ -115,7 +117,9 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
             Channels.ChannelID.newBuilder().setName(channelID)
         ).addAllLine(terms.toList()).build(), object: StreamObserver<OperationResult> {
             override fun onNext(value: OperationResult?) {}
-            override fun onError(t: Throwable?) {}
+            override fun onError(t: Throwable?) {
+                println(t)
+            }
             override fun onCompleted() {}
         })
     }
@@ -133,9 +137,10 @@ open class ClientPrologSolverImpl(protected var solverID: String, protected var 
             override fun onNext(value: ReadLine) {
                 deque.putLast(value.line)
             }
-            override fun onError(t: Throwable?) {}
-            override fun onCompleted() {
+            override fun onError(t: Throwable?) {
+                println(t)
             }
+            override fun onCompleted() {}
         })
         stub.onNext(OutputChannelEvent.newBuilder()
             .setChannelID(MessageBuilder.fromChannelIDToMsg(channelID))

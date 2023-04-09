@@ -74,7 +74,9 @@ class ClientPrologMutableSolverImpl(solverID: String, channel: ManagedChannel) :
             override fun onNext(value: OperationResult) {
                 future.complete(value)
             }
-            override fun onError(t: Throwable?) {}
+            override fun onError(t: Throwable?) {
+                future.completeExceptionally(t!!)
+            }
             override fun onCompleted() {}
         })
 
@@ -203,7 +205,7 @@ class ClientPrologMutableSolverImpl(solverID: String, channel: ManagedChannel) :
             override fun onNext(value: ReadLine) {
                 op(value.line)
             }
-            override fun onError(t: Throwable?) {}
+            override fun onError(t: Throwable?) { println(t) }
             override fun onCompleted() {}
         })
         stub.onNext(OutputChannelEvent.newBuilder()

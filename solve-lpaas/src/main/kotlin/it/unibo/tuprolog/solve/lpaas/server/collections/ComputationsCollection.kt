@@ -3,7 +3,7 @@ package it.unibo.tuprolog.solve.lpaas.server.collections
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.lpaas.util.idGenerator
+import it.unibo.tuprolog.solve.lpaas.server.services.idGenerator
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 

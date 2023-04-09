@@ -44,20 +44,24 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             var solverID = ""
             val clauseList = mutableListOf<Clause>()
             override fun onNext(value: MutableClause) {
-                if(value.clause.content.isNotEmpty()) clauseList.add(value.clause.parseToClause())
-                if(solverID.isEmpty()) solverID = value.solverID
+                checkSolverExistence(value.solverID, responseObserver) {
+                    if (value.clause.content.isNotEmpty()) clauseList.add(value.clause.parseToClause())
+                    if (solverID.isEmpty()) solverID = value.solverID
+                }
             }
             override fun onError(t: Throwable?) {}
             override fun onCompleted() {
-                val solver = solvers.getMutableSolver(solverID)
-                if(solver != null ) {
-                    op(solver, Theory.of(clauseList))
-                    responseObserver.onNext(buildOperationResult())
-                } else {
-                    responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
+                if(solvers.contains(solverID)) {
+                    val solver = solvers.getMutableSolver(solverID)
+                    if (solver != null) {
+                        op(solver, Theory.of(clauseList))
+                        responseObserver.onNext(buildOperationResult())
+                    } else {
+                        responseObserver.onNext(buildOperationResult("The selected solver does not exist or  is not mutable"))
+                    }
+                    responseObserver.onCompleted()
+                    DbManager.get().updateSolver(solverID)
                 }
-                responseObserver.onCompleted()
-                DbManager.get().updateSolver(solverID)
             }
         }
     }
@@ -107,22 +111,25 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
     private fun genericRetract(solverID: String, structToRetract: TheoryMsg.ClauseMsg,
                                responseObserver: StreamObserver<RetractResultMsg>,
                                operation: (MutableSolver, Struct) -> RetractResult<Theory>) {
-        try {
-            val result = operation(
-                solvers.getMutableSolver(solverID)!!,
-                structToRetract.parseToStruct())
-            val responseBuilder = RetractResultMsg.newBuilder().setTheory(result.theory.toMsg())
-                .addAllClauses(result.clauses?.map { it.toMsg() })
-            if(result.isSuccess) {
-                responseObserver.onNext(responseBuilder.setIsSuccess(true).build())
-            } else {
-                responseObserver.onNext(responseBuilder.setIsFailure(true).build())
+        checkSolverExistence(solverID, responseObserver) {
+            try {
+                val result = operation(
+                    solvers.getMutableSolver(solverID)!!,
+                    structToRetract.parseToStruct()
+                )
+                val responseBuilder = RetractResultMsg.newBuilder().setTheory(result.theory.toMsg())
+                    .addAllClauses(result.clauses?.map { it.toMsg() })
+                if (result.isSuccess) {
+                    responseObserver.onNext(responseBuilder.setIsSuccess(true).build())
+                } else {
+                    responseObserver.onNext(responseBuilder.setIsFailure(true).build())
+                }
+            } catch (e: Exception) {
+                println(e)
             }
-        } catch (e: Exception) {
-            println(e)
+            responseObserver.onCompleted()
+            DbManager.get().updateSolver(solverID)
         }
-        responseObserver.onCompleted()
-        DbManager.get().updateSolver(solverID)
     }
 
     override fun setFlag(request: MutableFlag, responseObserver: StreamObserver<OperationResult>) {
@@ -144,9 +151,10 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
     }
 
     override fun setChannel(request: MutableChannelID, responseObserver: StreamObserver<OperationResult>) {
-        val collection = SolversCollection.getChannelDequesOfSolver(request.solverID)
         doOperationOnMutableSolver(request.solverID,
-            { when(request.type) {
+            {
+                val collection = SolversCollection.getChannelDequesOfSolver(request.solverID)
+                when(request.type) {
                 (MutableChannelID.CHANNEL_TYPE.INPUT) -> {
                     val channel = collection.addInputChannel(InputStore.STDIN, request.channel.contentList)
                     it.setStandardInput(channel)
@@ -156,14 +164,16 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
     }
 
     private fun doOperationOnMutableSolver(solverID: String, operation: (MutableSolver) -> Unit, responseObserver: StreamObserver<OperationResult>) {
-        try {
-            operation(solvers.getMutableSolver(solverID)!!)
-            responseObserver.onNext(buildOperationResult())
-        } catch (e: Exception) {
-            responseObserver.onNext(buildOperationResult("The selected solver is not mutable"))
+        checkSolverExistence(solverID, responseObserver) {
+            try {
+                operation(solvers.getMutableSolver(solverID)!!)
+                responseObserver.onNext(buildOperationResult())
+            } catch (e: Exception) {
+                responseObserver.onNext(buildOperationResult("The selected solver does not exist or is not mutable"))
+            }
+            responseObserver.onCompleted()
+            DbManager.get().updateSolver(solverID)
         }
-        responseObserver.onCompleted()
-        DbManager.get().updateSolver(solverID)
     }
 
     private fun buildOperationResult(error: String = ""): OperationResult {

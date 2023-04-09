@@ -9,8 +9,8 @@ import it.unibo.tuprolog.solve.flags.FlagStore
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.lpaas.server.channels.ChannelsDequesCollector
 import it.unibo.tuprolog.solve.lpaas.server.database.DbManager
+import it.unibo.tuprolog.solve.lpaas.server.services.idGenerator
 import it.unibo.tuprolog.theory.Theory
-import it.unibo.tuprolog.solve.lpaas.util.idGenerator
 import it.unibo.tuprolog.unify.Unificator
 
 object SolversCollection {
@@ -70,7 +70,6 @@ object SolversCollection {
             inputs = InputStore.of(channelsDeque.getInputChannels()),
             outputs = OutputStore.of(channelsDeque.getOutputChannels()))
         }
-        DbManager.get().addSolver(solverID = id, mutable = mutable)
         return id
     }
 
