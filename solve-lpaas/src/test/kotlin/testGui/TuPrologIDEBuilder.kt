@@ -19,7 +19,7 @@ import javafx.stage.Stage
  */
 data class TuPrologIDEBuilder(
     val stage: Stage,
-    var title: String = "tuProlog IDE",
+    var title: String = "LPaaS GUI",
     var icon: Image = TUPROLOG_LOGO,
     var onClose: () -> Boolean = { showExitConfirmationDialog(title) },
     var onAbout: () -> Unit = { showAboutDialog(title, Info.VERSION) },

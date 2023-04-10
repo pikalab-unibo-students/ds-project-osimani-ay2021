@@ -72,6 +72,12 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
             responseObserver)
     }
 
+    override fun unloadLibrary(request: MutableLibrary, responseObserver: StreamObserver<OperationResult>) {
+        doOperationOnMutableSolver(request.solverID,
+            { it.unloadLibrary(request.library.parse()) },
+            responseObserver)
+    }
+
     override fun assertA(request: MutableClause, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
             { it.assertA(request.clause.parseToStruct())},
@@ -141,12 +147,6 @@ object MutableSolverService: MutableSolverGrpc.MutableSolverImplBase() {
     override fun setLibraries(request: MutableRuntime, responseObserver: StreamObserver<OperationResult>) {
         doOperationOnMutableSolver(request.solverID,
             { it.setRuntime(request.runtime.parse()) },
-            responseObserver)
-    }
-
-    override fun unloadLibrary(request: MutableLibrary, responseObserver: StreamObserver<OperationResult>) {
-        doOperationOnMutableSolver(request.solverID,
-            { it.unloadLibrary(request.library.parse()) },
             responseObserver)
     }
 

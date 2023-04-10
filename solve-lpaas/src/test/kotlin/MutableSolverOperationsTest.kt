@@ -3,6 +3,8 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.solve.channel.OutputChannel
+import it.unibo.tuprolog.solve.libs.io.IOLib
+import it.unibo.tuprolog.solve.libs.oop.OOPLib
 import it.unibo.tuprolog.solve.lpaas.client.ClientMutableSolver
 import it.unibo.tuprolog.solve.lpaas.client.ClientSolver
 import it.unibo.tuprolog.solve.lpaas.client.prolog.ClientSolverFactory
@@ -33,6 +35,50 @@ class MutableSolverOperationsTest {
     fun afterEach() {
         clients.values.forEach { it.closeClient() }
         server.stop(true)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun useAssertA() {
+        val previousTheory = clients[MUTABLE]!!.getDynamicKB()
+        (clients[MUTABLE]!! as ClientMutableSolver)
+            .assertA(Struct.of("p", Term.parse("a")))
+        assertEquals(
+            Theory.of(listOf(Clause.parse("p(a) :- true.")) + previousTheory.clauses),
+            clients[MUTABLE]!!.getDynamicKB())
+    }
+
+    @Test
+    @Throws(Exception::class)
+        fun useAssertZ() {
+        val previousTheory = clients[MUTABLE]!!.getDynamicKB()
+        (clients[MUTABLE]!! as ClientMutableSolver)
+            .assertZ(Struct.of("p", Term.parse("a")))
+        assertEquals(
+            Theory.of(previousTheory + Clause.parse("p(a) :- true.")),
+            clients[MUTABLE]!!.getDynamicKB())
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun useLoadStaticKB() {
+        val newTheory = Theory.of(
+        Clause.parse("p(a) :- true."),
+        Clause.parse("p(b) :- true."))
+        (clients[MUTABLE]!! as ClientMutableSolver)
+            .loadStaticKb(newTheory)
+        assertEquals(
+            newTheory,
+            clients[MUTABLE]!!.getStaticKB())
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun useLoadLibrary() {
+        val library = OOPLib.alias
+        (clients[MUTABLE]!! as ClientMutableSolver)
+            .unloadLibrary(library)
+        assert(clients[MUTABLE]!!.getLibraries().contains(library))
     }
 
     @Test

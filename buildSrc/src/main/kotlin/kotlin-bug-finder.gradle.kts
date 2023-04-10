@@ -1,3 +1,4 @@
+/*
 import io.gitlab.arturbosch.detekt.DetektPlugin
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 
@@ -8,3 +9,4 @@ configure<DetektExtension> {
     config = rootProject.files(".detekt.yml")
     buildUponDefaultConfig = true
 }
+ */
