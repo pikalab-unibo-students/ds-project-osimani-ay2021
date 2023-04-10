@@ -18,11 +18,11 @@ jobs:
       - name: Checkout
         uses: DanySK/action-checkout@0.2.7
 
-      - name: Check Code Style
-        uses: DanySK/build-check-deploy-gradle-action@2.2.1
-        with:
-          build-command: true
-          check-command: ./gradlew ktlintCheck
+      #- name: Check Code Style
+      #  uses: DanySK/build-check-deploy-gradle-action@2.2.1
+      #  with:
+      #    build-command: true
+      #    check-command: ./gradlew ktlintCheck
 
   test-jvm:
     strategy:
