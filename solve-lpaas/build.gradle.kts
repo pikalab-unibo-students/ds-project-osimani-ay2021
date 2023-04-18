@@ -37,7 +37,7 @@ kotlin {
 
         test {
             dependencies {
-                implementation("org.testng:testng:7.1.0")
+                implementation("org.testng:testng:7.1.1")
                 implementation(libs.grpc.testing)
                 implementation(project(":solve-classic"))
                 libs.javafx.graphics.get().let {
