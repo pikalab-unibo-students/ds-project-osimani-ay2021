@@ -4,7 +4,7 @@ val otherProjects = setOf("documentation")
 
 val jsProjects = setOf("parser-js")
 
-val jvmProjects = setOf("examples", "ide", "ide-plp", "parser-jvm")
+val jvmProjects = setOf("examples", "ide", "ide-plp", "parser-jvm", "primitives-aas")
 
 val Project.ktProjects
     get() = rootProject.subprojects.except(otherProjects + jsProjects + jvmProjects).map { it.name }.toSet()

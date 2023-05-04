@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.primitives";
+option java_outer_classname = "PaaS";
+
+package primitives;
+
+import "basicMessages.proto";
+
+service GenericPrimitiveService {
+  rpc callPrimitive(stream RequestMsg) returns (stream ResponseMsg) {}
+  rpc getSignature(EmptyMsg) returns (SignatureMsg) {}
+}
+
+message RequestMsg {
+  SignatureMsg signature = 1;
+  repeated ArgumentMsg arguments = 2;
+  ExecutionContextMsg context = 3;
+  int64 start_time = 4;
+  int64 max_duration = 5;
+}
+
+import "sideEffectsMessages.proto";
+
+message ResponseMsg {
+  SolutionMsg solution = 1;
+  string side_effect_manager = 2;
+  repeated SideEffectMsg sideEffects = 3;
+  bool hasNext = 4;
+}
+
+import "errorsMessages.proto";
+
+message SolutionMsg {
+  SolutionType type = 1;
+  StructMsg query = 2;
+  map<string, ArgumentMsg> substitutions = 3;
+  optional ErrorMsg error = 4;
+
+  enum SolutionType {
+    SUCCESS = 0;
+    FAIL = 1;
+    HALT = 2;
+  }
+}
+
+message ErrorMsg {
+  optional string message = 1;
+  repeated ExecutionContextMsg contexts = 2;
+  optional ErrorMsg cause = 3;
+  oneof error {
+    InitializationIssueMsg initializationIssue = 4;
+    MissingPredicateMsg missingPredicate = 5;
+    HaltExceptionMsg haltException = 6;
+    LogicErrorMsg logicError = 7;
+    ResolutionExceptionMsg resolutionException = 8;
+    TimeOutExceptionMsg timeoutException = 9;
+  }
+}
+
+message Operation {}
+
+

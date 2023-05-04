@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.primitives.errors";
+option java_outer_classname = "ErrorsMsg";
+
+package primitives;
+
+import "basicMessages.proto";
+
+message LogicErrorMsg {
+    StructMsg type = 1;
+    ArgumentMsg extraData = 2;
+    oneof error {
+        DomainErrorMsg domainError = 3;
+        EvaluationErrorMsg evaluationError = 4;
+        ExistenceErrorMsg existenceError = 5;
+        InstantiationErrorMsg instantiationError = 6;
+        MessageErrorMsg messageError = 7;
+        PermissionErrorMsg permissionError = 8;
+        RepresentationErrorMsg representationError = 9;
+        SyntaxErrorMsg syntaxError = 10;
+        SystemErrorMsg systemError = 11;
+        TypeErrorMsg typeError = 12;
+    }
+}
+
+message DomainErrorMsg {
+    string expectedDomain = 1;
+    ArgumentMsg culprit = 2;
+}
+
+message EvaluationErrorMsg {
+    string errorType = 1;
+}
+
+message ExistenceErrorMsg {
+    string expectedObject = 1;
+    ArgumentMsg culprit = 2;
+}
+
+message InstantiationErrorMsg {
+    ArgumentMsg culprit = 1;
+}
+
+message MessageErrorMsg {}
+
+message PermissionErrorMsg {
+    string operation = 1;
+    string permission = 2;
+    ArgumentMsg culprit = 3;
+}
+
+message RepresentationErrorMsg {
+    string limit = 1;
+}
+
+message SyntaxErrorMsg {}
+
+message SystemErrorMsg {}
+
+message TypeErrorMsg {
+    string expectedType = 1;
+    ArgumentMsg culprit = 2;
+}
+
+message InitializationIssueMsg {
+    StructMsg goal = 1;
+}
+
+message MissingPredicateMsg {
+    SignatureMsg signature = 1;
+}
+
+message HaltExceptionMsg {
+    int32 exitStatus = 1;
+}
+
+message ResolutionExceptionMsg {}
+
+message TimeOutExceptionMsg {
+    int64 exceededDuration = 1;
+}
+
+
+
+

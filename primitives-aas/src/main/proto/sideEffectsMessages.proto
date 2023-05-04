@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.primitives.sideEffects";
+option java_outer_classname = "SideEffectsMsg";
+
+package primitives;
+
+import "basicMessages.proto";
+
+message SideEffectMsg {
+  oneof msg {
+    // Extends With All Types
+    SetClausesOfKBMsg clauses = 1;
+    AlterFlagsMsg flags = 2;
+    AlterRuntimeMsg runtime = 3;
+    AlterOperatorsMsg operators = 4;
+    AlterChannelsMsg channels = 5;
+    AlterCustomDataMsg customData = 6;
+  }
+}
+
+message SetClausesOfKBMsg {
+  enum KbType {
+    STATIC = 0;
+    DYNAMIC = 1;
+  }
+
+  enum OpType {
+    RESET = 0;
+    ADD = 1;
+    REMOVE = 2;
+  }
+
+  KbType kbType = 1;
+  OpType operationType = 2;
+  optional bool onTop = 3; //default = false
+  repeated StructMsg clauses = 4;
+}
+
+message AlterFlagsMsg {
+  enum OpType {
+    SET = 0;
+    RESET = 1;
+    CLEAR = 2;
+  }
+
+  OpType operationType = 1;
+  map<string, ArgumentMsg> flags = 2;
+}
+
+message AlterRuntimeMsg {
+  enum OpType {
+    LOAD = 0;
+    UNLOAD = 1;
+    UPDATE = 2;
+    RESET = 3;
+  }
+
+  OpType operationType = 1;
+  repeated string libraries = 2;
+}
+
+message AlterOperatorsMsg {
+  enum OpType {
+    SET = 0;
+    RESET = 1;
+    REMOVE = 2;
+  }
+
+  OpType operationType = 1;
+  repeated OperatorMsg operators = 2;
+}
+
+message AlterChannelsMsg {
+  enum OpType {
+    OPEN = 0;
+    RESET = 1;
+    CLOSE = 2;
+  }
+
+  enum ChannelType {
+    INPUT = 0;
+    OUTPUT = 1;
+  }
+
+  ChannelType channelType = 1;
+  OpType type = 2;
+  map<string, string> channels = 3;
+}
+
+message AlterCustomDataMsg {
+  enum OpType {
+    SET_PERSISTENT = 0;
+    SET_DURABLE = 1;
+    SET_EPHEMERAL = 2;
+  }
+
+  OpType type = 1;
+  map<string, string> data = 2;
+}
+
+
+//ADD SIDE EFFECT TO WRITE ON CHANNEL
+//RESET GIT ON BRANCH FROM ORIGIN
+

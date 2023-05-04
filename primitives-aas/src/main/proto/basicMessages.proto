@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "it.unibo.tuprolog.primitives.messages";
+option java_outer_classname = "BasicMessages";
+
+package primitives;
+
+message SignatureMsg {
+  string name = 1;
+  uint32 arity = 2;
+}
+
+message ExecutionContextMsg {
+  // From ExecutionContext
+  StructMsg procedure = 1;
+  map<string, ArgumentMsg> substitutions = 3;
+  repeated StructMsg logicStackTrace = 2;
+  CustomDataMsg customDataStore = 4;
+  //From ExecutionContextAware
+  map<string, ArgumentMsg> unificator = 5;
+  repeated string libraries = 6;
+  map<string, ArgumentMsg> flags = 7;
+  repeated StructMsg staticKB = 8;
+  repeated StructMsg dynamicKB = 9;
+  repeated OperatorMsg operators = 10;
+  map<string, string> inputChannels = 11;
+  repeated string outputChannels = 12;
+  // From Durable
+  int64 startTime = 13;
+  int64 endTime = 14;
+  int64 remainingTime = 15;
+  int64 elapsedTime = 16;
+  int64 maxDuration = 17;
+}
+
+message CustomDataMsg {
+  map<string, string> persistentData = 1;
+  map<string, string> durableData = 2;
+  map<string, string> ephemeralData = 3;
+}
+
+message OperatorMsg {
+  string functor = 1;
+  string specifier = 2;
+  int32 priority = 3;
+}
+
+message StructMsg {
+  string functor = 1;
+  repeated ArgumentMsg arguments = 3;
+}
+
+message ArgumentMsg {
+  oneof argument {
+    StructMsg struct = 1;
+    string var = 2;
+    string constant = 3;
+  }
+}
+
+message EmptyMsg {}
+
+
