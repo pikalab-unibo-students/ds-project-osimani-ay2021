@@ -21,7 +21,7 @@ object PrimitiveServerFactory {
 
     fun startLibraryServers(library: Library, initialPort: Int = 8080) {
         val list = library.primitives.map {
-            PrimitiveServerWrapper.of(it.key.name, it.key.arity) { request ->
+            PrimitiveServerWrapper.of(it.key.name, it.key.arity) { request, _ ->
                     it.value.solve(request)
                 }
             }

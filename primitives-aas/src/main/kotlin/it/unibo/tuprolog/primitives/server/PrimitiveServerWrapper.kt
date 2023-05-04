@@ -1,53 +1,25 @@
 package it.unibo.tuprolog.primitives.server
 
 import io.grpc.stub.StreamObserver
+import it.unibo.tuprolog.primitives.GeneratorMsg
 import it.unibo.tuprolog.primitives.GenericPrimitiveServiceGrpc
-import it.unibo.tuprolog.primitives.RequestMsg
-import it.unibo.tuprolog.primitives.ResponseMsg
+import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
-import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
+import it.unibo.tuprolog.primitives.server.session.ConnectionObserver
+import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Signature
-import it.unibo.tuprolog.solve.Solution
-import it.unibo.tuprolog.solve.exception.ResolutionException
-import it.unibo.tuprolog.solve.primitive.Primitive
 import it.unibo.tuprolog.solve.primitive.PrimitiveWrapper
-import it.unibo.tuprolog.solve.primitive.Solve
 
 class PrimitiveServerWrapper private constructor(val signature: Signature,
-                                                 private val primitive: Primitive):
+                                                 private val primitive: PrimitiveWithSession
+):
     GenericPrimitiveServiceGrpc.GenericPrimitiveServiceImplBase()  {
 
-    override fun callPrimitive(responseObserver: StreamObserver<ResponseMsg>): StreamObserver<RequestMsg> {
-        return object: StreamObserver<RequestMsg> {
-
-            var stream: Iterator<Solve.Response>? = null
-
-            override fun onNext(msg: RequestMsg) {
-                try {
-                    if (stream == null) {
-                        stream = primitive.solve(msg.deserialize()).iterator()
-                    }
-                    responseObserver.onNext(
-                        stream!!.next().serialize(stream!!.hasNext())
-                    )
-                    if (!stream!!.hasNext()) this.onCompleted()
-                } catch (e: ResolutionException) {
-                    stream = iterator {
-                        e.serialize()
-                    }
-                }
-            }
-
-            override fun onError(t: Throwable?) {}
-
-            override fun onCompleted() {
-                responseObserver.onCompleted()
-            }
-
-        }
+    override fun callPrimitive(responseObserver: StreamObserver<GeneratorMsg>): StreamObserver<SolverMsg> {
+        return ConnectionObserver(responseObserver, primitive)
     }
 
     /** Respond with the signature of the primitive **/
@@ -59,15 +31,19 @@ class PrimitiveServerWrapper private constructor(val signature: Signature,
     companion object {
 
         fun of(functor: String, arity: Int,
-               primitive: Primitive): PrimitiveServerWrapper =
+               primitive: PrimitiveWithSession
+        ): PrimitiveServerWrapper =
             PrimitiveServerWrapper(Signature(functor, arity), primitive)
 
         fun of(signature: Signature,
-               primitive: Primitive): PrimitiveServerWrapper =
+               primitive: PrimitiveWithSession
+        ): PrimitiveServerWrapper =
             PrimitiveServerWrapper(signature, primitive)
 
-        fun from(primitiveWrapper: PrimitiveWrapper<ExecutionContext>): PrimitiveServerWrapper =
-            PrimitiveServerWrapper(primitiveWrapper.signature, primitiveWrapper.implementation)
+        fun from(primitive: PrimitiveWrapper<ExecutionContext>) =
+            PrimitiveServerWrapper(primitive.signature) {request, _ ->
+                primitive.implementation.solve(request)
+            }
     }
 }
 

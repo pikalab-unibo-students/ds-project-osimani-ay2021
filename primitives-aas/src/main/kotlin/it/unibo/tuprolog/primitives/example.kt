@@ -26,7 +26,7 @@ fun main() {
                 fact { "user"("giovanni") },
             )
         )
-        val query = "solve"(6)
+        val query = "nt"(X)
         val solutions = solver.solve(query)
         solutions.take(5).forEach {
             when (it) {

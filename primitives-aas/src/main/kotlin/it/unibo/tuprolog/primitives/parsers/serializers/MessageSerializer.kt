@@ -15,9 +15,7 @@ fun Solve.Request<ExecutionContext>.serialize(): RequestMsg =
 
 fun Solve.Response.serialize(hasNext: Boolean = true): ResponseMsg =
     ResponseMsg.newBuilder()
-        .setSolution(solution.serialize())
-        // RESOLVE SIDE-EFFECT-MANAGER
+        .setSolution(solution.serialize(hasNext))
         .addAllSideEffects(sideEffects.map { it.serialize() })
-        .setHasNext(hasNext)
         .build()
 

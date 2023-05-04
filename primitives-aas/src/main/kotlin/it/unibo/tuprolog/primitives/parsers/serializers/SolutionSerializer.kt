@@ -3,7 +3,7 @@ package it.unibo.tuprolog.primitives.parsers.serializers
 import it.unibo.tuprolog.primitives.SolutionMsg
 import it.unibo.tuprolog.solve.Solution
 
-fun Solution.serialize(): SolutionMsg {
+fun Solution.serialize(hasNext: Boolean = true): SolutionMsg {
     val solutionBuilder = SolutionMsg.newBuilder()
         .setQuery(query.serialize())
         .setType(
@@ -20,6 +20,7 @@ fun Solution.serialize(): SolutionMsg {
     if(exception != null) {
         solutionBuilder.setError(exception!!.serialize())
     }
+    solutionBuilder.setHasNext(hasNext)
     return solutionBuilder.build()
 }
 
