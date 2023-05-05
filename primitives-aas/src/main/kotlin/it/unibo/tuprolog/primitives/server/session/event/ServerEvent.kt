@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.primitives.server.event
+package it.unibo.tuprolog.primitives.server.session.event
 
 interface ServerEvent<A, B, C> {
 

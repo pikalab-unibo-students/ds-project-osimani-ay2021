@@ -1,13 +1,11 @@
-package it.unibo.tuprolog.primitives.server.event
+package it.unibo.tuprolog.primitives.server.session.event.impl
 
 import io.grpc.stub.StreamObserver
-import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.primitives.GeneratorMsg
 import it.unibo.tuprolog.primitives.LineMsg
-import it.unibo.tuprolog.primitives.SubSolveResponse
-import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
+import it.unibo.tuprolog.primitives.READ_LINE_TIMEOUT
 import it.unibo.tuprolog.primitives.parsers.serializers.buildReadLineMsg
-import it.unibo.tuprolog.primitives.parsers.serializers.buildSubSolveMsg
+import it.unibo.tuprolog.primitives.server.session.event.ServerEvent
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 

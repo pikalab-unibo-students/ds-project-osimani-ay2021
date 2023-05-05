@@ -1,18 +1,17 @@
 package it.unibo.tuprolog.primitives.client
 
 import io.grpc.ManagedChannel
-import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.primitives.*
-import it.unibo.tuprolog.primitives.messages.EmptyMsg
+import it.unibo.tuprolog.primitives.client.session.SessionClientObserver
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.primitive.Solve
 
-class StreamedQueue(request: Solve.Request<ExecutionContext>, channel: ManagedChannel) {
+class SolutionQueue(request: Solve.Request<ExecutionContext>, channel: ManagedChannel) {
 
-    private val responseObserver: ConnectionClientObserver
+    private val responseObserver: SessionClientObserver
 
     init {
-        responseObserver = ConnectionClientObserver(request)
+        responseObserver = SessionClientObserver(request)
         val requestObserver = GenericPrimitiveServiceGrpc.newStub(channel).callPrimitive(responseObserver)
         responseObserver.sendRequestOn(requestObserver)
     }

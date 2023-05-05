@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.primitives.server.event
+package it.unibo.tuprolog.primitives.server.session.event.impl
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Scope
@@ -8,6 +8,7 @@ import it.unibo.tuprolog.primitives.SubSolveResponse
 import it.unibo.tuprolog.primitives.idGenerator
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.buildSubSolveMsg
+import it.unibo.tuprolog.primitives.server.session.event.ServerEvent
 import it.unibo.tuprolog.solve.Solution
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue

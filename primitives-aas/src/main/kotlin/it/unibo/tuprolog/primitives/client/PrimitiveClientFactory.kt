@@ -46,7 +46,7 @@ object PrimitiveClientFactory {
     /** It returns the results from a [Solve.Request] given by the server mapping it into a lazy sequence of [Solve.Response]
      */
     private fun primitive(channel: ManagedChannel): (Solve.Request<ExecutionContext>) -> Sequence<Solve.Response> = {
-        val observer = StreamedQueue(it, channel)
+        val observer = SolutionQueue(it, channel)
         sequence {
             while (!observer.isClosed) {
                 yield(observer.popElement())

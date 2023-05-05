@@ -4,20 +4,18 @@ import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.*
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
-import it.unibo.tuprolog.primitives.parsers.serializers.buildReadLineMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
-import it.unibo.tuprolog.primitives.server.event.ReadLineHandler
-import it.unibo.tuprolog.primitives.server.event.SubSolveHandler
+import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineHandler
+import it.unibo.tuprolog.primitives.server.session.event.impl.SubSolveHandler
 import it.unibo.tuprolog.solve.Solution
+import it.unibo.tuprolog.solve.currentTimeInstant
 import it.unibo.tuprolog.solve.primitive.Solve
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
 
 /**
  * Represent the observer of a connection between the Primitive Server and a client,
  * generated from a call of the primitive
  */
-class ConnectionObserver(
+class SessionObserver(
     private val responseObserver: StreamObserver<GeneratorMsg>,
     private val primitive: PrimitiveWithSession
 ): StreamObserver<SolverMsg>, Session {
@@ -41,7 +39,9 @@ class ConnectionObserver(
         }
     }
 
-    override fun onError(t: Throwable?) {}
+    override fun onError(t: Throwable?) {
+        println("from server $t")
+    }
 
     override fun onCompleted() {
         responseObserver.onCompleted()
