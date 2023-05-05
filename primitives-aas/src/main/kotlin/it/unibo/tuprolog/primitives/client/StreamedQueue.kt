@@ -10,11 +10,10 @@ import it.unibo.tuprolog.solve.primitive.Solve
 class StreamedQueue(request: Solve.Request<ExecutionContext>, channel: ManagedChannel) {
 
     private val responseObserver: ConnectionClientObserver
-    private val requestObserver: StreamObserver<SolverMsg>
 
     init {
         responseObserver = ConnectionClientObserver(request)
-        requestObserver = GenericPrimitiveServiceGrpc.newStub(channel).callPrimitive(responseObserver)
+        val requestObserver = GenericPrimitiveServiceGrpc.newStub(channel).callPrimitive(responseObserver)
         responseObserver.sendRequestOn(requestObserver)
     }
 
@@ -22,8 +21,6 @@ class StreamedQueue(request: Solve.Request<ExecutionContext>, channel: ManagedCh
      * @throws IllegalStateException if the stream is already over
      */
     fun popElement(): Solve.Response {
-        if(responseObserver.isClosed) throw IllegalStateException()
-        requestObserver.onNext(SolverMsg.newBuilder().setNext(EmptyMsg.getDefaultInstance()).build())
         return responseObserver.popElement()
     }
 

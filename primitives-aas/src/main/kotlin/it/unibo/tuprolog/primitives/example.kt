@@ -1,5 +1,6 @@
 package it.unibo.tuprolog.primitives
 
+import it.unibo.tuprolog.core.Numeric
 import it.unibo.tuprolog.dsl.theory.logicProgramming
 import it.unibo.tuprolog.primitives.client.PrimitiveClientFactory.searchLibrary
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory
@@ -17,7 +18,7 @@ fun main() {
         }.start()
     }
 
-    Thread.sleep(3000)
+    Thread.sleep(5000)
 
     logicProgramming {
         val solver = Solver.prolog.solverWithDefaultBuiltins(
@@ -26,7 +27,7 @@ fun main() {
                 fact { "user"("giovanni") },
             )
         )
-        val query = "nt"(X)
+        val query = "solve"("solve"("nt"(X)))
         val solutions = solver.solve(query)
         solutions.take(5).forEach {
             when (it) {
@@ -47,5 +48,4 @@ fun main() {
             }
         }
     }
-
 }

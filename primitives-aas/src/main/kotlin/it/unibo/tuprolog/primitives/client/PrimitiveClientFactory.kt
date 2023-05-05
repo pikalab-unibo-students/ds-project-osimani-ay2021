@@ -34,7 +34,7 @@ object PrimitiveClientFactory {
         return connectToPrimitive(address.first, address.second)
     }
 
-    fun searchPrimitive(signature: Signature): Pair<Signature, Primitive>  =
+    fun searchPrimitive(signature: Signature): Pair<Signature, Primitive> =
         searchPrimitive(signature.name, signature.arity)
 
     fun searchLibrary(libraryName: String): Library =

@@ -6,7 +6,10 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.GeneratorMsg
 import it.unibo.tuprolog.primitives.LineMsg
 import it.unibo.tuprolog.primitives.SolverMsg
+import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
+import it.unibo.tuprolog.primitives.parsers.serializers.buildLineMsg
+import it.unibo.tuprolog.primitives.parsers.serializers.buildSubSolveSolutionMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Solution
@@ -26,7 +29,7 @@ class ConnectionClientObserver(private val request: Solve.Request<ExecutionConte
 
     private val scope = Scope.of(request.query)
     private val solver = request.context.createSolver()
-    private val computations: MutableMap<Struct, Iterator<Solution>> = mutableMapOf()
+    private val computations: MutableMap<String, Iterator<Solution>> = mutableMapOf()
     private val queue = LinkedBlockingDeque<Solve.Response>()
     private var responseObserver: CompletableDeferred<StreamObserver<SolverMsg>> = CompletableDeferred()
 
@@ -53,7 +56,13 @@ class ConnectionClientObserver(private val request: Solve.Request<ExecutionConte
 
     override fun onCompleted() { closed = true }
 
-    fun popElement(): Solve.Response = queue.takeFirst()
+    fun popElement(): Solve.Response {
+        if(this.isClosed) throw IllegalStateException()
+        getResponseObserver().onNext(
+            SolverMsg.newBuilder().setNext(EmptyMsg.getDefaultInstance()).build()
+        )
+        return queue.takeFirst()
+    }
 
     private fun handleEvent(event: GeneratorMsg) {
         if(event.hasResponse()) {
@@ -67,19 +76,18 @@ class ConnectionClientObserver(private val request: Solve.Request<ExecutionConte
             solver.inputChannels[event.readLine.channelName]?.let {
                 val line = it.read()!!
                 getResponseObserver().onNext(
-                    SolverMsg.newBuilder().setLine(LineMsg.newBuilder().setContent(line)).build()
+                    buildLineMsg(event.readLine.channelName, line)
                 )
             }
         }
         else if(event.hasSubSolve()) {
             val subSolve = event.subSolve
             val query = subSolve.query.deserialize(scope)
-            val solution: Solution =
-                computations.putIfAbsent(query, solver.solve(query).iterator())!!.next()
+            computations.putIfAbsent(subSolve.requestID, solver.solve(query).iterator())
+            val solution: Solution = computations[subSolve.requestID]!!.next()
             getResponseObserver().onNext(
-                SolverMsg.newBuilder().setSolution(
-                    solution.serialize(computations[query]!!.hasNext())
-                ).build()
+                buildSubSolveSolutionMsg(solution, subSolve.requestID,
+                    computations[subSolve.requestID]!!.hasNext())
             )
         }
     }

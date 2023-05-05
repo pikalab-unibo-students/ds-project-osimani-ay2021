@@ -16,7 +16,7 @@ service GenericPrimitiveService {
 message GeneratorMsg {
   oneof msg {
     ResponseMsg response = 1;
-    SubSolveMsg subSolve = 2;
+    SubSolveRequest subSolve = 2;
     ReadLineMsg readLine = 3;
   }
 }
@@ -25,7 +25,7 @@ message SolverMsg {
   oneof msg {
     RequestMsg request = 1;
     EmptyMsg next = 2;
-    SolutionMsg solution = 3;
+    SubSolveResponse solution = 3;
     LineMsg line = 4;
   }
 }
@@ -75,11 +75,17 @@ message ErrorMsg {
   }
 }
 
-message SubSolveMsg {
+message SubSolveRequest {
+  string requestID = 5;
   StructMsg query = 1;
   optional int64 timeout = 2;
   optional bool lazy = 3;
   optional int32 limit = 4;
+}
+
+message SubSolveResponse {
+  string requestID = 1;
+  SolutionMsg solution = 2;
 }
 
 message ReadLineMsg {
@@ -87,7 +93,8 @@ message ReadLineMsg {
 }
 
 message LineMsg {
-  string content = 1;
+  string channelName = 1;
+  string content = 2;
 }
 
 
