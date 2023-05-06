@@ -37,8 +37,6 @@ interface DbManager {
         private var manager: DbManager? = null
 
         private const val port = 27017
-        private const val DB_USER="app_user"
-        private val DB_PASS="app_password"
         //val URL_DOCKER = "mongodb://${DB_USER}:${DB_PASS}@mongodb"
         const val URL_LOCAL = "mongodb://localhost"
         //val URL_DOCKER_LOCAL = "mongodb://${DB_USER}:${DB_PASS}@0.0.0.0"

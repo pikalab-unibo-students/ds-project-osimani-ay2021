@@ -3,7 +3,7 @@ package it.unibo.tuprolog.primitives.client
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import it.unibo.tuprolog.primitives.DbManager
-import it.unibo.tuprolog.primitives.GenericPrimitiveServiceGrpc
+import it.unibo.tuprolog.primitives.GenericPrimitiveServiceGrpcKt.GenericPrimitiveServiceCoroutineStub
 import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.solve.ExecutionContext
@@ -18,26 +18,26 @@ object PrimitiveClientFactory {
     /** Connects to the primitive server and maps it to a local primitive
      * @return the primitive mapping of the connection
      */
-    fun connectToPrimitive(address: String = "localhost", port: Int = 8080):
+    suspend fun connectToPrimitive(address: String = "localhost", port: Int = 8080):
         Pair<Signature, Primitive> {
         val channel = ManagedChannelBuilder.forAddress(address, port)
             .usePlaintext()
             .build()
-        val signature = GenericPrimitiveServiceGrpc.newFutureStub(channel)
-            .getSignature(EmptyMsg.getDefaultInstance()).get()
+        val signature = GenericPrimitiveServiceCoroutineStub(channel)
+            .getSignature(EmptyMsg.getDefaultInstance())
         return signature.deserialize() to Primitive(primitive((channel)))
     }
 
-    fun searchPrimitive(functor: String, arity: Int):
+    suspend fun searchPrimitive(functor: String, arity: Int):
         Pair<Signature, Primitive> {
         val address = DbManager.get().getPrimitive(functor, arity)!!
         return connectToPrimitive(address.first, address.second)
     }
 
-    fun searchPrimitive(signature: Signature): Pair<Signature, Primitive> =
+    suspend fun searchPrimitive(signature: Signature): Pair<Signature, Primitive> =
         searchPrimitive(signature.name, signature.arity)
 
-    fun searchLibrary(libraryName: String): Library =
+    suspend fun searchLibrary(libraryName: String): Library =
         Library.of(libraryName, DbManager.get().getLibrary(libraryName)
             .associate {
                 searchPrimitive(it.first, it.second)

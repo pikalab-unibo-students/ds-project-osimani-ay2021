@@ -1,10 +1,11 @@
 package it.unibo.tuprolog.primitives.client
 
 import io.grpc.ManagedChannel
-import it.unibo.tuprolog.primitives.*
+import it.unibo.tuprolog.primitives.GenericPrimitiveServiceGrpcKt.GenericPrimitiveServiceCoroutineStub
 import it.unibo.tuprolog.primitives.client.session.SessionClientObserver
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.primitive.Solve
+import kotlinx.coroutines.flow.flow
 
 class SolutionQueue(request: Solve.Request<ExecutionContext>, channel: ManagedChannel) {
 
@@ -12,7 +13,12 @@ class SolutionQueue(request: Solve.Request<ExecutionContext>, channel: ManagedCh
 
     init {
         responseObserver = SessionClientObserver(request)
-        val requestObserver = GenericPrimitiveServiceGrpc.newStub(channel).callPrimitive(responseObserver)
+        val requestObserver = GenericPrimitiveServiceCoroutineStub(channel).callPrimitive(
+            flow {
+
+            }
+        ).collect {
+        }
         responseObserver.sendRequestOn(requestObserver)
     }
 

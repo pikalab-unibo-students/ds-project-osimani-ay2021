@@ -15,6 +15,7 @@ npm-syncRequest = "6.1.0" # sync-request
 ktlint = "10.3.0"
 detekt = "1.22.0"
 grpc = "1.51.0"
+grpcKotlin = "1.3.0"
 proto = "3.21.9"
 
 [plugins]
@@ -66,10 +67,12 @@ kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref =
 javalin = "io.javalin:javalin:4.6.7"
 grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+grpcKotlin-stub = { module = "io.grpc:grpc-kotlin-stub", version.ref = "grpcKotlin" }
 grpc-testing = { module = "io.grpc:grpc-testing", version.ref = "grpc" }
 grpc-generator-java = { module = "io.grpc:protoc-gen-grpc-java", version.ref = "grpc" }
-#grpc-generator-kotlin = { module = "io.grpc:protoc-gen-grpc-kotlin", version = "1.3.0" }
+grpc-generator-kotlin = { module = "io.grpc:protoc-gen-grpc-kotlin", version.ref = "grpcKotlin" }
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java-util", version.ref = "proto" }
+protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin-util", version.ref = "proto" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "proto" }
 tomcat-annotations = "org.apache.tomcat:annotations-api:6.0.53"
