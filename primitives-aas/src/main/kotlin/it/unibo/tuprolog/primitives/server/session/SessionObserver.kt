@@ -7,6 +7,7 @@ import it.unibo.tuprolog.primitives.SubSolveResponse
 import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineHandler
 import it.unibo.tuprolog.primitives.server.session.event.impl.SubSolveHandler
 import it.unibo.tuprolog.solve.Solution
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KSuspendFunction1
 
@@ -21,18 +22,12 @@ class SessionObserver(
     private val subSolveHandler: SubSolveHandler = SubSolveHandler(emit)
     private val readLineHandler: ReadLineHandler = ReadLineHandler(emit)
 
-    override fun subSolve(query: Struct): Sequence<Solution> =
-        runBlocking {
-            subSolveHandler.applyEvent(query)
-        }
+    override suspend fun subSolve(query: Struct): Flow<Solution> = subSolveHandler.applyEvent(query)
 
-    fun addSolution(msg: SubSolveResponse) = subSolveHandler.handleResponse(msg)
+    suspend fun addSolution(msg: SubSolveResponse) = subSolveHandler.handleResponse(msg)
 
-    override fun readLine(channelName: String): String =
-        runBlocking {
-            readLineHandler.applyEvent(channelName)
-        }
+    override suspend fun readLine(channelName: String): String = readLineHandler.applyEvent(channelName)
 
-    fun addLine(msg: LineMsg) = readLineHandler.handleResponse(msg)
+    suspend fun addLine(msg: LineMsg) = readLineHandler.handleResponse(msg)
 
 }

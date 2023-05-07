@@ -6,11 +6,15 @@ import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.PrimitiveServerWrapper
 import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
 import it.unibo.tuprolog.solve.Signature
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
 
 val readerPrimitive = PrimitiveWithSession { request, session ->
     sequence {
         while(true) {
-            val line = session.readLine(request.arguments[0].castToAtom().toString())
+            val line = runBlocking {
+                session.readLine(request.arguments[0].castToAtom().toString())
+            }
             yield(request.replySuccess(Substitution.of(request.arguments[1].castToVar(), Atom.of(line))))
         }
     }

@@ -4,16 +4,21 @@ import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.PrimitiveServerWrapper
 import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
 import it.unibo.tuprolog.solve.Signature
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
 
 val innestedPrimitive = PrimitiveWithSession { request, session ->
     sequence {
-        session.subSolve(request.arguments[0].castToStruct()).forEach {
-            if(it.isYes)
-                yield(request.replySuccess(it.substitution.castToUnifier()))
-            else if(it.isNo) {
-                yield(request.replyFail())
-            } else {
-                yield(request.replyException(it.exception!!))
+        val yield = ::yield
+        runBlocking {
+            session.subSolve(request.arguments[0].castToStruct()).collect {
+                if (it.isYes)
+                    yield(request.replySuccess(it.substitution.castToUnifier()))
+                else if (it.isNo) {
+                    yield(request.replyFail())
+                } else {
+                    yield(request.replyException(it.exception!!))
+                }
             }
         }
     }

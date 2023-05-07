@@ -2,10 +2,11 @@ package it.unibo.tuprolog.primitives.server.session
 
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.primitive.Solve
+import kotlinx.coroutines.flow.Flow
 
 fun interface PrimitiveWithSession {
 
-    fun solve(request: Solve.Request<ExecutionContext>, session: Session): Sequence<Solve.Response>
+    suspend fun solve(request: Solve.Request<ExecutionContext>, session: Session): Sequence<Solve.Response>
 
     companion object {
         @JvmStatic

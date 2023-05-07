@@ -3,6 +3,7 @@ package it.unibo.tuprolog.primitives.server
 import io.grpc.ServerBuilder
 import it.unibo.tuprolog.primitives.DbManager
 import it.unibo.tuprolog.solve.library.Library
+import kotlinx.coroutines.flow.asFlow
 
 object PrimitiveServerFactory {
     fun startService(service: PrimitiveServerWrapper, port: Int = 8080, libraryName: String = "") {

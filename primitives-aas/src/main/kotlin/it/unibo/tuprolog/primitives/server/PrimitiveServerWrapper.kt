@@ -13,20 +13,19 @@ import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Signature
 import it.unibo.tuprolog.solve.primitive.PrimitiveWrapper
 import it.unibo.tuprolog.solve.primitive.Solve
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.*
 
 class PrimitiveServerWrapper private constructor(val signature: Signature,
                                                  private val primitive: PrimitiveWithSession
 ):
     GenericPrimitiveServiceGrpcKt.GenericPrimitiveServiceCoroutineImplBase()  {
 
-
     override fun callPrimitive(requests: Flow<SolverMsg>): Flow<GeneratorMsg> {
-        var stream: Iterator<Solve.Response>? = null
-        return flow{
-            requests.collect {msg ->
-                val session = SessionObserver(::emit)
+        return flow {
+            var stream: Iterator<Solve.Response>? = null
+            val session = SessionObserver(::emit)
+            requests.collect { msg ->
+                println(msg)
                 when (stream) {
                     null -> {
                         /** Handling Initialization Event */

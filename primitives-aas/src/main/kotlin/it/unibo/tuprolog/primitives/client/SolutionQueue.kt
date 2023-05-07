@@ -2,33 +2,42 @@ package it.unibo.tuprolog.primitives.client
 
 import io.grpc.ManagedChannel
 import it.unibo.tuprolog.primitives.GenericPrimitiveServiceGrpcKt.GenericPrimitiveServiceCoroutineStub
-import it.unibo.tuprolog.primitives.client.session.SessionClientObserver
+import it.unibo.tuprolog.primitives.client.impl.FlowDispatcherImpl
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.primitive.Solve
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
 
 class SolutionQueue(request: Solve.Request<ExecutionContext>, channel: ManagedChannel) {
 
-    private val responseObserver: SessionClientObserver
+    private val dispatcher = FlowDispatcherImpl(request)
 
     init {
-        responseObserver = SessionClientObserver(request)
-        val requestObserver = GenericPrimitiveServiceCoroutineStub(channel).callPrimitive(
+        val input = GenericPrimitiveServiceCoroutineStub(channel).callPrimitive(
             flow {
-
+                emit(dispatcher.getMessage())
             }
-        ).collect {
+        )
+        runBlocking {
+            while(!dispatcher.isClosed) {
+                input.collect {
+                    dispatcher.handleMessage(it)
+                }
+            }
         }
-        responseObserver.sendRequestOn(requestObserver)
     }
 
     /** Returns the head element received from the server.
      * @throws IllegalStateException if the stream is already over
      */
     fun popElement(): Solve.Response {
-        return responseObserver.popElement()
+        if(!isOver) {
+            return runBlocking {
+                dispatcher.popResponse()
+            }
+        } else throw IllegalStateException()
     }
 
-    val isClosed: Boolean
-        get() = responseObserver.isClosed
+    val isOver: Boolean
+        get() = dispatcher.isClosed
 }

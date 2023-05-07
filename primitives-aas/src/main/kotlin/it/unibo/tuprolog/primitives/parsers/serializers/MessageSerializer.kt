@@ -35,9 +35,9 @@ fun buildReadLineMsg(channelName: String): GeneratorMsg =
         ReadLineMsg.newBuilder().setChannelName(channelName))
         .build()
 
-fun buildLineMsg(channelName: String, line: String): SolverMsg =
+fun buildLineMsg(channelName: String, line: String = "", error: LineMsg.Error? = null): SolverMsg =
     SolverMsg.newBuilder().setLine(
-        LineMsg.newBuilder().setChannelName(channelName).setContent(line))
+        LineMsg.newBuilder().setChannelName(channelName).setContent(line).setError(error))
         .build()
 
 fun buildSubSolveSolutionMsg(solution: Solution, requestID: String, hasNext: Boolean = true): SolverMsg =

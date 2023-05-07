@@ -93,8 +93,13 @@ message ReadLineMsg {
 }
 
 message LineMsg {
+  enum Error {
+    EMPTY_CHANNEL = 0;
+    CHANNEL_NOT_FOUND = 1;
+  }
   string channelName = 1;
   string content = 2;
+  optional Error error = 3;
 }
 
 

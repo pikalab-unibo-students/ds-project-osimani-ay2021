@@ -2,11 +2,12 @@ package it.unibo.tuprolog.primitives.server.session
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.solve.Solution
+import kotlinx.coroutines.flow.Flow
 
 interface Session {
 
-    fun subSolve(query: Struct): Sequence<Solution>
+    suspend fun subSolve(query: Struct): Flow<Solution>
 
-    fun readLine(channelName: String): String
+    suspend fun readLine(channelName: String): String
 
 }

@@ -23,7 +23,7 @@ fun main() {
         }.start()
     }
 
-    Thread.sleep(3000)
+    Thread.sleep(5000)
 
     logicProgramming {
         val solver = Solver.prolog.solverWithDefaultBuiltins(
@@ -33,7 +33,7 @@ fun main() {
             ),
             stdIn = InputChannel.of("hell")
         )
-        val query = "solve"("nt"(X))
+        val query = "nt"(X)
         val solutions = solver.solve(query)
         solutions.take(3).forEach {
             when (it) {
