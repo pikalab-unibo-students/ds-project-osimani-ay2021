@@ -1,24 +1,27 @@
-package it.unibo.tuprolog.primitives.server.session
+package it.unibo.tuprolog.primitives.server.session.impl
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.*
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
+import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
+import it.unibo.tuprolog.primitives.server.session.ServerSession
 import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineHandler
 import it.unibo.tuprolog.primitives.server.session.event.impl.SubSolveHandler
 import it.unibo.tuprolog.solve.Solution
-import it.unibo.tuprolog.solve.currentTimeInstant
 import it.unibo.tuprolog.solve.primitive.Solve
+import kotlinx.coroutines.coroutineScope
+import kotlin.coroutines.coroutineContext
 
 /**
  * Represent the observer of a connection between the Primitive Server and a client,
  * generated from a call of the primitive
  */
-class SessionObserver(
+class ServerSessionImpl(
     private val responseObserver: StreamObserver<GeneratorMsg>,
     private val primitive: PrimitiveWithSession
-): StreamObserver<SolverMsg>, Session {
+): ServerSession {
 
     private var stream: Iterator<Solve.Response>? = null
 

@@ -6,17 +6,17 @@ import it.unibo.tuprolog.solve.library.Library
 
 object PrimitiveServerFactory {
     fun startService(service: PrimitiveServerWrapper, port: Int = 8080, libraryName: String = "") {
-        val genericPrimitives = ServerBuilder.forPort(port)
+        val genericPrimitive = ServerBuilder.forPort(port)
             .addService(service)
             .build()
-        genericPrimitives!!.start()
+        genericPrimitive!!.start()
         DbManager.get().addPrimitive(service.signature, port = port, libraryName =  libraryName)
         Runtime.getRuntime().addShutdownHook(Thread {
             DbManager.get().deletePrimitive(service.signature, libraryName)
-            genericPrimitives.shutdownNow()
+            genericPrimitive.shutdownNow()
         })
         println("${service.signature.name} listening on port $port")
-        genericPrimitives.awaitTermination()
+        genericPrimitive.awaitTermination()
     }
 
     fun startLibraryServers(library: Library, initialPort: Int = 8080) {

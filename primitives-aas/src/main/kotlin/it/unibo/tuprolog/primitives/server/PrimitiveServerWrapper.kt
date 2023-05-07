@@ -7,7 +7,7 @@ import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
-import it.unibo.tuprolog.primitives.server.session.SessionObserver
+import it.unibo.tuprolog.primitives.server.session.impl.ServerSessionImpl
 import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Signature
@@ -19,7 +19,7 @@ class PrimitiveServerWrapper private constructor(val signature: Signature,
     GenericPrimitiveServiceGrpc.GenericPrimitiveServiceImplBase()  {
 
     override fun callPrimitive(responseObserver: StreamObserver<GeneratorMsg>): StreamObserver<SolverMsg> {
-        return SessionObserver(responseObserver, primitive)
+        return ServerSessionImpl(responseObserver, primitive)
     }
 
     /** Respond with the signature of the primitive **/

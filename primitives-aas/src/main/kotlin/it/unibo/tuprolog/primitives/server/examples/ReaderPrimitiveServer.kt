@@ -10,8 +10,13 @@ import it.unibo.tuprolog.solve.Signature
 val readerPrimitive = PrimitiveWithSession { request, session ->
     sequence {
         while(true) {
-            val line = session.readLine(request.arguments[0].castToAtom().toString())
-            yield(request.replySuccess(Substitution.of(request.arguments[1].castToVar(), Atom.of(line))))
+            try {
+                val line = session.readLine(request.arguments[0].castToAtom().toString())
+                yield(request.replySuccess(Substitution.of(request.arguments[1].castToVar(), Atom.of(line))))
+            } catch (e: Exception) {
+                yield(request.replyFail())
+            }
+
         }
     }
 }

@@ -22,7 +22,10 @@ val ntPrimitive = PrimitiveWrapper.wrap<ExecutionContext>(Signature("nt",1)) { r
     when (val arg1: Term = request.arguments[0]) {
         is Var ->
             sequence {
-                while(true) yield(request.replySuccess(Substitution.of(arg1, generator.next())))
+                while(true) {
+                    val integer = generator.next()
+                    yield(request.replySuccess(Substitution.of(arg1, integer)))
+                }
             }
         is Integer ->
             sequenceOf(request.replyWith(checkValue(arg1)))

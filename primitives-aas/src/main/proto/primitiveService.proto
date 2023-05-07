@@ -94,7 +94,10 @@ message ReadLineMsg {
 
 message LineMsg {
   string channelName = 1;
-  string content = 2;
+  oneof result {
+    bool failed = 2;
+    string content = 3;
+  }
 }
 
 

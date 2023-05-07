@@ -5,11 +5,11 @@ import it.unibo.tuprolog.solve.primitive.Solve
 
 fun interface PrimitiveWithSession {
 
-    fun solve(request: Solve.Request<ExecutionContext>, session: Session): Sequence<Solve.Response>
+    fun solve(request: Solve.Request<ExecutionContext>, session: ServerSession): Sequence<Solve.Response>
 
     companion object {
         @JvmStatic
-        fun of(function: (Solve.Request<ExecutionContext>, session: Session)
+        fun of(function: (Solve.Request<ExecutionContext>, session: ServerSession)
             -> Sequence<Solve.Response>): PrimitiveWithSession = PrimitiveWithSession(function)
 
     }

@@ -35,10 +35,14 @@ fun buildReadLineMsg(channelName: String): GeneratorMsg =
         ReadLineMsg.newBuilder().setChannelName(channelName))
         .build()
 
-fun buildLineMsg(channelName: String, line: String): SolverMsg =
-    SolverMsg.newBuilder().setLine(
-        LineMsg.newBuilder().setChannelName(channelName).setContent(line))
-        .build()
+fun buildLineMsg(channelName: String, line: String): SolverMsg {
+    val builder =LineMsg.newBuilder().setChannelName(channelName).setContent(line)
+    return SolverMsg.newBuilder().setLine(
+        if (line.isBlank()) builder.setFailed(true)
+        else builder.setContent(line)
+    ).build()
+}
+
 
 fun buildSubSolveSolutionMsg(solution: Solution, requestID: String, hasNext: Boolean = true): SolverMsg =
     SolverMsg.newBuilder().setSolution(

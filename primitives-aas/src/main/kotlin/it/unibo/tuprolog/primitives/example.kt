@@ -15,7 +15,7 @@ import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.library.Runtime
 
 fun main() {
-    /*val libraryName = "customLibrary"
+    val libraryName = "customLibrary"
     listOf(Pair(innestedPrimitiveServer, 8080), Pair(ntPrimitiveServer, 8081),
         Pair(readerPrimitiveServer, 8082)).forEach {
         Thread {
@@ -23,7 +23,7 @@ fun main() {
         }.start()
     }
 
-    Thread.sleep(5000)*/
+    Thread.sleep(5000)
 
     logicProgramming {
         val solver = Solver.prolog.solverWithDefaultBuiltins(
@@ -35,7 +35,7 @@ fun main() {
         )
         val query = "readLine"(InputStore.STDIN, X)
         val solutions = solver.solve(query)
-        solutions.take(3).forEach {
+        solutions.take(6).forEach {
             when (it) {
                 is Solution.No -> println("no.\n")
                 is Solution.Yes -> {
@@ -53,5 +53,6 @@ fun main() {
                 }
             }
         }
+        println("Computation Ended")
     }
 }
