@@ -1,18 +1,18 @@
 package it.unibo.tuprolog.primitives
 
-import it.unibo.tuprolog.core.Numeric
 import it.unibo.tuprolog.dsl.theory.logicProgramming
 import it.unibo.tuprolog.primitives.client.PrimitiveClientFactory.searchLibrary
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory
 import it.unibo.tuprolog.primitives.server.examples.innestedPrimitiveServer
 import it.unibo.tuprolog.primitives.server.examples.ntPrimitiveServer
-import it.unibo.tuprolog.primitives.server.examples.readerPrimitive
 import it.unibo.tuprolog.primitives.server.examples.readerPrimitiveServer
+import it.unibo.tuprolog.solve.Signature
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.InputChannel
-import it.unibo.tuprolog.solve.channel.InputStore
+import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
+import it.unibo.tuprolog.solve.stdlib.primitive.Natural
 
 fun main() {
     val libraryName = "customLibrary"
@@ -33,9 +33,9 @@ fun main() {
             ),
             stdIn = InputChannel.of("hell")
         )
-        val query = "readLine"(InputStore.STDIN, X)
+        val query = "nt"(X)
         val solutions = solver.solve(query)
-        solutions.take(6).forEach {
+        solutions.take(3).forEach {
             when (it) {
                 is Solution.No -> println("no.\n")
                 is Solution.Yes -> {

@@ -12,6 +12,7 @@ import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
 import it.unibo.tuprolog.solve.ExecutionContext
+import it.unibo.tuprolog.solve.currentTimeInstant
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.primitive.Solve
 import java.util.concurrent.LinkedBlockingDeque
@@ -67,7 +68,7 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
     }
 
     override fun popElement(): Solve.Response {
-        if(this.isOver) throw IllegalStateException()
+        if (this.isOver) throw IllegalStateException()
         responseStream.onNext(
             SolverMsg.newBuilder().setNext(EmptyMsg.getDefaultInstance()).build()
         )

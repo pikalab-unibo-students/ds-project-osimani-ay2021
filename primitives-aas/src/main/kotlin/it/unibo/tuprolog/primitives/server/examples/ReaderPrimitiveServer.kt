@@ -6,6 +6,7 @@ import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.PrimitiveServerWrapper
 import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
 import it.unibo.tuprolog.solve.Signature
+import it.unibo.tuprolog.solve.currentTimeInstant
 
 val readerPrimitive = PrimitiveWithSession { request, session ->
     sequence {
@@ -16,7 +17,6 @@ val readerPrimitive = PrimitiveWithSession { request, session ->
             } catch (e: Exception) {
                 yield(request.replyFail())
             }
-
         }
     }
 }

@@ -10,6 +10,7 @@ import it.unibo.tuprolog.primitives.server.session.ServerSession
 import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineHandler
 import it.unibo.tuprolog.primitives.server.session.event.impl.SubSolveHandler
 import it.unibo.tuprolog.solve.Solution
+import it.unibo.tuprolog.solve.currentTimeInstant
 import it.unibo.tuprolog.solve.primitive.Solve
 import kotlinx.coroutines.coroutineScope
 import kotlin.coroutines.coroutineContext

@@ -11,5 +11,4 @@ interface SolutionQueue {
      */
     fun popElement(): Solve.Response
 
-
 }

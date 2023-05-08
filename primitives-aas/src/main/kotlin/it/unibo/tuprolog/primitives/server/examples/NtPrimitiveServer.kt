@@ -9,6 +9,7 @@ import it.unibo.tuprolog.primitives.server.PrimitiveServerWrapper
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Signature
 import it.unibo.tuprolog.solve.primitive.PrimitiveWrapper
+import kotlinx.coroutines.yield
 import org.gciatto.kt.math.BigInteger
 
 val ntPrimitive = PrimitiveWrapper.wrap<ExecutionContext>(Signature("nt",1)) { request ->
@@ -18,15 +19,9 @@ val ntPrimitive = PrimitiveWrapper.wrap<ExecutionContext>(Signature("nt",1)) { r
     fun checkValue(value: Integer): Boolean =
         value.intValue.signum >= 0
 
-    val generator: Iterator<Term> = generateValues().iterator()
     when (val arg1: Term = request.arguments[0]) {
         is Var ->
-            sequence {
-                while(true) {
-                    val integer = generator.next()
-                    yield(request.replySuccess(Substitution.of(arg1, integer)))
-                }
-            }
+            generateValues().map{ request.replySuccess(Substitution.of(arg1, it)) }
         is Integer ->
             sequenceOf(request.replyWith(checkValue(arg1)))
         else ->

@@ -8,9 +8,12 @@ import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Signature
+import it.unibo.tuprolog.solve.currentTimeInstant
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.primitive.Primitive
+import it.unibo.tuprolog.solve.primitive.PrimitiveWrapper
 import it.unibo.tuprolog.solve.primitive.Solve
+import it.unibo.tuprolog.solve.stdlib.primitive.Natural
 
 /** The factory that creates a primitive given the URL of its server **/
 object PrimitiveClientFactory {
@@ -25,7 +28,7 @@ object PrimitiveClientFactory {
             .build()
         val signature = GenericPrimitiveServiceGrpc.newFutureStub(channel)
             .getSignature(EmptyMsg.getDefaultInstance()).get()
-        return signature.deserialize() to Primitive(primitive((channel)))
+        return signature.deserialize() to Primitive(primitive(channel))
     }
 
     fun searchPrimitive(functor: String, arity: Int):
@@ -48,7 +51,8 @@ object PrimitiveClientFactory {
     private fun primitive(channel: ManagedChannel): (Solve.Request<ExecutionContext>) -> Sequence<Solve.Response> = {
         val observer = ClientSession.of(it, channel)
         sequence {
-            while (!observer.isOver) {
+            while(!observer.isOver) {
+                println("compute")
                 yield(observer.popElement())
             }
         }
