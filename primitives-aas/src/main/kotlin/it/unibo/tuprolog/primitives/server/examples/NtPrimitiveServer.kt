@@ -5,14 +5,10 @@ import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
-import it.unibo.tuprolog.primitives.server.PrimitiveServerWrapper
-import it.unibo.tuprolog.solve.ExecutionContext
-import it.unibo.tuprolog.solve.Signature
-import it.unibo.tuprolog.solve.primitive.PrimitiveWrapper
-import kotlinx.coroutines.yield
+import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
 import org.gciatto.kt.math.BigInteger
 
-val ntPrimitive = PrimitiveWrapper.wrap<ExecutionContext>(Signature("nt",1)) { request ->
+val ntPrimitive = DistribuitedPrimitive { request ->
     fun generateValues(): Sequence<Term> =
         generateSequence(BigInteger.ZERO) { it + BigInteger.ONE }.map { Integer.of(it) }
 
@@ -21,7 +17,7 @@ val ntPrimitive = PrimitiveWrapper.wrap<ExecutionContext>(Signature("nt",1)) { r
 
     when (val arg1: Term = request.arguments[0]) {
         is Var ->
-            generateValues().map{ request.replySuccess(Substitution.of(arg1, it)) }
+            generateValues().map{request.replySuccess(Substitution.of(arg1, it))}
         is Integer ->
             sequenceOf(request.replyWith(checkValue(arg1)))
         else ->
@@ -29,8 +25,6 @@ val ntPrimitive = PrimitiveWrapper.wrap<ExecutionContext>(Signature("nt",1)) { r
     }
 }
 
-val ntPrimitiveServer = PrimitiveServerWrapper.from(ntPrimitive)
-
 fun main() {
-    startService(ntPrimitiveServer, 8081, "customLibrary")
+    startService("nt", 1, ntPrimitive, 8081, "customLibrary")
 }

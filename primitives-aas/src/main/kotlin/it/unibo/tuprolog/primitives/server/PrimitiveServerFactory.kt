@@ -2,12 +2,22 @@ package it.unibo.tuprolog.primitives.server
 
 import io.grpc.ServerBuilder
 import it.unibo.tuprolog.primitives.DbManager
-import it.unibo.tuprolog.solve.library.Library
+import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
+import java.util.concurrent.Executors
 
 object PrimitiveServerFactory {
-    fun startService(service: PrimitiveServerWrapper, port: Int = 8080, libraryName: String = "") {
+    fun startService(
+        functor: String,
+        arity: Int,
+        primitive: DistribuitedPrimitive,
+        port: Int = 8080,
+        libraryName: String = ""
+    ) {
+        val executor = Executors.newCachedThreadPool()
+        val service = PrimitiveServerWrapper.of(functor, arity, primitive, executor)
         val genericPrimitive = ServerBuilder.forPort(port)
             .addService(service)
+            .executor(executor)
             .build()
         genericPrimitive!!.start()
         DbManager.get().addPrimitive(service.signature, port = port, libraryName =  libraryName)
@@ -18,17 +28,4 @@ object PrimitiveServerFactory {
         println("${service.signature.name} listening on port $port")
         genericPrimitive.awaitTermination()
     }
-
-    fun startLibraryServers(library: Library, initialPort: Int = 8080) {
-        val list = library.primitives.map {
-            PrimitiveServerWrapper.of(it.key.name, it.key.arity) { request, _ ->
-                    it.value.solve(request)
-                }
-            }
-        var port = initialPort
-        list.forEach {
-            startService(it, port++, library.alias)
-        }
-    }
-
 }

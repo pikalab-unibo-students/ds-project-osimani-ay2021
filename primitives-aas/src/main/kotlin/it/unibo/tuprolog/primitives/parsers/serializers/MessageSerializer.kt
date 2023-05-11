@@ -2,6 +2,7 @@ package it.unibo.tuprolog.primitives.parsers.serializers
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.*
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.SolveOptions
@@ -16,6 +17,12 @@ fun Solve.Request<ExecutionContext>.serialize(): RequestMsg =
         .setMaxDuration(this.maxDuration).build()
 
 fun Solve.Response.serialize(hasNext: Boolean = true): ResponseMsg =
+    ResponseMsg.newBuilder()
+        .setSolution(solution.serialize(hasNext))
+        .addAllSideEffects(sideEffects.map { it.serialize() })
+        .build()
+
+fun DistributedResponse.serialize(hasNext: Boolean = true): ResponseMsg =
     ResponseMsg.newBuilder()
         .setSolution(solution.serialize(hasNext))
         .addAllSideEffects(sideEffects.map { it.serialize() })

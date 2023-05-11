@@ -27,7 +27,6 @@ class ReadLineHandler(private val responseObserver: StreamObserver<GeneratorMsg>
         if(result.hasContent()) {
             return result.content
         } else throw Exception("ReadLine operation failed")
-
     }
 
     override fun handleResponse(response: LineMsg) {

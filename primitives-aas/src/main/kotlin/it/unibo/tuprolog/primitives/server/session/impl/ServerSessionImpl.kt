@@ -5,40 +5,39 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.*
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
-import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
+import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
 import it.unibo.tuprolog.primitives.server.session.ServerSession
 import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineHandler
 import it.unibo.tuprolog.primitives.server.session.event.impl.SubSolveHandler
 import it.unibo.tuprolog.solve.Solution
-import it.unibo.tuprolog.solve.currentTimeInstant
-import it.unibo.tuprolog.solve.primitive.Solve
-import kotlinx.coroutines.coroutineScope
-import kotlin.coroutines.coroutineContext
+import java.util.concurrent.Executor
 
 /**
  * Represent the observer of a connection between the Primitive Server and a client,
  * generated from a call of the primitive
  */
 class ServerSessionImpl(
+    private val primitive: DistribuitedPrimitive,
     private val responseObserver: StreamObserver<GeneratorMsg>,
-    private val primitive: PrimitiveWithSession
-): ServerSession {
+    private val executor: Executor
+): ServerSession, StreamObserver<SolverMsg> {
 
-    private var stream: Iterator<Solve.Response>? = null
+    private var stream: Iterator<DistributedResponse>? = null
 
-    override fun onNext(msg: SolverMsg) {
-        when (stream) {
+    override fun onNext(
+        msg: SolverMsg
+    ) = when (stream) {
             null -> {
                 if (msg.hasRequest()) {
-                    stream = primitive.solve(msg.request.deserialize(), this).iterator()
+                    stream = primitive.solve(msg.request.deserialize(this)).iterator()
                 } else {
-                    println("ERROR, STREAM IS NOT INITIALIZED")
+                    throw IllegalStateException("The request has not been received yet")
                 }
             }
-            else -> {
-                Thread {
-                    handleEvent(msg)
-                }.start()
+        else -> {
+            executor.execute {
+                handleEvent(msg)
             }
         }
     }
@@ -58,15 +57,11 @@ class ServerSessionImpl(
         /** Handling Next Request */
         if(event.hasNext()) {
             if(stream != null) {
-                try {
-                    val solution = stream!!.next().serialize(stream!!.hasNext())
-                    responseObserver.onNext(
-                        GeneratorMsg.newBuilder().setResponse(solution).build()
-                    )
-                    if (!stream!!.hasNext()) this.onCompleted()
-                } catch (e: Exception) {
-                    println("error: $e")
-                }
+                val solution = stream!!.next().serialize(stream!!.hasNext())
+                responseObserver.onNext(
+                    GeneratorMsg.newBuilder().setResponse(solution).build()
+                )
+                if (!stream!!.hasNext()) this.onCompleted()
             }
         }
         /** Handling SubSolve Solution Event */
@@ -79,7 +74,7 @@ class ServerSessionImpl(
         }
         /** Throws error if it tries to initialize again */
         else if(event.hasRequest()) {
-            println("STREAM IS ALREADY INITIALIZED")
+            throw IllegalArgumentException("The request has already been initialized")
         }
     }
 

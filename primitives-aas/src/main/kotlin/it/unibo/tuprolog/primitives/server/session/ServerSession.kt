@@ -1,11 +1,9 @@
 package it.unibo.tuprolog.primitives.server.session
 
-import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Struct
-import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.solve.Solution
 
-interface ServerSession: StreamObserver<SolverMsg> {
+interface ServerSession {
 
     /** Request the client solver to resolve a query. It can be blocking.
      * @return the solutions computed

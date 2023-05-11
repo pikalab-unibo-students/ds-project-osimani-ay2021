@@ -7,19 +7,22 @@ import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
+import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
 import it.unibo.tuprolog.primitives.server.session.impl.ServerSessionImpl
-import it.unibo.tuprolog.primitives.server.session.PrimitiveWithSession
-import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Signature
-import it.unibo.tuprolog.solve.primitive.PrimitiveWrapper
+import java.util.concurrent.Executor
 
-class PrimitiveServerWrapper private constructor(val signature: Signature,
-                                                 private val primitive: PrimitiveWithSession
-):
-    GenericPrimitiveServiceGrpc.GenericPrimitiveServiceImplBase()  {
+class PrimitiveServerWrapper private constructor(
+    functor: String,
+    arity: Int,
+    private val primitive: DistribuitedPrimitive,
+    private val executor: Executor
+): GenericPrimitiveServiceGrpc.GenericPrimitiveServiceImplBase()  {
+
+    val signature: Signature by lazy { Signature(functor, arity) }
 
     override fun callPrimitive(responseObserver: StreamObserver<GeneratorMsg>): StreamObserver<SolverMsg> {
-        return ServerSessionImpl(responseObserver, primitive)
+        return ServerSessionImpl(primitive, responseObserver, executor)
     }
 
     /** Respond with the signature of the primitive **/
@@ -29,21 +32,13 @@ class PrimitiveServerWrapper private constructor(val signature: Signature,
     }
 
     companion object {
-
-        fun of(functor: String, arity: Int,
-               primitive: PrimitiveWithSession
+        fun of(
+            functor: String,
+            arity: Int,
+            primitive: DistribuitedPrimitive,
+            executor: Executor
         ): PrimitiveServerWrapper =
-            PrimitiveServerWrapper(Signature(functor, arity), primitive)
-
-        fun of(signature: Signature,
-               primitive: PrimitiveWithSession
-        ): PrimitiveServerWrapper =
-            PrimitiveServerWrapper(signature, primitive)
-
-        fun from(primitive: PrimitiveWrapper<ExecutionContext>) =
-            PrimitiveServerWrapper(primitive.signature) {request, _ ->
-                primitive.implementation.solve(request)
-            }
+            PrimitiveServerWrapper(functor, arity, primitive, executor)
     }
 }
 

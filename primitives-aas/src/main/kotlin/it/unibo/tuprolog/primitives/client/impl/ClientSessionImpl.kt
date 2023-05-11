@@ -22,10 +22,6 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
 
     private var closed = false
 
-    /** Returns true if all the solutions have been received **/
-    override val isOver: Boolean
-        get() = closed
-
     private val scope = Scope.of(request.query)
     private val sessionSolver: SessionSolver
     private val responseStream: StreamObserver<SolverMsg>
@@ -67,11 +63,16 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
         closed = true
     }
 
-    override fun popElement(): Solve.Response {
-        if (this.isOver) throw IllegalStateException()
-        responseStream.onNext(
-            SolverMsg.newBuilder().setNext(EmptyMsg.getDefaultInstance()).build()
-        )
-        return queue.takeFirst()
-    }
+    override val solutionsQueue: Iterator<Solve.Response> =
+        object: Iterator<Solve.Response> {
+            override fun hasNext(): Boolean = !closed
+
+            override fun next(): Solve.Response {
+                responseStream.onNext(
+                    SolverMsg.newBuilder().setNext(EmptyMsg.getDefaultInstance()).build()
+                )
+                return queue.takeFirst()
+            }
+        }
+
 }
