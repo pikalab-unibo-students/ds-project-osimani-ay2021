@@ -3,6 +3,7 @@ package it.unibo.tuprolog.primitives.parsers.deserializers
 import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.primitives.SolutionMsg
+import it.unibo.tuprolog.primitives.parsers.ParsingException
 import it.unibo.tuprolog.solve.Solution
 
 fun SolutionMsg.deserialize(scope: Scope = Scope.empty()): Solution {
@@ -24,8 +25,7 @@ fun SolutionMsg.deserialize(scope: Scope = Scope.empty()): Solution {
         SolutionMsg.SolutionType.HALT -> {
             Solution.halt(query, this.error.deserialize(scope))
         }
-        else -> {
-            throw IllegalStateException()
-        }
+        else ->
+            throw ParsingException(this)
     }
 }

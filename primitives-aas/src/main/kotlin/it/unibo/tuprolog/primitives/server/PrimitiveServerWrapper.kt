@@ -8,6 +8,7 @@ import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
 import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitiveWrapper
 import it.unibo.tuprolog.primitives.server.session.impl.ServerSessionImpl
 import it.unibo.tuprolog.solve.Signature
 import java.util.concurrent.Executor
@@ -39,6 +40,12 @@ class PrimitiveServerWrapper private constructor(
             executor: Executor
         ): PrimitiveServerWrapper =
             PrimitiveServerWrapper(functor, arity, primitive, executor)
+
+        fun of(
+            primitive: DistribuitedPrimitiveWrapper,
+            executor: Executor
+        ): PrimitiveServerWrapper =
+            of(primitive.signature.name, primitive.signature.arity, primitive.implementation, executor)
     }
 }
 

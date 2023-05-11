@@ -99,8 +99,6 @@ fun ExecutionContextMsg.deserialize(scope: Scope = Scope.empty()): ExecutionCont
     }
 }
 
-
-
 /* Fix with generic type value */
 fun CustomDataMsg.deserialize(): CustomDataStore = CustomDataStore.empty().copy(
     this.persistentDataMap,

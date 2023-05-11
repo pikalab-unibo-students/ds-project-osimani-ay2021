@@ -3,6 +3,7 @@ package it.unibo.tuprolog.primitives.parsers.deserializers
 import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.primitives.ErrorMsg
 import it.unibo.tuprolog.primitives.errors.LogicErrorMsg
+import it.unibo.tuprolog.primitives.parsers.ParsingException
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.exception.HaltException
 import it.unibo.tuprolog.solve.exception.LogicError
@@ -42,9 +43,8 @@ fun ErrorMsg.deserialize(scope: Scope = Scope.empty()): ResolutionException {
         ErrorMsg.ErrorCase.TIMEOUTEXCEPTION -> {
             TimeOutException(message, cause, contexts, this.timeoutException.exceededDuration)
         }
-        else -> {
-            throw IllegalStateException()
-        }
+        else ->
+            throw ParsingException(this)
     }
 }
 

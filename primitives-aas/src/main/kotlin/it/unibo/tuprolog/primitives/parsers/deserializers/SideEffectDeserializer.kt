@@ -1,5 +1,6 @@
 package it.unibo.tuprolog.primitives.parsers.deserializers
 
+import it.unibo.tuprolog.primitives.parsers.ParsingException
 import it.unibo.tuprolog.primitives.sideEffects.*
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
@@ -142,5 +143,5 @@ fun SideEffectMsg.deserialize(): SideEffect {
         }
         else -> {}
     }
-    throw IllegalArgumentException("Parsing is not possible on $this")
+    throw ParsingException(this)
 }

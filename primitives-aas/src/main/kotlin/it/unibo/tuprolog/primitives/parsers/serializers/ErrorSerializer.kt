@@ -2,6 +2,8 @@ package it.unibo.tuprolog.primitives.parsers.serializers
 
 import it.unibo.tuprolog.primitives.ErrorMsg
 import it.unibo.tuprolog.primitives.errors.*
+import it.unibo.tuprolog.primitives.parsers.ParsingException
+import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.solve.exception.*
 import it.unibo.tuprolog.solve.exception.error.*
 import it.unibo.tuprolog.solve.exception.warning.InitializationIssue
@@ -90,7 +92,7 @@ fun LogicError.serialize(builder: ErrorMsg.Builder): ErrorMsg {
                     .setCulprit(this.culprit.serialize())
                     .setExpectedType(this.expectedType.name)
             )
-        else -> {}
+        else -> throw ParsingException(this)
     }
     return builder.setLogicError(logicErrorBuilder).build()
 }
@@ -105,5 +107,5 @@ fun Warning.serialize(builder: ErrorMsg.Builder): ErrorMsg =
             builder.setMissingPredicate(
                 MissingPredicateMsg.newBuilder()
                     .setSignature(this.signature.serialize())).build()
-        else -> throw IllegalStateException()
+        else -> throw ParsingException(this)
     }

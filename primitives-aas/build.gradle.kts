@@ -30,6 +30,7 @@ kotlin {
             dependencies {
                 implementation("org.testng:testng:7.1.0")
                 implementation(libs.grpc.testing)
+                implementation(kotlin("test"))
             }
         }
     }

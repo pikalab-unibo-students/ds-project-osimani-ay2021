@@ -1,6 +1,8 @@
 package it.unibo.tuprolog.primitives.parsers.serializers
 
 import it.unibo.tuprolog.primitives.messages.ArgumentMsg
+import it.unibo.tuprolog.primitives.parsers.ParsingException
+import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.sideEffects.*
 import it.unibo.tuprolog.primitives.sideEffects.AlterChannelsMsg.CloseChannels
 import it.unibo.tuprolog.primitives.sideEffects.AlterChannelsMsg.ModifyChannels
@@ -14,7 +16,7 @@ fun SideEffect.serialize(): SideEffectMsg =
         is SideEffect.AlterOperators -> this.serialize()
         is SideEffect.AlterChannels -> this.serialize()
         is SideEffect.AlterCustomData -> this.serialize()
-        else -> throw IllegalStateException()
+        else -> throw ParsingException(this)
     }
 
 
@@ -178,7 +180,7 @@ fun SideEffect.AlterChannels.serialize(): SideEffectMsg {
                     })
             )
         }
-        else -> throw IllegalStateException()
+        else -> throw ParsingException(this)
     }
     return SideEffectMsg.newBuilder()
         .setChannels(builder).build()

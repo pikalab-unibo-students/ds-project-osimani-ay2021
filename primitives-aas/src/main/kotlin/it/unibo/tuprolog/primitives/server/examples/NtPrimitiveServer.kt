@@ -6,9 +6,10 @@ import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitiveWrapper
 import org.gciatto.kt.math.BigInteger
 
-val ntPrimitive = DistribuitedPrimitive { request ->
+val ntPrimitive = DistribuitedPrimitiveWrapper("nt", 1) { request ->
     fun generateValues(): Sequence<Term> =
         generateSequence(BigInteger.ZERO) { it + BigInteger.ONE }.map { Integer.of(it) }
 
@@ -26,5 +27,5 @@ val ntPrimitive = DistribuitedPrimitive { request ->
 }
 
 fun main() {
-    startService("nt", 1, ntPrimitive, 8081, "customLibrary")
+    startService(ntPrimitive, 8081, "customLibrary")
 }

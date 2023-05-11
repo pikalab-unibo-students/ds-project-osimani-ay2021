@@ -2,8 +2,9 @@ package it.unibo.tuprolog.primitives.server.examples
 
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitiveWrapper
 
-val innestedPrimitive = DistribuitedPrimitive { request ->
+val innestedPrimitive = DistribuitedPrimitiveWrapper("solve", 1) { request ->
     request.subSolve(request.arguments[0].castToStruct()).map {
             if(it.isYes)
                 request.replySuccess(it.substitution.castToUnifier())
@@ -16,5 +17,5 @@ val innestedPrimitive = DistribuitedPrimitive { request ->
 }
 
 fun main() {
-    startService("solve", 1, innestedPrimitive, 8080, "customLibrary")
+    startService(innestedPrimitive, 8080, "customLibrary")
 }
