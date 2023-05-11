@@ -1,5 +1,7 @@
 package it.unibo.tuprolog.primitives.server.session.impl
 
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.*
@@ -43,7 +45,14 @@ class ServerSessionImpl(
     }
 
     override fun onError(t: Throwable?) {
-        println("from server $t")
+        if (t!! is StatusRuntimeException &&
+            (t as StatusRuntimeException).status.code == Status.CANCELLED.code)
+            println("Connection ended by client")
+        else {
+            t.let {
+                throw t
+            }
+        }
     }
 
     override fun onCompleted() {

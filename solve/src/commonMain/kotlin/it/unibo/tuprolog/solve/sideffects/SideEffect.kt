@@ -329,6 +329,29 @@ abstract class SideEffect {
             context.update(outputChannels = context.outputChannels - names)
     }
 
+    data class WriteOnOutputChannels(
+        val messages: Map<String, List<String>>
+    ) : AlterChannels() {
+        constructor(vararg messages: Pair<String, List<String>>) : this(listOf(*messages))
+
+        constructor(messages: Iterable<Pair<String, List<String>>>) : this(messages.toMap())
+
+        constructor(messages: Sequence<Pair<String, List<String>>>) : this(messages.toMap())
+
+        override fun applyTo(context: ExecutionContext): ExecutionContext =
+            context.update(
+                outputChannels = context.outputChannels.plus(
+                    context.outputChannels.filter {
+                        messages.containsKey(it.key)
+                    }.map {
+                        messages[it.key]!!.forEach {
+                            msg -> it.value.write(msg)
+                        }
+                        it.toPair()
+                    }
+                ))
+    }
+
     abstract class AlterCustomData(open val data: Map<String, Any>, open val reset: Boolean = false) : SideEffect()
 
     data class SetPersistentData(

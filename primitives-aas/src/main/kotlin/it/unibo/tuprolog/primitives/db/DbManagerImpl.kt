@@ -1,11 +1,8 @@
-package it.unibo.tuprolog.primitives.impl
+package it.unibo.tuprolog.primitives.db
 
 import com.mongodb.ConnectionString
 import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
-import it.unibo.tuprolog.primitives.DbManager
-import it.unibo.tuprolog.solve.Signature
 import org.litote.kmongo.*
 
 class DbManagerImpl(url: String, port: Int): DbManager {

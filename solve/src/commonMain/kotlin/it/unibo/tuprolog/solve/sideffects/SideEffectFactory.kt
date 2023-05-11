@@ -153,6 +153,12 @@ interface SideEffectFactory {
 
     fun closeOutputChannels(vararg names: String): SideEffect.CloseOutputChannels
 
+    fun writeOnOutputChannels(messages: Sequence<Pair<String, List<String>>>): SideEffect.WriteOnOutputChannels
+
+    fun writeOnOutputChannels(messages: Map<String, List<String>>): SideEffect.WriteOnOutputChannels
+
+    fun writeOnOutputChannels(vararg messages: Pair<String, List<String>>): SideEffect.WriteOnOutputChannels
+
     fun addEphemeralData(key: String, value: Any): SideEffect.SetEphemeralData
 
     fun <X> addEphemeralData(data: Map<String, X>): SideEffect.SetEphemeralData

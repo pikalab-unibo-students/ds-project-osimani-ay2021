@@ -5,6 +5,7 @@ import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.operators.Operator
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
+import it.unibo.tuprolog.solve.exception.error.MessageError
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.sideffects.SideEffect
@@ -166,6 +167,9 @@ internal data class SideEffectsBuilderImpl(
     override fun closeOutputChannels(vararg names: String): SideEffect.CloseOutputChannels =
         adding { factory.closeOutputChannels(*names) }
 
+    override fun writeOnOutputChannels(vararg messages: Pair<String, List<String>>): SideEffect.WriteOnOutputChannels =
+        adding { factory.writeOnOutputChannels(*messages) }
+
     override fun unloadLibraries(aliases: Iterable<String>): SideEffect.UnloadLibraries =
         adding { factory.unloadLibraries(aliases) }
 
@@ -212,6 +216,12 @@ internal data class SideEffectsBuilderImpl(
 
     override fun resetOutputChannels(outputChannels: Sequence<Pair<String, OutputChannel<String>>>): SideEffect.ResetOutputChannels =
         adding { factory.resetOutputChannels(outputChannels) }
+
+    override fun writeOnOutputChannels(messages: Sequence<Pair<String, List<String>>>): SideEffect.WriteOnOutputChannels =
+        adding { factory.writeOnOutputChannels(messages) }
+
+    override fun writeOnOutputChannels(messages: Map<String, List<String>>): SideEffect.WriteOnOutputChannels =
+        adding { factory.writeOnOutputChannels(messages) }
 
     override fun addEphemeralData(key: String, value: Any): SideEffect.SetEphemeralData =
         adding { factory.addEphemeralData(key, value) }

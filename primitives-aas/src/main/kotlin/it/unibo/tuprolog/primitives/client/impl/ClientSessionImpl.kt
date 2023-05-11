@@ -50,7 +50,6 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
     }
 
     override fun onError(t: Throwable?) {
-        println("from client $t")
         queue.add(
             request.replyException(ResolutionException(
                 context = request.context,

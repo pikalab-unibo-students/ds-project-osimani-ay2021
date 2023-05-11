@@ -1,9 +1,6 @@
-package it.unibo.tuprolog.primitives
+package it.unibo.tuprolog.primitives.db
 
-import com.mongodb.ConnectionString
-import it.unibo.tuprolog.primitives.impl.DbManagerImpl
 import it.unibo.tuprolog.solve.Signature
-import org.litote.kmongo.KMongo
 
 interface DbManager {
     data class SerializedPrimitive(

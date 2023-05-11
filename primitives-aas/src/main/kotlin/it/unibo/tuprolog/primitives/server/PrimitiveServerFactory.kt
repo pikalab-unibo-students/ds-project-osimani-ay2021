@@ -1,7 +1,7 @@
 package it.unibo.tuprolog.primitives.server
 
 import io.grpc.ServerBuilder
-import it.unibo.tuprolog.primitives.DbManager
+import it.unibo.tuprolog.primitives.db.DbManager
 import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
 import java.util.concurrent.Executors
 

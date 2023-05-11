@@ -19,8 +19,10 @@ interface SessionSolver {
     fun readLine(event: ReadLineMsg)
 
     companion object {
-        fun of(responseObserver: StreamObserver<SolverMsg>,
-               executionContext: ExecutionContext
-        ): SessionSolverImpl = SessionSolverImpl(responseObserver, executionContext.createSolver())
+        fun of(
+            responseObserver: StreamObserver<SolverMsg>,
+            executionContext: ExecutionContext
+        ): SessionSolverImpl =
+            SessionSolverImpl(responseObserver, executionContext.createSolver())
     }
 }

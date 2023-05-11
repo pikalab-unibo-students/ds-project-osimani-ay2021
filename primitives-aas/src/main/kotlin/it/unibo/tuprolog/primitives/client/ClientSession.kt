@@ -12,7 +12,10 @@ interface ClientSession: StreamObserver<GeneratorMsg> {
     val solutionsQueue: Iterator<Solve.Response>
 
     companion object {
-        fun of(request: Solve.Request<ExecutionContext>, channel: ManagedChannel): ClientSession =
+        fun of(
+            request: Solve.Request<ExecutionContext>,
+            channel: ManagedChannel
+        ): ClientSession =
             ClientSessionImpl(request, channel)
 
     }

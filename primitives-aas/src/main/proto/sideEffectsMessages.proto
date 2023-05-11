@@ -73,20 +73,47 @@ message AlterOperatorsMsg {
 }
 
 message AlterChannelsMsg {
-  enum OpType {
-    OPEN = 0;
-    RESET = 1;
-    CLOSE = 2;
-  }
-
   enum ChannelType {
     INPUT = 0;
     OUTPUT = 1;
   }
 
-  ChannelType channelType = 1;
-  OpType type = 2;
-  map<string, string> channels = 3;
+  message ModifyChannels {
+    enum OpType {
+      OPEN = 0;
+      RESET = 1;
+    }
+
+    map<string, string> channels = 1;
+    OpType opType = 2;
+    ChannelType channelType = 3;
+  }
+
+  message CloseChannels {
+    repeated string channels = 1;
+    ChannelType channelType = 2;
+  }
+
+  message WriteOnOutputs {
+    message ContentMsg {
+      repeated string messages = 1;
+    }
+    map<string, ContentMsg> channels = 1;
+  }
+
+  oneof operation {
+    ModifyChannels modify = 2;
+    CloseChannels close = 3;
+    WriteOnOutputChannelMsg write = 4;
+  }
+}
+
+message WriteOnOutputChannelMsg {
+  message Messages {
+    repeated string message = 1;
+  }
+
+  map<string, Messages> messages = 3;
 }
 
 message AlterCustomDataMsg {

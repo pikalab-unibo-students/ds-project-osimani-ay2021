@@ -215,6 +215,15 @@ internal object DefaultSideEffectFactory : SideEffectFactory {
     override fun closeOutputChannels(vararg names: String) =
         SideEffect.CloseOutputChannels(*names)
 
+    override fun writeOnOutputChannels(vararg messages: Pair<String, List<String>>) =
+        SideEffect.WriteOnOutputChannels(*messages)
+
+    override fun writeOnOutputChannels(messages: Map<String, List<String>>) =
+        SideEffect.WriteOnOutputChannels(messages)
+
+    override fun writeOnOutputChannels(messages: Sequence<Pair<String, List<String>>>) =
+        SideEffect.WriteOnOutputChannels(messages)
+
     override fun addEphemeralData(key: String, value: Any) =
         SideEffect.SetEphemeralData(key, value, reset = false)
 

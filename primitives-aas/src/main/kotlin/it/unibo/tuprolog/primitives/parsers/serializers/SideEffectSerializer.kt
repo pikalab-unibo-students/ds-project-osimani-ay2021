@@ -2,6 +2,8 @@ package it.unibo.tuprolog.primitives.parsers.serializers
 
 import it.unibo.tuprolog.primitives.messages.ArgumentMsg
 import it.unibo.tuprolog.primitives.sideEffects.*
+import it.unibo.tuprolog.primitives.sideEffects.AlterChannelsMsg.CloseChannels
+import it.unibo.tuprolog.primitives.sideEffects.AlterChannelsMsg.ModifyChannels
 import it.unibo.tuprolog.solve.sideffects.SideEffect
 
 fun SideEffect.serialize(): SideEffectMsg =
@@ -120,42 +122,61 @@ fun SideEffect.AlterChannels.serialize(): SideEffectMsg {
     val builder = AlterChannelsMsg.newBuilder()
     when(this) {
         is SideEffect.AlterChannelsByName -> {
-            builder.setType(AlterChannelsMsg.OpType.CLOSE)
-                .putAllChannels(this.names.associateBy { "" })
-            when(this) {
-                is SideEffect.CloseInputChannels ->
-                    builder.setChannelType(AlterChannelsMsg.ChannelType.INPUT)
-                is SideEffect.CloseOutputChannels ->
-                    builder.setChannelType(AlterChannelsMsg.ChannelType.OUTPUT)
-            }
+            builder.setClose(CloseChannels.newBuilder()
+                .addAllChannels(this.names)
+                .setChannelType(
+                    when(this) {
+                        is SideEffect.CloseInputChannels ->
+                            AlterChannelsMsg.ChannelType.INPUT
+                        else ->
+                            AlterChannelsMsg.ChannelType.OUTPUT
+                    }
+                ))
         }
         is SideEffect.AlterInputChannels -> {
-            builder.setChannelType(AlterChannelsMsg.ChannelType.INPUT)
-                .putAllChannels(
-                    this.inputChannels.map {
-                        Pair(it.key, "") //FIX
-                    }.toMap()
-                )
-            when(this) {
-                is SideEffect.OpenInputChannels ->
-                    builder.setType(AlterChannelsMsg.OpType.OPEN)
-                is SideEffect.ResetInputChannels ->
-                    builder.setType(AlterChannelsMsg.OpType.RESET)
-            }
+            builder.setModify(
+                ModifyChannels.newBuilder()
+                    .putAllChannels(
+                        this.inputChannels.map {
+                            Pair(it.key, "") //FIX
+                        }.toMap())
+                    .setChannelType(AlterChannelsMsg.ChannelType.INPUT)
+                    .setOpType(
+                        when(this) {
+                            is SideEffect.OpenInputChannels ->
+                                AlterChannelsMsg.ModifyChannels.OpType.OPEN
+                            else ->
+                                AlterChannelsMsg.ModifyChannels.OpType.RESET
+                        }
+                    )
+            )
         }
         is SideEffect.AlterOutputChannels -> {
-            builder.setChannelType(AlterChannelsMsg.ChannelType.OUTPUT)
-                .putAllChannels(
-                    this.outputChannels.map {
-                        Pair(it.key, "") //FIX
-                    }.toMap()
-                )
-            when(this) {
-                is SideEffect.OpenOutputChannels ->
-                    builder.setType(AlterChannelsMsg.OpType.OPEN)
-                is SideEffect.ResetOutputChannels ->
-                    builder.setType(AlterChannelsMsg.OpType.RESET)
-            }
+            builder.setModify(
+                ModifyChannels.newBuilder()
+                    .putAllChannels(
+                        this.outputChannels.map {
+                            Pair(it.key, "") //FIX
+                        }.toMap())
+                    .setChannelType(AlterChannelsMsg.ChannelType.OUTPUT)
+                    .setOpType(
+                        when(this) {
+                            is SideEffect.OpenOutputChannels ->
+                                AlterChannelsMsg.ModifyChannels.OpType.OPEN
+                            else ->
+                                AlterChannelsMsg.ModifyChannels.OpType.RESET
+                        }
+                    )
+            )
+        }
+        is SideEffect.WriteOnOutputChannels -> {
+            builder.setWrite(
+                WriteOnOutputChannelMsg.newBuilder()
+                    .putAllMessages(this.messages.mapValues {
+                        WriteOnOutputChannelMsg.Messages.newBuilder()
+                            .addAllMessage(it.value).build()
+                    })
+            )
         }
         else -> throw IllegalStateException()
     }
