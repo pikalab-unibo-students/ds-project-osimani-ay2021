@@ -2,9 +2,9 @@ package it.unibo.tuprolog.primitives.server.examples
 
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
-import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
 
-val innestedPrimitive = DistribuitedPrimitiveWrapper("solve", 1) { request ->
+val innestedPrimitive = DistributedPrimitiveWrapper("solve", 1) { request ->
     request.subSolve(request.arguments[0].castToStruct()).map {
             if(it.isYes)
                 request.replySuccess(it.substitution.castToUnifier())

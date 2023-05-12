@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.primitives.server.session.event.impl
+package it.unibo.tuprolog.primitives.server.session.event
 
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Scope
@@ -8,22 +8,17 @@ import it.unibo.tuprolog.primitives.SubSolveResponse
 import it.unibo.tuprolog.primitives.idGenerator
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.buildSubSolveMsg
-import it.unibo.tuprolog.primitives.server.session.event.ServerEvent
 import it.unibo.tuprolog.solve.Solution
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.BlockingQueue
-import java.util.concurrent.Executor
-import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingQueue
 
 class SubSolveHandler(
     private val responseObserver: StreamObserver<GeneratorMsg>
-): ServerEvent<Struct, SubSolveResponse, Sequence<Solution>> {
+) {
 
     private val subSolvesMap: MutableMap<String, BlockingQueue<SubSolveResponse>> = mutableMapOf()
 
-    override fun sendRequest(input: Struct): Sequence<Solution> {
+    fun sendRequest(input: Struct, timeout: Long): Sequence<Solution> {
         val id = generateID()
         subSolvesMap.putIfAbsent(id, LinkedBlockingQueue(1))
         return object: Iterator<Solution> {
@@ -31,7 +26,7 @@ class SubSolveHandler(
             override fun hasNext(): Boolean = available
             override fun next(): Solution {
                 responseObserver.onNext(
-                    buildSubSolveMsg(input, id)
+                    buildSubSolveMsg(input, id, timeout = timeout)
                 )
                 val solution = subSolvesMap[id]!!.take().solution
                 available = solution.hasNext
@@ -40,7 +35,7 @@ class SubSolveHandler(
         }.asSequence()
     }
 
-    override fun handleResponse(response: SubSolveResponse) {
+    fun handleResponse(response: SubSolveResponse) {
         subSolvesMap[response.requestID]?.add(response)
     }
 

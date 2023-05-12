@@ -5,11 +5,10 @@ import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
-import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
-import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
 import org.gciatto.kt.math.BigInteger
 
-val ntPrimitive = DistribuitedPrimitiveWrapper("nt", 1) { request ->
+val ntPrimitive = DistributedPrimitiveWrapper("nt", 1) { request ->
     fun generateValues(): Sequence<Term> =
         generateSequence(BigInteger.ZERO) { it + BigInteger.ONE }.map { Integer.of(it) }
 

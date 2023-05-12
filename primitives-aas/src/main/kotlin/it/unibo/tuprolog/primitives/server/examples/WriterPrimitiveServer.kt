@@ -1,10 +1,10 @@
 package it.unibo.tuprolog.primitives.server.examples
 
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
-import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
 import it.unibo.tuprolog.solve.sideffects.SideEffect
 
-val writerPrimitive = DistribuitedPrimitiveWrapper("writeMessage", 2) { request ->
+val writerPrimitive = DistributedPrimitiveWrapper("writeMessage", 2) { request ->
     sequence {
         yield(request.replyWith(true,
             SideEffect.WriteOnOutputChannels(

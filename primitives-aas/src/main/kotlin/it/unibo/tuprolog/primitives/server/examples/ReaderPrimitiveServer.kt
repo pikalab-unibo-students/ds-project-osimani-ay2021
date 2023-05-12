@@ -3,9 +3,9 @@ package it.unibo.tuprolog.primitives.server.examples
 import it.unibo.tuprolog.core.Atom
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
-import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
 
-val readerPrimitive = DistribuitedPrimitiveWrapper("readLine",2 ) { request ->
+val readerPrimitive = DistributedPrimitiveWrapper("readLine",2 ) { request ->
     sequence {
         while(true) {
             try {

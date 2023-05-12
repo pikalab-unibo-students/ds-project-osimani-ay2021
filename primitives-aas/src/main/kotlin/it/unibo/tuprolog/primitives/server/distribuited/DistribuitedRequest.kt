@@ -7,6 +7,7 @@ import it.unibo.tuprolog.primitives.server.session.ServerSession
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.Signature
 import it.unibo.tuprolog.solve.Solution
+import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.sideffects.SideEffect
 
@@ -23,10 +24,7 @@ data class DistribuitedRequest(
         condition: Boolean,
         vararg sideEffect: SideEffect
     ) = DistributedResponse(
-        if (condition)
-            Solution.yes(query)
-        else
-            Solution.no(query),
+        if (condition) Solution.yes(query) else Solution.no(query),
         sideEffect.asList())
 
 
@@ -53,8 +51,8 @@ data class DistribuitedRequest(
         sideEffect.asList()
     )
 
-    fun subSolve(query: Struct): Sequence<Solution> =
-        session.subSolve(query)
+    fun subSolve(query: Struct, timeout: Long = SolveOptions.MAX_TIMEOUT): Sequence<Solution> =
+        session.subSolve(query, timeout)
 
     fun readLine(channelName: String): String =
         session.readLine(channelName)

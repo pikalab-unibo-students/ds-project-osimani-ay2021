@@ -20,7 +20,7 @@ class SessionSolverImpl(
 
     override fun solve(event: SubSolveRequest) {
         val query = event.query.deserialize()
-        computations.putIfAbsent(event.requestID, solver.solve(query).iterator())
+        computations.putIfAbsent(event.requestID, solver.solve(query, event.timeout).iterator())
         val solution: Solution = computations[event.requestID]!!.next()
         responseObserver.onNext(
             buildSubSolveSolutionMsg(

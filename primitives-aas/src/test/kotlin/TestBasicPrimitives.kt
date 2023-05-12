@@ -6,30 +6,26 @@ import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
 import it.unibo.tuprolog.solve.library.Runtime
+import java.util.concurrent.Executors
 import kotlin.test.*
 
 class TestBasicPrimitives {
 
     private lateinit var solver: Solver
-
-    /*private val servers: MutableSet<Thread> = mutableSetOf()
-
-    init {
-        var port = 8080
-        listOf(innestedPrimitive, ntPrimitive, readerPrimitive, throwablePrimitive, writerPrimitive).forEach {
-            val thread = Thread {
-                PrimitiveServerFactory
-                    .startService(it, port, "customLibrary")
-            }
-            servers.add(thread)
-            thread.start()
-            Thread.sleep(1000)
-            port++
-        }
-    }*/
+    private val executor = Executors.newCachedThreadPool()
 
     @BeforeTest
     fun beforeEach() {
+        var port = 8080
+        listOf(innestedPrimitive, ntPrimitive, readerPrimitive, throwablePrimitive, writerPrimitive).forEach {
+            executor.submit {
+                PrimitiveServerFactory
+                    .startService(it, port, "customLibrary")
+            }
+            Thread.sleep(500)
+            port++
+        }
+
         logicProgramming {
             solver = Solver.prolog.solverWithDefaultBuiltins(
                 otherLibraries = Runtime.of(
@@ -39,6 +35,12 @@ class TestBasicPrimitives {
             )
         }
     }
+
+    @AfterTest
+    fun afterEach() {
+        executor.shutdownNow()
+    }
+
 
     /** Testing Basic Primitive **/
     @Test
