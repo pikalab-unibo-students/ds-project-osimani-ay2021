@@ -32,30 +32,31 @@ fun buildSubSolveMsg(query: Struct, id: String,
                      lazy: Boolean = true,
                      timeout: Long = SolveOptions.MAX_TIMEOUT,
                      limit: Int = SolveOptions.ALL_SOLUTIONS): GeneratorMsg =
-    GeneratorMsg.newBuilder().setSubSolve(
-        SubSolveRequest.newBuilder().setQuery(query.serialize()).setRequestID(id)
-            .setLazy(lazy).setTimeout(timeout).setLimit(limit))
-        .build()
+    GeneratorMsg.newBuilder().setRequest(
+        SubRequestMsg.newBuilder().setId(id).setSubSolve(
+            SubSolveRequest.newBuilder().setQuery(query.serialize())
+                .setLazy(lazy).setTimeout(timeout).setLimit(limit))
+    ).build()
 
-fun buildReadLineMsg(channelName: String): GeneratorMsg =
-    GeneratorMsg.newBuilder().setReadLine(
-        ReadLineMsg.newBuilder().setChannelName(channelName))
-        .build()
+fun buildReadLineMsg(id: String, channelName: String): GeneratorMsg =
+    GeneratorMsg.newBuilder().setRequest(
+        SubRequestMsg.newBuilder().setId(id).setReadLine(
+            ReadLineMsg.newBuilder().setChannelName(channelName))
+    ).build()
 
-fun buildLineMsg(channelName: String, line: String): SolverMsg {
-    val builder =LineMsg.newBuilder().setChannelName(channelName).setContent(line)
-    return SolverMsg.newBuilder().setLine(
-        if (line.isBlank()) builder.setFailed(true)
-        else builder.setContent(line)
+fun buildLineMsg(id: String, channelName: String, line: String): SolverMsg {
+    val builder = LineMsg.newBuilder().setChannelName(channelName).setContent(line)
+    return SolverMsg.newBuilder().setResponse(
+        SubResponseMsg.newBuilder().setId(id).setLine(
+            if (line.isBlank()) builder.setFailed(true)
+            else builder.setContent(line))
     ).build()
 }
 
-
-fun buildSubSolveSolutionMsg(solution: Solution, requestID: String, hasNext: Boolean = true): SolverMsg =
-    SolverMsg.newBuilder().setSolution(
-        SubSolveResponse.newBuilder()
-            .setSolution(solution.serialize(hasNext))
-            .setRequestID(requestID))
+fun buildSubSolveSolutionMsg(id: String, solution: Solution, hasNext: Boolean = true): SolverMsg =
+    SolverMsg.newBuilder().setResponse(
+        SubResponseMsg.newBuilder().setId(id).setSolution(
+            solution.serialize(hasNext)))
         .build()
 
 

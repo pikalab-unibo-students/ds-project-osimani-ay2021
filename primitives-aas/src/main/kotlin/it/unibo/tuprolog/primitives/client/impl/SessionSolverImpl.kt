@@ -9,6 +9,7 @@ import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.buildLineMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.buildSubSolveSolutionMsg
 import it.unibo.tuprolog.solve.Solution
+import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.Solver
 
 class SessionSolverImpl(
@@ -18,22 +19,22 @@ class SessionSolverImpl(
 
     private val computations: MutableMap<String, Iterator<Solution>> = mutableMapOf()
 
-    override fun solve(event: SubSolveRequest) {
+    override fun solve(id: String, event: SubSolveRequest) {
         val query = event.query.deserialize()
-        computations.putIfAbsent(event.requestID, solver.solve(query, event.timeout).iterator())
-        val solution: Solution = computations[event.requestID]!!.next()
+        computations.putIfAbsent(id, solver.solve(query, event.timeout).iterator())
+        val solution: Solution = computations[id]!!.next()
         responseObserver.onNext(
             buildSubSolveSolutionMsg(
-                solution, event.requestID,
-                computations[event.requestID]!!.hasNext()
+                id, solution,
+                computations[id]!!.hasNext()
             )
         )
     }
 
-    override fun readLine(event: ReadLineMsg) {
+    override fun readLine(id: String, event: ReadLineMsg) {
         solver.inputChannels[event.channelName]?.let { channel ->
             val line = channel.read()
-            responseObserver.onNext(buildLineMsg(event.channelName, line.orEmpty()))
+            responseObserver.onNext(buildLineMsg(id, event.channelName, line.orEmpty()))
         }
     }
 }

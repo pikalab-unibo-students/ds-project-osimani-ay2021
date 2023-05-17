@@ -41,11 +41,12 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
                 this.onCompleted()
             }
         }
-        else if(value.hasReadLine()) {
-            sessionSolver.readLine(value.readLine)
-        }
-        else if(value.hasSubSolve()) {
-            sessionSolver.solve(value.subSolve)
+        else if(value.hasRequest()) {
+            val request = value.request
+            if(request.hasSubSolve())
+                sessionSolver.solve(request.id, request.subSolve)
+            else if(request.hasReadLine())
+                sessionSolver.readLine(request.id, request.readLine)
         }
     }
 

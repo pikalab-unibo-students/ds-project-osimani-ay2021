@@ -5,12 +5,14 @@ import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.GeneratorMsg
 import it.unibo.tuprolog.primitives.RequestMsg
 import it.unibo.tuprolog.primitives.SolverMsg
+import it.unibo.tuprolog.primitives.idGenerator
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
 import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
 import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
-import it.unibo.tuprolog.primitives.server.session.event.ReadLineHandler
-import it.unibo.tuprolog.primitives.server.session.event.SubSolveHandler
+import it.unibo.tuprolog.primitives.server.session.event.SubRequestEvent
+import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineEvent
+import it.unibo.tuprolog.primitives.server.session.event.impl.SingleSubSolveEvent
 import it.unibo.tuprolog.solve.Solution
 
 /**
@@ -24,8 +26,7 @@ class ServerSessionImpl(
 ): ServerSession {
 
     private val stream: Iterator<DistributedResponse>
-    private val subSolveHandler: SubSolveHandler = SubSolveHandler(responseObserver)
-    private val readLineHandler: ReadLineHandler = ReadLineHandler(responseObserver)
+    private val ongoingSubRequests: MutableList<SubRequestEvent> = mutableListOf()
 
     init {
         stream = primitive.solve(
@@ -42,13 +43,11 @@ class ServerSessionImpl(
             )
             if (!stream.hasNext()) responseObserver.onCompleted()
         }
-        /** Handling SubSolve Solution Event */
-        else if (msg.hasSolution()) {
-            subSolveHandler.handleResponse(msg.solution)
-        }
-        /** Handling ReadLine Response Event */
-        else if (msg.hasLine()) {
-            readLineHandler.handleResponse(msg.line)
+        /** Handling SubRequest Event */
+        else if (msg.hasResponse()) {
+            ongoingSubRequests.find { it.id == msg.response.id }.let {
+                it?.signalResponse(msg.response)
+            }
         }
         /** Throws error if it tries to initialize again */
         else if (msg.hasRequest()) {
@@ -57,8 +56,34 @@ class ServerSessionImpl(
     }
 
     override fun subSolve(query: Struct, timeout: Long): Sequence<Solution> =
-        subSolveHandler.sendRequest(query, timeout)
+        object: Iterator<Solution> {
+            val id: String = idGenerator()
+            private var hasNext: Boolean = true
 
-    override fun readLine(channelName: String): String =
-        readLineHandler.sendRequest(channelName)
+            override fun hasNext(): Boolean =
+                hasNext
+
+            override fun next(): Solution {
+                val request = SingleSubSolveEvent(id, query, timeout)
+                enqueueGeneratorRequest(request)
+                return request.awaitResult().also {
+                    hasNext = request.hasNext()!!
+                    ongoingSubRequests.remove(request)
+                }
+            }
+        }.asSequence()
+
+    override fun readLine(channelName: String): String {
+        val request = ReadLineEvent(idGenerator(), channelName)
+        enqueueGeneratorRequest(request)
+        return request.awaitResult().also {
+            ongoingSubRequests.remove(request)
+        }
+    }
+
+    private fun enqueueGeneratorRequest(request: SubRequestEvent) {
+        responseObserver.onNext(request.message)
+        ongoingSubRequests.add(request)
+    }
+
 }

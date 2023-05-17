@@ -1,0 +1,9 @@
+GRPC COMMANDS:
+- To generate from protos:
+		python -m grpc_tools.protoc -I../proto --python_out=./generatedProto --pyi_out=./generatedProto --grpc_python_out=./generatedProto ../proto/*.proto
+
+PYTHON ENV:
+- to enable activate, form admin powershell
+		Set-ExecutionPolicy Unrestricted -Scope Process
+- To switch to env:
+		...\env\Scripts\python.exe

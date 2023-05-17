@@ -68,14 +68,15 @@ class TestBasicPrimitives {
     @Throws(Exception::class)
     fun testSubSolve() {
         logicProgramming {
-            val query = "solve"("nt"(X))
+            val query = "solve"("natural"(X))
             val solutions = solver.solve(query).take(2).map {
+                println(it)
                 it.solvedQuery!!
             }.toList()
             assertEquals(
                 listOf(
-                    "solve"("nt"(0)),
-                    "solve"("nt"(1)),
+                    "solve"("natural"(0)),
+                    "solve"("natural"(1)),
                 ).toList(),
                 solutions
             )
@@ -95,7 +96,9 @@ class TestBasicPrimitives {
             listOf(
                 "h", "e", "l", "l", "o"
             ).toList(),
-            solutions.take(5).map { it.substitution.values.first().toString()}
+            solutions.take(5).map {
+                it.substitution.values.first().toString()
+            }
         )
     }
 }

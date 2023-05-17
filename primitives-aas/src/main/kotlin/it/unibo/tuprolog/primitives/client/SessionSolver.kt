@@ -11,12 +11,12 @@ interface SessionSolver {
 
     /** Solve a query requested by the primitive server and sends the result.
      *  It can be blocking */
-    fun solve(event: SubSolveRequest)
+    fun solve(id: String, event: SubSolveRequest)
 
     /** Reads a character from an Input channel and sends it to the Primitive Server.
      *  It returns 'failed' if the read fails.
      */
-    fun readLine(event: ReadLineMsg)
+    fun readLine(id: String, event: ReadLineMsg)
 
     companion object {
         fun of(
