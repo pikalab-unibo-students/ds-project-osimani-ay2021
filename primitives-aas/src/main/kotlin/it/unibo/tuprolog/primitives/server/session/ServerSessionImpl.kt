@@ -11,9 +11,11 @@ import it.unibo.tuprolog.primitives.parsers.serializers.serialize
 import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
 import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
 import it.unibo.tuprolog.primitives.server.session.event.SubRequestEvent
+import it.unibo.tuprolog.primitives.server.session.event.impl.InspectKbEvent
 import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineEvent
 import it.unibo.tuprolog.primitives.server.session.event.impl.SingleSubSolveEvent
 import it.unibo.tuprolog.solve.Solution
+import it.unibo.tuprolog.theory.Theory
 
 /**
  * Represent the observer of a connection between the Primitive Server and a client,
@@ -75,6 +77,18 @@ class ServerSessionImpl(
 
     override fun readLine(channelName: String): String {
         val request = ReadLineEvent(idGenerator(), channelName)
+        enqueueGeneratorRequest(request)
+        return request.awaitResult().also {
+            ongoingSubRequests.remove(request)
+        }
+    }
+
+    override fun inspectKB(
+        kbType: Session.KbType,
+        maxClauses: Long,
+        vararg filters: Pair<Session.KbFilter, String>
+    ): Theory {
+        val request = InspectKbEvent(idGenerator(), kbType, maxClauses, *filters)
         enqueueGeneratorRequest(request)
         return request.awaitResult().also {
             ongoingSubRequests.remove(request)

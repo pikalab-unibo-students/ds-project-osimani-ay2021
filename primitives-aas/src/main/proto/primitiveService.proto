@@ -79,6 +79,7 @@ message SubRequestMsg {
   oneof request {
     SubSolveRequest subSolve = 2;
     ReadLineMsg readLine = 3;
+    InspectKbMsg inspectKb = 4;
   }
 }
 
@@ -98,7 +99,30 @@ message SubResponseMsg {
   oneof response {
     SolutionMsg solution = 2;
     LineMsg line = 3;
+    TheoryMsg theory = 4;
   }
+}
+
+message InspectKbMsg {
+  enum KbType {
+    STATIC = 0;
+    DYNAMIC = 1;
+  }
+
+  enum FilterType {
+    CONTAINS_TERM = 0;
+    STARTS_WITH = 1;
+    CONTAINS_FUNCTOR = 2;
+  }
+
+  message FilterMsg {
+    FilterType type = 1;
+    string argument = 2;
+  }
+
+  KbType kbType = 1;
+  optional int64 maxClauses = 2;
+  repeated FilterMsg filters = 3;
 }
 
 message LineMsg {
@@ -107,6 +131,10 @@ message LineMsg {
     bool failed = 2;
     string content = 3;
   }
+}
+
+message TheoryMsg {
+  repeated StructMsg clauses = 1;
 }
 
 

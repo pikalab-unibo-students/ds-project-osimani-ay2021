@@ -47,6 +47,8 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
                 sessionSolver.solve(request.id, request.subSolve)
             else if(request.hasReadLine())
                 sessionSolver.readLine(request.id, request.readLine)
+            else if(request.hasInspectKb())
+                sessionSolver.inspectKb(request.id, request.inspectKb)
         }
     }
 
