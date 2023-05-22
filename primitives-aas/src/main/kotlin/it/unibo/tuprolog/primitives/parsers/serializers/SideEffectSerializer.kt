@@ -2,7 +2,6 @@ package it.unibo.tuprolog.primitives.parsers.serializers
 
 import it.unibo.tuprolog.primitives.messages.ArgumentMsg
 import it.unibo.tuprolog.primitives.parsers.ParsingException
-import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.sideEffects.*
 import it.unibo.tuprolog.primitives.sideEffects.AlterChannelsMsg.CloseChannels
 import it.unibo.tuprolog.primitives.sideEffects.AlterChannelsMsg.ModifyChannels
@@ -106,7 +105,7 @@ fun SideEffect.AlterRuntime.serialize(): SideEffectMsg {
 
 fun SideEffect.AlterOperators.serialize(): SideEffectMsg {
     val builder = AlterOperatorsMsg.newBuilder()
-        .addAllOperators(this.operatorSet.serialize())
+        .addAllOperators(this.operatorSet.serialize().operatorsList)
     when(this) {
         is SideEffect.SetOperators ->
             builder.setOperationType(AlterOperatorsMsg.OpType.SET)

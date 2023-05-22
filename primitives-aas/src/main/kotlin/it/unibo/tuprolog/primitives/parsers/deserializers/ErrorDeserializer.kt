@@ -13,42 +13,41 @@ import it.unibo.tuprolog.solve.exception.error.*
 import it.unibo.tuprolog.solve.exception.warning.InitializationIssue
 import it.unibo.tuprolog.solve.exception.warning.MissingPredicate
 
-fun ErrorMsg.deserialize(scope: Scope = Scope.empty()): ResolutionException {
-    val contexts = this.contextsList.map { it.deserialize(scope) }.toTypedArray()
+fun ErrorMsg.deserialize(scope: Scope = Scope.empty(), actualContext: ExecutionContext): ResolutionException {
     val message = if(this.hasMessage()) {
         this.message
     } else null
     val cause = if(this.hasCause()) {
-        this.cause.deserialize(scope)
+        this.cause.deserialize(scope, actualContext)
     } else null
     return when(this.errorCase) {
         ErrorMsg.ErrorCase.LOGICERROR -> {
-            this.logicError.deserialize(message, cause, contexts)
+            this.logicError.deserialize(message, cause, actualContext)
         }
         ErrorMsg.ErrorCase.INITIALIZATIONISSUE -> {
             InitializationIssue(
                 this.initializationIssue.goal.deserialize(),
-                cause, contexts
+                cause, actualContext
             )
         }
         ErrorMsg.ErrorCase.MISSINGPREDICATE -> {
-            MissingPredicate(cause, contexts, this.missingPredicate.signature.deserialize())
+            MissingPredicate(cause, actualContext, this.missingPredicate.signature.deserialize())
         }
         ErrorMsg.ErrorCase.HALTEXCEPTION -> {
-            HaltException(this.haltException.exitStatus, message, cause, contexts)
+            HaltException(this.haltException.exitStatus, message, cause, actualContext)
         }
         ErrorMsg.ErrorCase.RESOLUTIONEXCEPTION -> {
-            ResolutionException(message, cause, contexts)
+            ResolutionException(message, cause, actualContext)
         }
         ErrorMsg.ErrorCase.TIMEOUTEXCEPTION -> {
-            TimeOutException(message, cause, contexts, this.timeoutException.exceededDuration)
+            TimeOutException(message, cause, actualContext, this.timeoutException.exceededDuration)
         }
         else ->
             throw ParsingException(this)
     }
 }
 
-fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Array<ExecutionContext>): LogicError {
+fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, context: ExecutionContext): LogicError {
     val extraData =
         if(this.extraData.isInitialized)
             this.extraData.deserialize()
@@ -57,7 +56,7 @@ fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Arr
         LogicErrorMsg.ErrorCase.DOMAINERROR -> {
             val error = this.domainError
             DomainError(
-                message, cause, contexts,
+                message, cause, context,
                 DomainError.Expected.valueOf(error.expectedDomain),
                 error.culprit.deserialize(),
                 extraData
@@ -65,7 +64,7 @@ fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Arr
         }
         LogicErrorMsg.ErrorCase.EVALUATIONERROR -> {
             EvaluationError(
-                message, cause, contexts,
+                message, cause, context,
                 EvaluationError.Type.valueOf(this.evaluationError.errorType),
                 extraData
             )
@@ -73,7 +72,7 @@ fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Arr
         LogicErrorMsg.ErrorCase.EXISTENCEERROR -> {
             val error = this.existenceError
             ExistenceError(
-                message, cause, contexts,
+                message, cause, context,
                 ExistenceError.ObjectType.valueOf(error.expectedObject),
                 error.culprit.deserialize(),
                 extraData
@@ -81,7 +80,7 @@ fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Arr
         }
         LogicErrorMsg.ErrorCase.INSTANTIATIONERROR -> {
             InstantiationError(
-                message, cause, contexts,
+                message, cause, context,
                 this.instantiationError.culprit.deserialize().castToVar(),
                 extraData
             )
@@ -89,7 +88,7 @@ fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Arr
         LogicErrorMsg.ErrorCase.PERMISSIONERROR -> {
             val error = this.permissionError
             PermissionError(
-                message, cause, contexts,
+                message, cause, context,
                 PermissionError.Operation.valueOf(error.operation),
                 PermissionError.Permission.valueOf(error.permission),
                 this.permissionError.culprit.deserialize().castToVar(),
@@ -98,21 +97,21 @@ fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Arr
         }
         LogicErrorMsg.ErrorCase.REPRESENTATIONERROR -> {
             RepresentationError(
-                message, cause, contexts,
+                message, cause, context,
                 RepresentationError.Limit.valueOf(this.representationError.limit),
                 extraData
             )
         }
         LogicErrorMsg.ErrorCase.SYNTAXERROR -> {
-            SyntaxError(message, cause, contexts, extraData)
+            SyntaxError(message, cause, context, extraData)
         }
         LogicErrorMsg.ErrorCase.SYSTEMERROR -> {
-            SystemError(message, cause, contexts, extraData)
+            SystemError(message, cause, context, extraData)
         }
         LogicErrorMsg.ErrorCase.TYPEERROR -> {
             val error = this.typeError
             TypeError(
-                message, cause, contexts,
+                message, cause, context,
                 TypeError.Expected.valueOf(error.expectedType),
                 this.typeError.culprit.deserialize(),
                 extraData
@@ -120,7 +119,7 @@ fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, contexts: Arr
         }
         else -> {
             LogicError.of(
-                message, cause, contexts,
+                message, cause, context,
                 type.deserialize().castToStruct(), extraData)
         }
     }

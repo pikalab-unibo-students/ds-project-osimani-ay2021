@@ -40,7 +40,6 @@ import "sideEffectsMessages.proto";
 
 message ResponseMsg {
   SolutionMsg solution = 1;
-  string side_effect_manager = 2;
   repeated SideEffectMsg sideEffects = 3;
 }
 
@@ -61,8 +60,8 @@ import "errorsMessages.proto";
 
 message ErrorMsg {
   optional string message = 1;
-  repeated ExecutionContextMsg contexts = 2;
-  optional ErrorMsg cause = 3;
+  optional ErrorMsg cause = 2;
+  ExecutionContextMsg context = 3;
   oneof error {
     InitializationIssueMsg initializationIssue = 4;
     MissingPredicateMsg missingPredicate = 5;
@@ -80,9 +79,26 @@ message SubRequestMsg {
     SubSolveRequest subSolve = 2;
     ReadLineMsg readLine = 3;
     InspectKbMsg inspectKb = 4;
+    GenericGetMsg genericGet = 5;
   }
 }
 
+message SubResponseMsg {
+  string id = 1;
+  oneof response {
+    ResponseMsg solution = 2;
+    LineMsg line = 3;
+    TheoryMsg theory = 4;
+    LogicStacktraceMsg logicStackTrace = 5;
+    CustomDataMsg customDataStore = 6;
+    UnificatorMsg unificator = 7;
+    LibrariesMsg libraries = 8;
+    OperatorSetMsg operators = 9;
+    ChannelsMsg channels = 10;
+  }
+}
+
+//SubSolve Messages
 message SubSolveRequest {
   StructMsg query = 1;
   optional int64 timeout = 2;
@@ -90,19 +106,21 @@ message SubSolveRequest {
   optional int32 limit = 4;
 }
 
+
+//ReadLine Messages
 message ReadLineMsg {
   string channelName = 1;
 }
 
-message SubResponseMsg {
-  string id = 1;
-  oneof response {
-    SolutionMsg solution = 2;
-    LineMsg line = 3;
-    TheoryMsg theory = 4;
+message LineMsg {
+  string channelName = 1;
+  oneof result {
+    bool failed = 2;
+    string content = 3;
   }
 }
 
+//Inspect KB Messages
 message InspectKbMsg {
   enum KbType {
     STATIC = 0;
@@ -125,16 +143,16 @@ message InspectKbMsg {
   repeated FilterMsg filters = 3;
 }
 
-message LineMsg {
-  string channelName = 1;
-  oneof result {
-    bool failed = 2;
-    string content = 3;
+//Generic Get Message
+message GenericGetMsg {
+  enum Element {
+    LOGIC_STACKTRACE = 0;
+    CUSTOM_DATA_STORE = 1;
+    UNIFICATOR = 2;
+    LIBRARIES = 3;
+    FLAGS = 4;
+    OPERATORS = 5;
+    INPUT_CHANNELS = 6;
+    OUTPUT_CHANNELS = 7;
   }
 }
-
-message TheoryMsg {
-  repeated StructMsg clauses = 1;
-}
-
-

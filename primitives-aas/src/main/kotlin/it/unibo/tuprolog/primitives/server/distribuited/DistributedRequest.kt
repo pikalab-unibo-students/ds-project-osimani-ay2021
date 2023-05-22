@@ -5,19 +5,14 @@ import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.primitives.server.session.ServerSession
 import it.unibo.tuprolog.primitives.server.session.Session
-import it.unibo.tuprolog.solve.ExecutionContext
-import it.unibo.tuprolog.solve.Signature
-import it.unibo.tuprolog.solve.Solution
-import it.unibo.tuprolog.solve.SolveOptions
-import it.unibo.tuprolog.solve.exception.ResolutionException
+import it.unibo.tuprolog.solve.*
 import it.unibo.tuprolog.solve.sideffects.SideEffect
-import it.unibo.tuprolog.theory.Theory
 
-data class DistribuitedRequest(
+data class DistributedRequest(
     val signature: Signature,
     val arguments: List<Term>,
-    val context: ExecutionContext,
-    val session: ServerSession
+    val context: DistributedExecutionContext,
+    private val session: ServerSession
 ): Session {
 
     val query: Struct by lazy { signature withArgs arguments }
@@ -26,7 +21,7 @@ data class DistribuitedRequest(
         condition: Boolean,
         vararg sideEffect: SideEffect
     ) = DistributedResponse(
-        if (condition) Solution.yes(query) else Solution.no(query),
+        if (condition) DistributedSolution.yes(query) else DistributedSolution.no(query),
         sideEffect.asList())
 
 
@@ -34,38 +29,31 @@ data class DistribuitedRequest(
         substitution: Substitution.Unifier,
         vararg sideEffect: SideEffect
     ) = DistributedResponse(
-        Solution.yes(query, substitution),
+        DistributedSolution.yes(query, substitution),
         sideEffect.asList()
     )
 
     fun replyFail(
         vararg sideEffect: SideEffect
     ) = DistributedResponse(
-        Solution.no(query),
+        DistributedSolution.no(query),
         sideEffect.asList()
     )
 
     fun replyError(
-        e: Throwable,
+        e: DistributedError,
         vararg sideEffect: SideEffect
     ) = DistributedResponse(
-        Solution.halt(query, ResolutionException(e, context)),
+            DistributedSolution.halt(query, e),
         sideEffect.asList()
     )
 
     override fun subSolve(
         query: Struct,
         timeout: Long
-    ): Sequence<Solution> =
+    ): Sequence<DistributedResponse> =
         session.subSolve(query, timeout)
 
     override fun readLine(channelName: String): String =
         session.readLine(channelName)
-
-    override fun inspectKB(
-        kbType: Session.KbType,
-        maxClauses: Long,
-        vararg filters: Pair<Session.KbFilter, String>
-    ): Theory =
-        session.inspectKB(kbType, maxClauses, *filters)
 }

@@ -6,7 +6,6 @@ import it.unibo.tuprolog.primitives.ReadLineMsg
 import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.SubSolveRequest
 import it.unibo.tuprolog.primitives.client.impl.SessionSolverImpl
-import it.unibo.tuprolog.primitives.server.session.event.impl.InspectKbEvent
 import it.unibo.tuprolog.solve.ExecutionContext
 
 interface SessionSolver {

@@ -1,14 +1,13 @@
 package it.unibo.tuprolog.primitives.server.session.event.impl
 
-import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.GeneratorMsg
-import it.unibo.tuprolog.primitives.SolutionMsg
+import it.unibo.tuprolog.primitives.ResponseMsg
 import it.unibo.tuprolog.primitives.SubResponseMsg
-import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
-import it.unibo.tuprolog.primitives.parsers.serializers.buildSubSolveMsg
+import it.unibo.tuprolog.primitives.parsers.deserializers.distribuited.deserializeAsDistributed
+import it.unibo.tuprolog.primitives.parsers.serializers.distribuited.buildSubSolveMsg
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
 import it.unibo.tuprolog.primitives.server.session.event.SubRequestEvent
-import it.unibo.tuprolog.solve.Solution
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 
@@ -20,17 +19,17 @@ class SingleSubSolveEvent(
 
     override val message: GeneratorMsg = buildSubSolveMsg(query, id, timeout = timeout)
 
-    private val result: CompletableDeferred<SolutionMsg> = CompletableDeferred()
+    private val result: CompletableDeferred<ResponseMsg> = CompletableDeferred()
     private var hasNext: Boolean? = null
 
     fun hasNext(): Boolean? = hasNext
 
-    override fun awaitResult(): Solution {
-        val solution = runBlocking {
+    override fun awaitResult(): DistributedResponse {
+        val response = runBlocking {
             result.await()
         }
-        hasNext = solution.hasNext
-        return solution.deserialize(Scope.of(query))
+        hasNext = response.solution.hasNext
+        return response.deserializeAsDistributed()
     }
 
     override fun signalResponse(msg: SubResponseMsg) {

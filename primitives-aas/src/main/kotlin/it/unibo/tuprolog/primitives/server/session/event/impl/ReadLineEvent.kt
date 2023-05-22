@@ -3,7 +3,7 @@ package it.unibo.tuprolog.primitives.server.session.event.impl
 import it.unibo.tuprolog.primitives.GeneratorMsg
 import it.unibo.tuprolog.primitives.LineMsg
 import it.unibo.tuprolog.primitives.SubResponseMsg
-import it.unibo.tuprolog.primitives.parsers.serializers.buildReadLineMsg
+import it.unibo.tuprolog.primitives.parsers.serializers.distribuited.buildReadLineMsg
 import it.unibo.tuprolog.primitives.server.session.event.SubRequestEvent
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking

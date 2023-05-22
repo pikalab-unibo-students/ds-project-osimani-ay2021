@@ -7,6 +7,10 @@ plugins {
     `publish-on-maven`
     alias(libs.plugins.protobuf)
 }
+dependencies {
+    implementation(project(mapOf("path" to ":solve")))
+    implementation(project(mapOf("path" to ":solve")))
+}
 
 kotlin {
     sourceSets {

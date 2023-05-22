@@ -13,10 +13,9 @@ import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.buildLineMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.buildSubSolveSolutionMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.buildTheoryMsg
-import it.unibo.tuprolog.primitives.parsers.serializers.serialize
 import it.unibo.tuprolog.solve.Solution
-import it.unibo.tuprolog.solve.SolveOptions
 import it.unibo.tuprolog.solve.Solver
+import it.unibo.tuprolog.solve.primitive.Solve
 
 class SessionSolverImpl(
     private val responseObserver: StreamObserver<SolverMsg>,
@@ -31,7 +30,7 @@ class SessionSolverImpl(
         val solution: Solution = computations[id]!!.next()
         responseObserver.onNext(
             buildSubSolveSolutionMsg(
-                id, solution,
+                id, Solve.Response(solution),
                 computations[id]!!.hasNext()
             )
         )

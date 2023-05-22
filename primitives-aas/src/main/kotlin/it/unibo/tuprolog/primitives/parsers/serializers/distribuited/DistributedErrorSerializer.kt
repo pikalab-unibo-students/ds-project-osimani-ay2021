@@ -1,31 +1,36 @@
-package it.unibo.tuprolog.primitives.parsers.serializers
+package it.unibo.tuprolog.primitives.parsers.serializers.distribuited
 
 import it.unibo.tuprolog.primitives.ErrorMsg
 import it.unibo.tuprolog.primitives.errors.*
 import it.unibo.tuprolog.primitives.parsers.ParsingException
-import it.unibo.tuprolog.solve.exception.*
-import it.unibo.tuprolog.solve.exception.error.*
-import it.unibo.tuprolog.solve.exception.warning.InitializationIssue
-import it.unibo.tuprolog.solve.exception.warning.MissingPredicate
+import it.unibo.tuprolog.primitives.parsers.serializers.serialize
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedError
 
-fun ResolutionException.serialize(): ErrorMsg {
+fun DistributedError.serialize(): ErrorMsg {
     val builder = ErrorMsg.newBuilder()
     this.message?.let {
         builder.setMessage(this.message)
     }
     this.cause?.let {
         builder.setCause(
-            if(it is ResolutionException) it.serialize()
+            if(it is DistributedError.ResolutionException) it.serialize()
             else ErrorMsg.newBuilder().setMessage(it.message ).build()
         )}
     return when (this) {
-        is LogicError -> this.serialize(builder)
-        is Warning -> this.serialize(builder)
-        is HaltException ->
+        is DistributedError.LogicError -> this.serialize(builder)
+        is DistributedError.InitializationIssue ->
+            builder.setInitializationIssue(
+                InitializationIssueMsg.newBuilder()
+                    .setGoal(this.goal.serialize())).build()
+        is DistributedError.MissingPredicate ->
+            builder.setMissingPredicate(
+                MissingPredicateMsg.newBuilder()
+                    .setSignature(this.signature.serialize())).build()
+        is DistributedError.HaltException ->
             builder.setHaltException(
                 HaltExceptionMsg.newBuilder()
                     .setExitStatus(this.exitStatus)).build()
-        is TimeOutException ->
+        is DistributedError.TimeOutException ->
             builder.setTimeoutException(
                 TimeOutExceptionMsg.newBuilder()
                     .setExceededDuration(this.exceededDuration)).build()
@@ -33,58 +38,58 @@ fun ResolutionException.serialize(): ErrorMsg {
     }
 }
 
-fun LogicError.serialize(builder: ErrorMsg.Builder): ErrorMsg {
+fun DistributedError.LogicError.serialize(builder: ErrorMsg.Builder): ErrorMsg {
     val logicErrorBuilder = LogicErrorMsg.newBuilder()
         .setType(this.type.serialize())
         .setExtraData(this.extraData?.serialize())
     when (this) {
-        is DomainError ->
+        is DistributedError.DomainError ->
             logicErrorBuilder.setDomainError(
                 DomainErrorMsg.newBuilder()
                     .setCulprit(this.culprit.serialize())
-                    .setExpectedDomain(this.expectedDomain.domain)
+                    .setExpectedDomain(this.expected.domain)
             )
-        is EvaluationError ->
+        is DistributedError.EvaluationError ->
             logicErrorBuilder.setEvaluationError(
                 EvaluationErrorMsg.newBuilder()
                     .setErrorType(this.errorType.name)
             )
-        is ExistenceError ->
+        is DistributedError.ExistenceError ->
             logicErrorBuilder.setExistenceError(
                 ExistenceErrorMsg.newBuilder()
                     .setCulprit(this.culprit.serialize())
-                    .setExpectedObject(this.expectedObject.name)
+                    .setExpectedObject(this.expectedObjectType.name)
             )
-        is InstantiationError ->
+        is DistributedError.InstantiationError ->
             logicErrorBuilder.setInstantiationError(
                 InstantiationErrorMsg.newBuilder()
                     .setCulprit(this.culprit.serialize())
             )
-        is MessageError ->
+        is DistributedError.MessageError ->
             logicErrorBuilder.setMessageError(
                 MessageErrorMsg.getDefaultInstance()
             )
-        is PermissionError ->
+        is DistributedError.PermissionError ->
             logicErrorBuilder.setPermissionError(
                 PermissionErrorMsg.newBuilder()
                     .setOperation(this.operation.operation)
                     .setPermission(this.permission.permission)
                     .setCulprit(this.culprit.serialize())
             )
-        is RepresentationError ->
+        is DistributedError.RepresentationError ->
             logicErrorBuilder.setRepresentationError(
                 RepresentationErrorMsg.newBuilder()
                     .setLimit(this.limit.limit)
             )
-        is SyntaxError ->
+        is DistributedError.SyntaxError ->
             logicErrorBuilder.setSyntaxError(
                 SyntaxErrorMsg.getDefaultInstance()
             )
-        is SystemError ->
+        is DistributedError.SystemError ->
             logicErrorBuilder.setSystemError(
                 SystemErrorMsg.getDefaultInstance()
             )
-        is TypeError ->
+        is DistributedError.TypeError ->
             logicErrorBuilder.setTypeError(
                 TypeErrorMsg.newBuilder()
                     .setCulprit(this.culprit.serialize())
@@ -94,16 +99,3 @@ fun LogicError.serialize(builder: ErrorMsg.Builder): ErrorMsg {
     }
     return builder.setLogicError(logicErrorBuilder).build()
 }
-
-fun Warning.serialize(builder: ErrorMsg.Builder): ErrorMsg =
-    when(this) {
-        is InitializationIssue ->
-            builder.setInitializationIssue(
-                InitializationIssueMsg.newBuilder()
-                    .setGoal(this.goal.serialize())).build()
-        is MissingPredicate ->
-            builder.setMissingPredicate(
-                MissingPredicateMsg.newBuilder()
-                    .setSignature(this.signature.serialize())).build()
-        else -> throw ParsingException(this)
-    }

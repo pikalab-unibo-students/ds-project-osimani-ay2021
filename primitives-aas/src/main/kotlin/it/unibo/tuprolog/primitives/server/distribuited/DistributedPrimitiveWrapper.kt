@@ -5,7 +5,7 @@ import it.unibo.tuprolog.solve.Signature
 class DistributedPrimitiveWrapper(
     name: String,
     arity: Int,
-    val implementation: DistribuitedPrimitive
+    val implementation: DistributedPrimitive
 ) {
 
     val signature: Signature by lazy { Signature(name, arity)}

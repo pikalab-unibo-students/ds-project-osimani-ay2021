@@ -1,17 +1,16 @@
 package it.unibo.tuprolog.primitives.server.examples
 
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
-import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
 import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
 
 val innestedPrimitive = DistributedPrimitiveWrapper("solve", 1) { request ->
     request.subSolve(request.arguments[0].castToStruct()).map {
-            if(it.isYes)
-                request.replySuccess(it.substitution.castToUnifier())
-            else if(it.isNo) {
+            if(it.solution.isYes)
+                request.replySuccess(it.solution.substitution.castToUnifier())
+            else if(it.solution.isNo) {
                 request.replyFail()
             } else {
-                request.replyError(it.exception!!)
+                request.replyError(it.solution.exception!!)
             }
         }
 }

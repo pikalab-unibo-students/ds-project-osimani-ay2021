@@ -1,13 +1,13 @@
-package it.unibo.tuprolog.primitives.parsers.deserializers
+package it.unibo.tuprolog.primitives.parsers.deserializers.distribuited
 
 import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.primitives.SolutionMsg
 import it.unibo.tuprolog.primitives.parsers.ParsingException
-import it.unibo.tuprolog.solve.ExecutionContext
-import it.unibo.tuprolog.solve.Solution
+import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedSolution
 
-fun SolutionMsg.deserialize(scope: Scope = Scope.empty(), actualContext: ExecutionContext): Solution {
+fun SolutionMsg.deserializeAsDistributed(scope: Scope = Scope.empty()): DistributedSolution {
     val query = this.query.deserialize(scope)
     return when(this.type) {
         SolutionMsg.SolutionType.SUCCESS -> {
@@ -16,15 +16,15 @@ fun SolutionMsg.deserialize(scope: Scope = Scope.empty(), actualContext: Executi
                     it.value.deserialize(scope))
             }).asUnifier()
             if (substitution != null) {
-                Solution.yes(query, substitution)
+                DistributedSolution.yes(query, substitution)
             }
-            else Solution.yes(query)
+            else DistributedSolution.yes(query)
         }
         SolutionMsg.SolutionType.FAIL -> {
-            Solution.no(query)
+            DistributedSolution.no(query)
         }
         SolutionMsg.SolutionType.HALT -> {
-            Solution.halt(query, this.error.deserialize(scope, actualContext))
+            DistributedSolution.halt(query, this.error.deserializeAsDistributed(scope))
         }
         else ->
             throw ParsingException(this)

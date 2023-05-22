@@ -1,12 +1,10 @@
 package it.unibo.tuprolog.primitives.server.session.event.impl
 
 import it.unibo.tuprolog.primitives.GeneratorMsg
-import it.unibo.tuprolog.primitives.LineMsg
 import it.unibo.tuprolog.primitives.SubResponseMsg
-import it.unibo.tuprolog.primitives.TheoryMsg
+import it.unibo.tuprolog.primitives.messages.TheoryMsg
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
-import it.unibo.tuprolog.primitives.parsers.serializers.buildInspectKbMsg
-import it.unibo.tuprolog.primitives.parsers.serializers.buildReadLineMsg
+import it.unibo.tuprolog.primitives.parsers.serializers.distribuited.buildInspectKbMsg
 import it.unibo.tuprolog.primitives.server.session.Session
 import it.unibo.tuprolog.primitives.server.session.event.SubRequestEvent
 import it.unibo.tuprolog.theory.Theory

@@ -3,9 +3,7 @@ package it.unibo.tuprolog.primitives.parsers.serializers
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var
-import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.primitives.messages.ArgumentMsg
-import it.unibo.tuprolog.primitives.messages.OperatorMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
 import it.unibo.tuprolog.primitives.messages.StructMsg
 import it.unibo.tuprolog.solve.Signature
@@ -31,13 +29,4 @@ fun Struct.serialize(): StructMsg {
 
 fun Signature.serialize(): SignatureMsg =
     SignatureMsg.newBuilder().setName(this.name).setArity(this.arity).build()
-
-fun OperatorSet.serialize(): List<OperatorMsg> =
-    this.map {
-        OperatorMsg.newBuilder()
-            .setFunctor(it.functor)
-            .setPriority(it.priority)
-            .setSpecifier(it.specifier.name)
-            .build()
-    }
 

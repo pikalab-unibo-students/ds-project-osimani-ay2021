@@ -9,17 +9,16 @@ import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
-import it.unibo.tuprolog.primitives.server.distribuited.DistribuitedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitive
 import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
 import it.unibo.tuprolog.primitives.server.session.ServerSession
-import it.unibo.tuprolog.primitives.server.session.ServerSessionImpl
 import it.unibo.tuprolog.solve.Signature
 import java.util.concurrent.Executor
 
 class PrimitiveServerWrapper private constructor(
     functor: String,
     arity: Int,
-    private val primitive: DistribuitedPrimitive,
+    private val primitive: DistributedPrimitive,
     private val executor: Executor
 ): GenericPrimitiveServiceGrpc.GenericPrimitiveServiceImplBase()  {
 
@@ -72,7 +71,7 @@ class PrimitiveServerWrapper private constructor(
         fun of(
             name: String,
             arity: Int,
-            primitive: DistribuitedPrimitive,
+            primitive: DistributedPrimitive,
             executor: Executor
         ): PrimitiveServerWrapper =
             PrimitiveServerWrapper(name, arity, primitive, executor)

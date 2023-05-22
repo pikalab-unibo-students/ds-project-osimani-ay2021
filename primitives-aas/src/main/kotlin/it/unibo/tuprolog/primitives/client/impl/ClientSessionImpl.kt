@@ -12,7 +12,6 @@ import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.parsers.deserializers.deserialize
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
 import it.unibo.tuprolog.solve.ExecutionContext
-import it.unibo.tuprolog.solve.currentTimeInstant
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.primitive.Solve
 import java.util.concurrent.LinkedBlockingDeque
@@ -35,7 +34,7 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
 
     override fun onNext(value: GeneratorMsg) {
         if(value.hasResponse()) {
-            queue.add(value.response.deserialize(scope))
+            queue.add(value.response.deserialize(scope, request.context))
             if(!value.response.solution.hasNext) {
                 closed = true
                 this.onCompleted()
@@ -73,6 +72,7 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
                 responseStream.onNext(
                     SolverMsg.newBuilder().setNext(EmptyMsg.getDefaultInstance()).build()
                 )
+                
                 return queue.takeFirst()
             }
         }
