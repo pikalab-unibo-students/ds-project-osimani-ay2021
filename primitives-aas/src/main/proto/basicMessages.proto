@@ -53,7 +53,15 @@ message UnificatorMsg {
 }
 
 message LibrariesMsg {
-  repeated string libraries = 1;
+  repeated LibraryMsg libraries = 1;
+}
+
+message LibraryMsg {
+  repeated SignatureMsg primitives = 1;
+  repeated SignatureMsg rulesSignatures = 2;
+  repeated StructMsg clauses = 3;
+  repeated SignatureMsg functionsSignatures = 4;
+  OperatorSetMsg operators = 5;
 }
 
 message FlagsMsg {

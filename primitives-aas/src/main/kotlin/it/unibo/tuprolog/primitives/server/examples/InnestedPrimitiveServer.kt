@@ -1,7 +1,7 @@
 package it.unibo.tuprolog.primitives.server.examples
 
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 
 val innestedPrimitive = DistributedPrimitiveWrapper("solve", 1) { request ->
     request.subSolve(request.arguments[0].castToStruct()).map {

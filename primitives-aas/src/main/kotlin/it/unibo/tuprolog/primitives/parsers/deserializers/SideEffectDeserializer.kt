@@ -5,6 +5,7 @@ import it.unibo.tuprolog.primitives.sideEffects.*
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.OutputChannel
 import it.unibo.tuprolog.solve.library.Library
+import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.sideffects.SideEffect
 
 fun SideEffectMsg.deserialize(): SideEffect {
@@ -61,6 +62,9 @@ fun SideEffectMsg.deserialize(): SideEffect {
                     return SideEffect.LoadLibrary(Library.of(effect.getLibraries(0)))
                 AlterRuntimeMsg.OpType.UNLOAD ->
                     return SideEffect.UnloadLibraries(effect.librariesList)
+                //To Solve
+                AlterRuntimeMsg.OpType.RESET ->
+                    return SideEffect.ResetRuntime(Runtime.empty())
                 else -> {}
             }
 

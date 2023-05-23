@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.primitives.server.distribuited
+package it.unibo.tuprolog.primitives.server.distribuited.solve
 
 fun interface DistributedPrimitive {
 

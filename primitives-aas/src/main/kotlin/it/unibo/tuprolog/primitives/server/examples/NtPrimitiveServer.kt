@@ -5,7 +5,7 @@ import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.Var
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 import org.gciatto.kt.math.BigInteger
 
 val ntPrimitive = DistributedPrimitiveWrapper("nt", 1) { request ->

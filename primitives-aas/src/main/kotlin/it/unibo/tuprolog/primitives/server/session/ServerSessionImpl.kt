@@ -1,6 +1,7 @@
 package it.unibo.tuprolog.primitives.server.session
 
 import io.grpc.stub.StreamObserver
+import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.primitives.GeneratorMsg
@@ -9,15 +10,16 @@ import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.utils.idGenerator
 import it.unibo.tuprolog.primitives.parsers.deserializers.distribuited.deserializeAsDistributed
 import it.unibo.tuprolog.primitives.parsers.serializers.distribuited.serialize
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitive
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedResponse
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedRuntime
 import it.unibo.tuprolog.primitives.server.session.event.SubRequestEvent
-import it.unibo.tuprolog.primitives.server.session.event.impl.InspectKbEvent
+import it.unibo.tuprolog.primitives.server.session.event.impl.GetEvent
+import it.unibo.tuprolog.primitives.server.session.event.impl.SingleInspectKbEvent
 import it.unibo.tuprolog.primitives.server.session.event.impl.ReadLineEvent
 import it.unibo.tuprolog.primitives.server.session.event.impl.SingleSubSolveEvent
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.flags.FlagStore
-import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
 /**
@@ -70,65 +72,90 @@ class ServerSessionImpl(
 
             override fun next(): DistributedResponse {
                 val request = SingleSubSolveEvent(id, query, timeout)
-                enqueueGeneratorRequest(request)
-                return request.awaitResult().also {
-                    hasNext = request.hasNext()!!
-                    ongoingSubRequests.remove(request)
-                }
+
+                return enqueueRequestAndAwait<DistributedResponse>(request)
+                    .also {
+                        hasNext = request.hasNext()!!
+                    }
             }
         }.asSequence()
 
     override fun readLine(channelName: String): String {
         val request = ReadLineEvent(idGenerator(), channelName)
-        enqueueGeneratorRequest(request)
-        return request.awaitResult().also {
-            ongoingSubRequests.remove(request)
-        }
-    }
-
-    override fun getLogicStackTrace(): List<Struct> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getCustomDataStore(): CustomDataStore {
-        TODO("Not yet implemented")
-    }
-
-    override fun getUnificator(): Unificator {
-        TODO("Not yet implemented")
-    }
-
-    override fun getLibraries(): List<String> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getFlagStore(): FlagStore {
-        TODO("Not yet implemented")
-    }
-
-    override fun getOperators(): OperatorSet {
-        TODO("Not yet implemented")
+        return enqueueRequestAndAwait(request)
     }
 
     override fun inspectKB(
         kbType: Session.KbType,
         maxClauses: Long,
         vararg filters: Pair<Session.KbFilter, String>
-    ): Theory {
-        val request = InspectKbEvent(idGenerator(), kbType, maxClauses, *filters)
-        enqueueGeneratorRequest(request)
-        return request.awaitResult().also {
-            ongoingSubRequests.remove(request)
-        }
-    }
+    ): Sequence<Clause?> =
+        object: Iterator<Clause?> {
+            val id: String = idGenerator()
+            private var hasNext: Boolean = true
 
-    override fun getChannelsNames(): Map<ContextRequester.ChannelType, String> {
-        TODO("Not yet implemented")
-    }
+            override fun hasNext(): Boolean =
+                hasNext
 
-    private fun enqueueGeneratorRequest(request: SubRequestEvent) {
+            override fun next(): Clause? {
+                val request = SingleInspectKbEvent(idGenerator(), kbType, maxClauses, *filters)
+
+                return enqueueRequestAndAwait<Clause?>(request)
+                    .also { hasNext = (it != null) }
+            }
+        }.asSequence()
+
+    override fun getLogicStackTrace(): List<Struct> =
+        enqueueRequestAndAwait(
+            GetEvent.ofLogicStackTrace(idGenerator())
+        )
+
+    override fun getCustomDataStore(): CustomDataStore =
+        enqueueRequestAndAwait(
+            GetEvent.ofCustomDataStore(idGenerator())
+        )
+
+    override fun getUnificator(): Unificator =
+        enqueueRequestAndAwait(
+            GetEvent.ofUnificator(idGenerator())
+        )
+
+
+    override fun getLibraries(): DistributedRuntime =
+        enqueueRequestAndAwait(
+            GetEvent.ofLibraries(idGenerator())
+        )
+
+    override fun getFlagStore(): FlagStore =
+        enqueueRequestAndAwait(
+            GetEvent.ofFlagStore(idGenerator())
+        )
+
+    override fun getOperators(): OperatorSet =
+        enqueueRequestAndAwait(
+            GetEvent.ofOperators(idGenerator())
+        )
+
+    override fun getInputStoreAliases(): Set<String> =
+        enqueueRequestAndAwait(
+            GetEvent.ofInputChannels(idGenerator())
+        )
+
+    override fun getOutputStoreAliases(): Set<String> =
+        enqueueRequestAndAwait(
+            GetEvent.ofOutputChannels(idGenerator())
+        )
+
+    private inline fun <reified T> enqueueRequestAndAwait(request: SubRequestEvent): T {
         responseObserver.onNext(request.message)
         ongoingSubRequests.add(request)
+        val result = request.awaitResult().also {
+            ongoingSubRequests.remove(request)
+        }
+        return if(result is T)
+            result
+        else
+            throw TypeCastException()
     }
 
 }

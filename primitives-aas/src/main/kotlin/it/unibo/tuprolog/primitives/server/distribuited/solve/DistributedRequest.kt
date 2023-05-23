@@ -1,8 +1,11 @@
-package it.unibo.tuprolog.primitives.server.distribuited
+package it.unibo.tuprolog.primitives.server.distribuited.solve
 
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.Term
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedError
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedExecutionContext
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedSolution
 import it.unibo.tuprolog.primitives.server.session.ServerSession
 import it.unibo.tuprolog.primitives.server.session.Session
 import it.unibo.tuprolog.solve.*

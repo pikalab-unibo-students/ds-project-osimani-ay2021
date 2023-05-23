@@ -2,7 +2,7 @@ package it.unibo.tuprolog.primitives.server.examples
 
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.distribuited.DistributedError
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 
 val throwablePrimitive = DistributedPrimitiveWrapper("error",0) { request ->
     sequence {

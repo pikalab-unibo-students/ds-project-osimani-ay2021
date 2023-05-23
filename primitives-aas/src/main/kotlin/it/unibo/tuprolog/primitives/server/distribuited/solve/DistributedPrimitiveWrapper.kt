@@ -1,5 +1,6 @@
-package it.unibo.tuprolog.primitives.server.distribuited
+package it.unibo.tuprolog.primitives.server.distribuited.solve
 
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitive
 import it.unibo.tuprolog.solve.Signature
 
 class DistributedPrimitiveWrapper(

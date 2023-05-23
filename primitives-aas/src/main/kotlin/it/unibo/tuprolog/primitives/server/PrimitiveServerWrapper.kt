@@ -9,8 +9,8 @@ import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.messages.EmptyMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitive
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 import it.unibo.tuprolog.primitives.server.session.ServerSession
 import it.unibo.tuprolog.solve.Signature
 import java.util.concurrent.Executor

@@ -6,14 +6,14 @@ import it.unibo.tuprolog.primitives.ResponseMsg
 import it.unibo.tuprolog.primitives.SubResponseMsg
 import it.unibo.tuprolog.primitives.parsers.deserializers.distribuited.deserializeAsDistributed
 import it.unibo.tuprolog.primitives.parsers.serializers.distribuited.buildSubSolveMsg
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedResponse
 import it.unibo.tuprolog.primitives.server.session.event.SubRequestEvent
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 
 class SingleSubSolveEvent(
     override val id: String,
-    private val query: Struct,
+    query: Struct,
     timeout: Long
 ): SubRequestEvent {
 

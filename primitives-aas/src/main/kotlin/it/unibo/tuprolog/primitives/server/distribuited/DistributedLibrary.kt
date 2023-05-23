@@ -1,0 +1,20 @@
+package it.unibo.tuprolog.primitives.server.distribuited
+
+import it.unibo.tuprolog.core.Clause
+import it.unibo.tuprolog.solve.Signature
+
+data class DistributedRuntime(
+    val libraries: Iterable<DistributedLibrary>
+) {
+    data class DistributedLibrary(
+        val primitives: Set<Signature>,
+        val rulesSignatures: Set<Signature>,
+        val clauses: Set<Clause>,
+        val functionSignatures: Set<Signature>
+    )
+
+    companion object {
+         fun of(libraries: Iterable<DistributedLibrary>) =
+             DistributedRuntime(libraries)
+    }
+}

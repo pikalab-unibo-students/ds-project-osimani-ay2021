@@ -1,5 +1,6 @@
-package it.unibo.tuprolog.primitives.server.distribuited
+package it.unibo.tuprolog.primitives.server.distribuited.solve
 
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedSolution
 import it.unibo.tuprolog.solve.sideffects.SideEffect
 
 data class DistributedResponse(

@@ -3,7 +3,7 @@ package it.unibo.tuprolog.primitives.parsers.serializers.distribuited
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.primitives.*
 import it.unibo.tuprolog.primitives.parsers.serializers.serialize
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedResponse
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedResponse
 import it.unibo.tuprolog.primitives.server.session.Session
 import it.unibo.tuprolog.solve.SolveOptions
 
@@ -53,6 +53,12 @@ fun buildInspectKbMsg(
                                 Session.KbFilter.STARTS_WITH -> InspectKbMsg.FilterType.STARTS_WITH
                             })
                         .setArgument(it.second).build()}))
+    ).build()
+
+fun buildGetMsg(id: String, type: GenericGetMsg.Element): GeneratorMsg =
+    GeneratorMsg.newBuilder().setRequest(
+        SubRequestMsg.newBuilder().setId(id).setGenericGet(
+            GenericGetMsg.newBuilder().setElement(type))
     ).build()
 
 

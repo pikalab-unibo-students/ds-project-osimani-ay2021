@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.primitives.GeneratorMsg
+import it.unibo.tuprolog.primitives.GenericGetMsg
 import it.unibo.tuprolog.primitives.GenericPrimitiveServiceGrpc
 import it.unibo.tuprolog.primitives.SolverMsg
 import it.unibo.tuprolog.primitives.client.ClientSession
@@ -48,6 +49,28 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
                 sessionSolver.readLine(request.id, request.readLine)
             else if(request.hasInspectKb())
                 sessionSolver.inspectKb(request.id, request.inspectKb)
+            else if(request.hasGenericGet()) {
+                val get = request.genericGet
+                when(get.element) {
+                    GenericGetMsg.Element.LOGIC_STACKTRACE ->
+                        sessionSolver.getLogicStackTrace(request.id)
+                    GenericGetMsg.Element.CUSTOM_DATA_STORE ->
+                        sessionSolver.getCustomDataStore(request.id)
+                    GenericGetMsg.Element.LIBRARIES ->
+                        sessionSolver.getLibraries(request.id)
+                    GenericGetMsg.Element.UNIFICATOR ->
+                        sessionSolver.getUnificator(request.id)
+                    GenericGetMsg.Element.FLAGS ->
+                        sessionSolver.getFlagStore(request.id)
+                    GenericGetMsg.Element.OPERATORS ->
+                        sessionSolver.getOperators(request.id)
+                    GenericGetMsg.Element.INPUT_CHANNELS ->
+                        sessionSolver.getInputStoreAliases(request.id)
+                    GenericGetMsg.Element.OUTPUT_CHANNELS ->
+                        sessionSolver.getOutputStoreAliases(request.id)
+                    else -> throw IllegalStateException()
+                }
+            }
         }
     }
 

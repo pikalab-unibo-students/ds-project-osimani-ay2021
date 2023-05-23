@@ -5,6 +5,7 @@ import it.unibo.tuprolog.primitives.messages.*
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.flags.FlagStore
+import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
@@ -30,7 +31,18 @@ fun Unificator.serialize(): UnificatorMsg =
 
 fun Runtime.serialize(): LibrariesMsg =
     LibrariesMsg.newBuilder()
-        .addAllLibraries(this.aliases).build()
+        .addAllLibraries(
+            this.libraries.map { it.serialize() }
+        ).build()
+
+fun Library.serialize(): LibraryMsg =
+    LibraryMsg.newBuilder()
+        .addAllClauses(this.clauses.map { it.serialize() })
+        .addAllPrimitives(this.primitives.keys.map { it.serialize() })
+        .addAllFunctionsSignatures(this.functions.keys.map { it.serialize() })
+        .addAllRulesSignatures(this.rulesSignatures.map { it.serialize() }.toList())
+        .setOperators(this.operators.serialize())
+        .build()
 
 fun FlagStore.serialize(): FlagsMsg =
     FlagsMsg.newBuilder()

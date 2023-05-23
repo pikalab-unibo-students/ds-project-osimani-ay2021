@@ -6,6 +6,7 @@ import it.unibo.tuprolog.core.operators.OperatorSet
 import it.unibo.tuprolog.core.operators.Specifier
 import it.unibo.tuprolog.core.parsing.parse
 import it.unibo.tuprolog.primitives.messages.*
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedRuntime
 import it.unibo.tuprolog.solve.Signature
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.flags.FlagStore
@@ -64,4 +65,17 @@ fun OperatorSetMsg.deserialize(): OperatorSet =
     OperatorSet(this.operatorsList.map {
         it.deserialize()
     })
+
+fun LibrariesMsg.deserialize(): DistributedRuntime =
+    DistributedRuntime.of(
+        this.librariesList.map { it.deserialize() }
+    )
+
+fun LibraryMsg.deserialize(): DistributedRuntime.DistributedLibrary =
+    DistributedRuntime.DistributedLibrary(
+        this.primitivesList.map { it.deserialize() }.toSet(),
+        this.rulesSignaturesList.map { it.deserialize() }.toSet(),
+        this.clausesList.map { it.deserialize().asClause()!! }.toSet(),
+        this.functionsSignaturesList.map { it.deserialize() }.toSet()
+    )
 

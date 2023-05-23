@@ -88,13 +88,8 @@ message SubResponseMsg {
   oneof response {
     ResponseMsg solution = 2;
     LineMsg line = 3;
-    TheoryMsg theory = 4;
-    LogicStacktraceMsg logicStackTrace = 5;
-    CustomDataMsg customDataStore = 6;
-    UnificatorMsg unificator = 7;
-    LibrariesMsg libraries = 8;
-    OperatorSetMsg operators = 9;
-    ChannelsMsg channels = 10;
+    StructMsg clause = 4;
+    GenericGetResponse genericGet = 5;
   }
 }
 
@@ -154,5 +149,19 @@ message GenericGetMsg {
     OPERATORS = 5;
     INPUT_CHANNELS = 6;
     OUTPUT_CHANNELS = 7;
+  }
+
+  Element element = 1;
+}
+
+message GenericGetResponse {
+  oneof result {
+    LogicStacktraceMsg logicStackTrace = 5;
+    CustomDataMsg customDataStore = 6;
+    UnificatorMsg unificator = 7;
+    LibrariesMsg libraries = 8;
+    FlagsMsg flags = 9;
+    OperatorSetMsg operators = 10;
+    ChannelsMsg channels = 11;
   }
 }

@@ -2,8 +2,8 @@ package it.unibo.tuprolog.primitives.server
 
 import io.grpc.ServerBuilder
 import it.unibo.tuprolog.primitives.db.DbManager
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitive
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitiveWrapper
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 import java.util.concurrent.Executors
 
 object PrimitiveServerFactory {

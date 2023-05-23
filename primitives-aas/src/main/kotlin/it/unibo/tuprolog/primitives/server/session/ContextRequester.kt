@@ -1,10 +1,11 @@
 package it.unibo.tuprolog.primitives.server.session
 
+import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.operators.OperatorSet
+import it.unibo.tuprolog.primitives.server.distribuited.DistributedRuntime
 import it.unibo.tuprolog.solve.data.CustomDataStore
 import it.unibo.tuprolog.solve.flags.FlagStore
-import it.unibo.tuprolog.theory.Theory
 import it.unibo.tuprolog.unify.Unificator
 
 interface ContextRequester {
@@ -14,7 +15,7 @@ interface ContextRequester {
 
     fun getUnificator(): Unificator
 
-    fun getLibraries(): List<String>
+    fun getLibraries(): DistributedRuntime
 
     fun getFlagStore(): FlagStore
 
@@ -29,12 +30,9 @@ interface ContextRequester {
         kbType: Session.KbType,
         maxClauses: Long = -1,
         vararg filters: Pair<Session.KbFilter, String>
-    ): Theory
+    ): Sequence<Clause?>
 
-    fun getChannelsNames(): Map<ChannelType, String>
+    fun getInputStoreAliases(): Set<String>
 
-    enum class ChannelType {
-        INPUT,
-        OUTPUT
-    }
+    fun getOutputStoreAliases(): Set<String>
 }

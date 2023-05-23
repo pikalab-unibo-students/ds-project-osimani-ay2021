@@ -11,5 +11,5 @@ interface SubRequestEvent {
 
     fun signalResponse(msg: SubResponseMsg)
 
-    fun awaitResult(): Any
+    fun awaitResult(): Any?
 }

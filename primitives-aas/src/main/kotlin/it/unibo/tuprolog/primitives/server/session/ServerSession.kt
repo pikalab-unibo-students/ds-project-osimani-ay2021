@@ -4,7 +4,7 @@ import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.primitives.GeneratorMsg
 import it.unibo.tuprolog.primitives.RequestMsg
 import it.unibo.tuprolog.primitives.SolverMsg
-import it.unibo.tuprolog.primitives.server.distribuited.DistributedPrimitive
+import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitive
 
 interface ServerSession: Session, ContextRequester {
 
