@@ -31,14 +31,14 @@ data class DistributedExecutionContext(
         get() = contextRequester.getCustomDataStore()
     val unificator: Unificator
         get() = contextRequester.getUnificator()
-    val libraries: DistributedRuntime
+    val runtime: DistributedRuntime
         get() = contextRequester.getLibraries()
     val flags: FlagStore
         get() = contextRequester.getFlagStore()
     val staticKb: Theory
-        get() = Theory.of(contextRequester.inspectKB(Session.KbType.STATIC).filterNotNull())
+        get() = Theory.of(contextRequester.inspectKB(Session.KbType.STATIC).filterNotNull().toList())
     val dynamicKb: Theory
-        get() = Theory.of(contextRequester.inspectKB(Session.KbType.DYNAMIC).filterNotNull())
+        get() = Theory.of(contextRequester.inspectKB(Session.KbType.DYNAMIC).filterNotNull().toList())
     val operators: OperatorSet
         get() = contextRequester.getOperators()
     val inputStore: Set<String>

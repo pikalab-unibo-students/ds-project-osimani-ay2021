@@ -27,6 +27,13 @@ data class DistributedRequest(
         if (condition) DistributedSolution.yes(query) else DistributedSolution.no(query),
         sideEffect.asList())
 
+    fun replySuccess(
+        vararg sideEffect: SideEffect
+    ) = DistributedResponse(
+        DistributedSolution.yes(query),
+        sideEffect.asList()
+    )
+
 
     fun replySuccess(
         substitution: Substitution.Unifier,

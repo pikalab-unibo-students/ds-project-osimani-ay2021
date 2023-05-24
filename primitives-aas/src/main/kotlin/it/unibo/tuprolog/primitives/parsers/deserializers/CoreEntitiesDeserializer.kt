@@ -28,6 +28,12 @@ fun deserializeVar(name: String, scope: Scope = Scope.empty()): Var =
 fun StructMsg.deserialize(scope: Scope = Scope.empty()): Struct =
     Struct.of(this.functor, this.argumentsList.map { it.deserialize(scope) })
 
+fun StructMsg.deserializeAsClause(scope: Scope = Scope.empty()): Clause? =
+    if(this != StructMsg.getDefaultInstance())
+        this.deserialize(scope).asClause()
+    else
+        null
+
 fun SignatureMsg.deserialize(): Signature = Signature(this.name, this.arity)
 
 fun OperatorMsg.deserialize(): Operator =
@@ -73,6 +79,7 @@ fun LibrariesMsg.deserialize(): DistributedRuntime =
 
 fun LibraryMsg.deserialize(): DistributedRuntime.DistributedLibrary =
     DistributedRuntime.DistributedLibrary(
+        this.alias,
         this.primitivesList.map { it.deserialize() }.toSet(),
         this.rulesSignaturesList.map { it.deserialize() }.toSet(),
         this.clausesList.map { it.deserialize().asClause()!! }.toSet(),

@@ -57,11 +57,12 @@ message LibrariesMsg {
 }
 
 message LibraryMsg {
-  repeated SignatureMsg primitives = 1;
-  repeated SignatureMsg rulesSignatures = 2;
-  repeated StructMsg clauses = 3;
-  repeated SignatureMsg functionsSignatures = 4;
-  OperatorSetMsg operators = 5;
+  string alias = 1;
+  repeated SignatureMsg primitives = 2;
+  repeated SignatureMsg rulesSignatures = 3;
+  repeated StructMsg clauses = 4;
+  repeated SignatureMsg functionsSignatures = 5;
+  OperatorSetMsg operators = 6;
 }
 
 message FlagsMsg {

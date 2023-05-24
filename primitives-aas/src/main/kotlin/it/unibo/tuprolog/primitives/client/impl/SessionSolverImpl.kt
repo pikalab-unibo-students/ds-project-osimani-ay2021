@@ -16,7 +16,6 @@ import it.unibo.tuprolog.solve.Solution
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.library.Runtime
 import it.unibo.tuprolog.solve.primitive.Solve
-import it.unibo.tuprolog.solve.sideffects.SideEffectFactory
 import it.unibo.tuprolog.solve.sideffects.SideEffectsBuilder
 
 class SessionSolverImpl(
@@ -102,7 +101,12 @@ class SessionSolverImpl(
         responseObserver.onNext(
             buildClauseMsg(
                 id,
-                theoryIterator[id]?.next()
+                if(theoryIterator[id]!!.hasNext()) {
+                    theoryIterator[id]?.next()
+                } else {
+                    theoryIterator.remove(id)
+                    null
+                }
             )
         )
     }

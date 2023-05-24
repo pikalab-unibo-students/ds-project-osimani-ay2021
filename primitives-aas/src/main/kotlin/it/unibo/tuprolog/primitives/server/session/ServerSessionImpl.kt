@@ -91,7 +91,6 @@ class ServerSessionImpl(
         vararg filters: Pair<Session.KbFilter, String>
     ): Sequence<Clause?> =
         object: Iterator<Clause?> {
-            val id: String = idGenerator()
             private var hasNext: Boolean = true
 
             override fun hasNext(): Boolean =

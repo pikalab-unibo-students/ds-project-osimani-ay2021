@@ -37,6 +37,7 @@ fun Runtime.serialize(): LibrariesMsg =
 
 fun Library.serialize(): LibraryMsg =
     LibraryMsg.newBuilder()
+        .setAlias(this.alias)
         .addAllClauses(this.clauses.map { it.serialize() })
         .addAllPrimitives(this.primitives.keys.map { it.serialize() })
         .addAllFunctionsSignatures(this.functions.keys.map { it.serialize() })

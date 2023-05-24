@@ -1,7 +1,8 @@
+import examples.*
+import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.dsl.theory.logicProgramming
 import it.unibo.tuprolog.primitives.client.PrimitiveClientFactory
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory
-import it.unibo.tuprolog.primitives.server.examples.*
 import it.unibo.tuprolog.solve.Solver
 import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
@@ -100,5 +101,18 @@ class TestBasicPrimitives {
                 it.substitution.values.first().toString()
             }
         )
+    }
+
+    /** Testing SubSolve **/
+    @Test
+    @Throws(Exception::class)
+    fun testErrors() {
+        val solutions = logicProgramming {
+            val query = Struct.of("error")
+            solver.solve(query).take(2)
+        }
+        val solution = solutions.last()
+        println(solution)
+        assertTrue { solution.isHalt }
     }
 }

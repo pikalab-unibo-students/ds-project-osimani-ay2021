@@ -23,12 +23,13 @@ abstract class GetEvent <T: Any>(
 
     override val message: GeneratorMsg = buildGetMsg(id, type)
 
-    val result: CompletableDeferred<GenericGetResponse> = CompletableDeferred()
+    private val result: CompletableDeferred<GenericGetResponse> = CompletableDeferred()
 
     override fun awaitResult(): T {
-        return handleResult(runBlocking {
+        val result = runBlocking {
             result.await()
-        })
+        }
+        return handleResult(result)
     }
 
     override fun signalResponse(msg: SubResponseMsg) {

@@ -62,8 +62,8 @@ sealed interface DistributedSolution {
         override val solvedQuery: Struct? = substitution.applyTo(query)?.castToStruct()
 
         override val isYes: Boolean = false
-        override val isNo: Boolean = true
-        override val isHalt: Boolean = false
+        override val isNo: Boolean = false
+        override val isHalt: Boolean = true
     }
 
     companion object {

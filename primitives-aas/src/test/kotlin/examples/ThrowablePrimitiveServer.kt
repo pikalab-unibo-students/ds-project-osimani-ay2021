@@ -1,4 +1,4 @@
-package it.unibo.tuprolog.primitives.server.examples
+package examples
 
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.distribuited.DistributedError

@@ -112,11 +112,12 @@ fun buildSubSolveSolutionMsg(id: String, response: Solve.Response, hasNext: Bool
         .build()
 
 fun buildClauseMsg(id: String, clause: Clause?): SolverMsg {
-    return SolverMsg.newBuilder().setResponse(
-        SubResponseMsg.newBuilder().setId(id).setClause(
-            clause?.serialize()
-        )
-    ).build()
+    val builder = SubResponseMsg.newBuilder().setId(id)
+    if(clause != null)
+        builder.setClause(clause.serialize())
+    else
+        builder.setClause(StructMsg.getDefaultInstance())
+    return SolverMsg.newBuilder().setResponse(builder).build()
 }
 
 
