@@ -52,6 +52,7 @@ class ServerSessionImpl(
         }
         /** Handling SubRequest Event */
         else if (msg.hasResponse()) {
+            println(msg)
             ongoingSubRequests.find { it.id == msg.response.id }.let {
                 it?.signalResponse(msg.response)
             }
@@ -91,13 +92,14 @@ class ServerSessionImpl(
         vararg filters: Pair<Session.KbFilter, String>
     ): Sequence<Clause?> =
         object: Iterator<Clause?> {
+            private val id = idGenerator()
             private var hasNext: Boolean = true
 
             override fun hasNext(): Boolean =
                 hasNext
 
             override fun next(): Clause? {
-                val request = SingleInspectKbEvent(idGenerator(), kbType, maxClauses, *filters)
+                val request = SingleInspectKbEvent(id, kbType, maxClauses, *filters)
 
                 return enqueueRequestAndAwait<Clause?>(request)
                     .also { hasNext = (it != null) }

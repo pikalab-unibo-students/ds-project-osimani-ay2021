@@ -36,5 +36,5 @@ private fun printDifference(actual: Any, expected: Any): String =
     "$actual was received instead of $expected"
 
 fun main() {
-    startService(getEventsPrimitive, 8084, "customLibrary")
+    startService(getEventsPrimitive, 8086, "customLibrary")
 }

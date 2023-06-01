@@ -10,7 +10,7 @@ import "basicMessages.proto";
 
 message LogicErrorMsg {
     StructMsg type = 1;
-    ArgumentMsg extraData = 2;
+    optional ArgumentMsg extraData = 2;
     oneof error {
         DomainErrorMsg domainError = 3;
         EvaluationErrorMsg evaluationError = 4;

@@ -102,7 +102,7 @@ class SessionSolverImpl(
             buildClauseMsg(
                 id,
                 if(theoryIterator[id]!!.hasNext()) {
-                    theoryIterator[id]?.next()
+                    theoryIterator[id]!!.next()
                 } else {
                     theoryIterator.remove(id)
                     null

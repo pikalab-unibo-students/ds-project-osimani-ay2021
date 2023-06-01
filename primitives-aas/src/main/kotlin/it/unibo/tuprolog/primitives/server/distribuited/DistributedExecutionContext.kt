@@ -1,5 +1,6 @@
 package it.unibo.tuprolog.primitives.server.distribuited
 
+import it.unibo.tuprolog.core.Clause
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.operators.OperatorSet
@@ -45,6 +46,20 @@ data class DistributedExecutionContext(
         get() = contextRequester.getInputStoreAliases()
     val outputStore: Set<String>
         get() = contextRequester.getOutputStoreAliases()
+
+    fun filterStaticKb(maxClauses: Long = -1,
+                       vararg filters: Pair<Session.KbFilter, String>): Sequence<Clause?> {
+        return contextRequester.inspectKB(Session.KbType.STATIC, maxClauses, *filters)
+                .filterNotNull()
+    }
+
+    fun filterDynamicKb(maxClauses: Long = -1,
+                       vararg filters: Pair<Session.KbFilter, String>): Theory {
+        return Theory.of(
+            contextRequester.inspectKB(Session.KbType.DYNAMIC, maxClauses, *filters)
+                .filterNotNull().toList()
+        )
+    }
 
     fun toDummyContext(): ExecutionContext {
         val source = this

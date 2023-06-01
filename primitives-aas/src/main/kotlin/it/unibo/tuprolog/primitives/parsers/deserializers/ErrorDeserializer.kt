@@ -3,6 +3,7 @@ package it.unibo.tuprolog.primitives.parsers.deserializers
 import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.primitives.ErrorMsg
 import it.unibo.tuprolog.primitives.errors.LogicErrorMsg
+import it.unibo.tuprolog.primitives.messages.ArgumentMsg
 import it.unibo.tuprolog.primitives.parsers.ParsingException
 import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.exception.HaltException
@@ -49,7 +50,7 @@ fun ErrorMsg.deserialize(scope: Scope = Scope.empty(), actualContext: ExecutionC
 
 fun LogicErrorMsg.deserialize(message: String?, cause: Throwable?, context: ExecutionContext): LogicError {
     val extraData =
-        if(this.extraData.isInitialized)
+        if(this.extraData != ArgumentMsg.getDefaultInstance())
             this.extraData.deserialize()
         else null
     return when(this.errorCase) {

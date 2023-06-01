@@ -127,7 +127,16 @@ message AlterCustomDataMsg {
   map<string, string> data = 2;
 }
 
+message UpdateFromSessionMsg {
+  enum UpdateType {
+    STATIC_KB = 0;
+    DYNAMIC_KB = 1;
+    FLAGS = 2;
+    OPERATORS = 3;
+    INPUT_CHANNELS = 4;
+    OUTPUT_CHANNELS = 5;
+  }
 
-//ADD SIDE EFFECT TO WRITE ON CHANNEL
-//RESET GIT ON BRANCH FROM ORIGIN
+  UpdateType type = 1;
+}
 

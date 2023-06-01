@@ -3,6 +3,7 @@ package it.unibo.tuprolog.primitives.parsers.serializers
 import it.unibo.tuprolog.primitives.ErrorMsg
 import it.unibo.tuprolog.primitives.errors.*
 import it.unibo.tuprolog.primitives.parsers.ParsingException
+import it.unibo.tuprolog.primitives.parsers.serializers.distribuited.serialize
 import it.unibo.tuprolog.solve.exception.*
 import it.unibo.tuprolog.solve.exception.error.*
 import it.unibo.tuprolog.solve.exception.warning.InitializationIssue
@@ -36,7 +37,7 @@ fun ResolutionException.serialize(): ErrorMsg {
 fun LogicError.serialize(builder: ErrorMsg.Builder): ErrorMsg {
     val logicErrorBuilder = LogicErrorMsg.newBuilder()
         .setType(this.type.serialize())
-        .setExtraData(this.extraData?.serialize())
+    this.extraData?.let { logicErrorBuilder.setExtraData(it.serialize()) }
     when (this) {
         is DomainError ->
             logicErrorBuilder.setDomainError(

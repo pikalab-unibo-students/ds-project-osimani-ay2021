@@ -68,6 +68,8 @@ class DbManagerImpl(url: String, port: Int): DbManager {
     private fun checkInitialization(op: () -> Unit) {
         try {
             op()
-        } catch(_:Exception) { println("The database is not connected") }
+        } catch (e: Exception) {
+            println(e)
+        }
     }
 }

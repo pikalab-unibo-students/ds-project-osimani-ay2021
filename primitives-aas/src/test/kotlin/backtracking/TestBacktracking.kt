@@ -1,10 +1,9 @@
-import it.unibo.tuprolog.core.Struct
+package backtracking
+
+import AbstractPrimitivesTestSuite
+import examples.*
 import it.unibo.tuprolog.dsl.theory.logicProgramming
 import it.unibo.tuprolog.primitives.client.PrimitiveClientFactory
-import examples.innestedPrimitive
-import examples.ntPrimitive
-import examples.readerPrimitive
-import examples.throwablePrimitive
 import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory
 import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 import it.unibo.tuprolog.solve.Solver
@@ -16,11 +15,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
-class TestBasicPrimitives: AbstractPrimitivesTestSuite() {
+class TestBacktracking: AbstractPrimitivesTestSuite() {
 
-    override val primitives: List<DistributedPrimitiveWrapper> = listOf(
-        ntPrimitive, innestedPrimitive, readerPrimitive, throwablePrimitive
-    )
+    override val primitives: List<DistributedPrimitiveWrapper> =
+        listOf(innestedPrimitive, ntPrimitive, readerPrimitive, throwablePrimitive, writerPrimitive)
 
     /** Testing Basic Primitive **/
     @Test
@@ -79,17 +77,5 @@ class TestBasicPrimitives: AbstractPrimitivesTestSuite() {
                 it.substitution.values.first().toString()
             }
         )
-    }
-
-    /** Testing SubSolve **/
-    @Test
-    @Throws(Exception::class)
-    fun testErrors() {
-        val solutions = logicProgramming {
-            val query = Struct.of("error")
-            solver.solve(query).take(2)
-        }
-        val solution = solutions.last()
-        assertTrue { solution.isHalt }
     }
 }

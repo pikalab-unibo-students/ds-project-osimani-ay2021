@@ -41,7 +41,7 @@ fun DistributedError.serialize(): ErrorMsg {
 fun DistributedError.LogicError.serialize(builder: ErrorMsg.Builder): ErrorMsg {
     val logicErrorBuilder = LogicErrorMsg.newBuilder()
         .setType(this.type.serialize())
-        .setExtraData(this.extraData?.serialize())
+    this.extraData?.let { logicErrorBuilder.setExtraData(it.serialize())}
     when (this) {
         is DistributedError.DomainError ->
             logicErrorBuilder.setDomainError(

@@ -1,5 +1,6 @@
 package it.unibo.tuprolog.primitives.server
 
+import io.grpc.Server
 import io.grpc.ServerBuilder
 import it.unibo.tuprolog.primitives.db.DbManager
 import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitive
@@ -21,7 +22,7 @@ object PrimitiveServerFactory {
         primitive: DistributedPrimitiveWrapper,
         port: Int = 8080,
         libraryName: String = ""
-    ) {
+    ): Server {
         val executor = Executors.newCachedThreadPool()
         val service = PrimitiveServerWrapper.of(primitive, executor)
         val genericPrimitive = ServerBuilder.forPort(port)
@@ -35,6 +36,6 @@ object PrimitiveServerFactory {
             genericPrimitive.shutdownNow()
         })
         println("${service.signature.name} listening on port $port")
-        genericPrimitive.awaitTermination()
+        return genericPrimitive
     }
 }
