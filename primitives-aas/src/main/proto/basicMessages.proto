@@ -30,7 +30,9 @@ message ArgumentMsg {
   oneof argument {
     StructMsg struct = 1;
     string var = 2;
-    string constant = 3;
+    double numeric = 3;
+    string atom = 4;
+    bool flag = 5;
   }
 }
 

@@ -1,19 +1,20 @@
 package it.unibo.tuprolog.primitives.parsers.serializers
 
-import it.unibo.tuprolog.core.Struct
-import it.unibo.tuprolog.core.Term
-import it.unibo.tuprolog.core.Var
+import it.unibo.tuprolog.core.*
 import it.unibo.tuprolog.primitives.messages.ArgumentMsg
 import it.unibo.tuprolog.primitives.messages.SignatureMsg
 import it.unibo.tuprolog.primitives.messages.StructMsg
 import it.unibo.tuprolog.solve.Signature
+import org.gciatto.kt.math.BigDecimal
 
 fun Term.serialize(): ArgumentMsg {
     val builder = ArgumentMsg.newBuilder()
     when(this) {
         is Var -> builder.setVar(this.name)
+        is Truth -> builder.setFlag(this.isTrue)
+        is Numeric -> builder.setNumeric(this.decimalValue.toDouble())
+        is Atom -> builder.setAtom(this.toString())
         is Struct -> builder.setStruct(this.serialize())
-        else -> builder.setConstant(this.toString())
     }
     return builder.build()
 }

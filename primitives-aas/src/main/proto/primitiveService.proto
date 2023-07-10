@@ -120,6 +120,7 @@ message InspectKbMsg {
   enum KbType {
     STATIC = 0;
     DYNAMIC = 1;
+    BOTH = 2;
   }
 
   enum FilterType {

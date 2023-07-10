@@ -11,6 +11,7 @@ import it.unibo.tuprolog.solve.Signature
 import it.unibo.tuprolog.solve.library.Library
 import it.unibo.tuprolog.solve.primitive.Primitive
 import it.unibo.tuprolog.solve.primitive.Solve
+import java.util.concurrent.TimeUnit
 
 /** The factory that creates a primitive given the URL of its server **/
 object PrimitiveClientFactory {
@@ -20,21 +21,23 @@ object PrimitiveClientFactory {
      */
     fun connectToPrimitive(address: String = "localhost", port: Int = 8080):
         Pair<Signature, Primitive> {
-        val channel = ManagedChannelBuilder.forAddress(address, port)
+        val channelBuilder = ManagedChannelBuilder.forAddress(address, port)
             .usePlaintext()
-            .build()
+        val channel = channelBuilder.build()
         val signature = GenericPrimitiveServiceGrpc.newFutureStub(channel)
             .getSignature(EmptyMsg.getDefaultInstance()).get()
-        return signature.deserialize() to Primitive(primitive(channel))
+        channel.shutdown()
+        channel.awaitTermination(1, TimeUnit.SECONDS)
+        return signature.deserialize() to Primitive(primitive(channelBuilder))
     }
 
     /** It returns the results from a [Solve.Request] given by the server mapping it into
      * a lazy sequence of [Solve.Response]
      */
     private fun primitive(
-        channel: ManagedChannel
+        channelBuilder: ManagedChannelBuilder<*>
     ): (Solve.Request<ExecutionContext>) -> Sequence<Solve.Response> = {
-        ClientSession.of(it, channel).solutionsQueue.asSequence()
+        ClientSession.of(it, channelBuilder).solutionsQueue.asSequence()
     }
 
     fun searchPrimitive(functor: String, arity: Int):

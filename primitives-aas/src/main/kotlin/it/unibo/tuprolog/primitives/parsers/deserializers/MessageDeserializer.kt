@@ -17,10 +17,10 @@ fun RequestMsg.deserialize(): Solve.Request<ExecutionContext> =
 fun ResponseMsg.deserialize(
     scope: Scope = Scope.empty(),
     actualContext: ExecutionContext = DummyContext()
-): Solve.Response =
-    Solve.Response(
-        solution = this.solution.deserialize(scope, actualContext),
-        sideEffects = this.sideEffectsList.map { it.deserialize() }
-    )
+): Solve.Response = Solve.Response(
+    solution = this.solution.deserialize(scope, actualContext),
+    sideEffects = this.sideEffectsList.map { it.deserialize() }
+)
+
 
 

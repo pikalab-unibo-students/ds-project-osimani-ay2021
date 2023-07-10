@@ -18,8 +18,16 @@ fun ArgumentMsg.deserialize(scope: Scope = Scope.empty()): Term =
         deserializeVar(this.`var`, scope)
     } else if(this.hasStruct()) {
         this.struct.deserialize()
+    } else if(this.hasFlag()) {
+        Truth.of(this.flag)
+    } else if(this.hasNumeric()) {
+        val value = this.numeric
+        if(value % 1 > 0)
+            Constant.parse(this.numeric.toString())
+        else
+            Constant.parse(this.numeric.toInt().toString())
     } else {
-        Term.parse(this.constant)
+        Atom.parse(this.atom)
     }
 
 fun deserializeVar(name: String, scope: Scope = Scope.empty()): Var =

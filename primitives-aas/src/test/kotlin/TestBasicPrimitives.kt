@@ -16,7 +16,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
-class TestBasicPrimitives: AbstractPrimitivesTestSuite() {
+class TestBasicPrimitives: KotlinPrimitivesTestSuite() {
 
     override val primitives: List<DistributedPrimitiveWrapper> = listOf(
         ntPrimitive, innestedPrimitive, readerPrimitive, throwablePrimitive

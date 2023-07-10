@@ -33,23 +33,10 @@ class SessionSolverImpl(
         val query = event.query.deserialize()
         computations.putIfAbsent(id, sessionSolver.solve(query, event.timeout).iterator())
         val solution: Solution = computations[id]!!.next()
-        val buildSideEffects: SideEffectsBuilder.() -> Unit = {
-            resetStaticKb(sessionSolver.staticKb)
-            resetDynamicKb(sessionSolver.dynamicKb)
-            resetFlags(sessionSolver.flags)
-            resetOperators(sessionSolver.operators)
-            //TO RESOLVE
-            resetInputChannels(emptyMap())
-            resetOutputChannels(emptyMap())
-            resetRuntime(Runtime.empty())
-        }
         responseObserver.onNext(
             buildSubSolveSolutionMsg(
                 id,
-                Solve.Response(
-                    solution,
-                    sideEffects = SideEffectsBuilder.empty()
-                        .also { it.buildSideEffects() }.build()),
+                Solve.Response(solution),
                 computations[id]!!.hasNext()
             )
         )
@@ -67,6 +54,7 @@ class SessionSolverImpl(
             val inspectedKB = when(event.kbType) {
                 InspectKbMsg.KbType.STATIC -> sessionSolver.staticKb
                 InspectKbMsg.KbType.DYNAMIC -> sessionSolver.dynamicKb
+                InspectKbMsg.KbType.BOTH -> sessionSolver.staticKb + sessionSolver.dynamicKb
                 else -> throw IllegalArgumentException()
             }
             val filters = event.filtersList.map { filter ->
@@ -86,16 +74,21 @@ class SessionSolverImpl(
                     InspectKbMsg.FilterType.STARTS_WITH -> {
                         { clause: Clause ->
                             if(clause.head != null)
-                                clause.head!!.functor.startsWith(filter.argument, true)
+                                clause.head!!.toString().startsWith(filter.argument, true)
                             else false
                         }
                     }
                     else -> throw IllegalArgumentException()
                 }
             }
-            theoryIterator[id] = inspectedKB.filter {
+            val iterator = inspectedKB.filter {
                 filters.all {filter -> filter(it) }
-            }.iterator()
+            }
+            theoryIterator[id] =
+                if(event.maxClauses.toInt() == -1)
+                    iterator.iterator()
+                else
+                    iterator.take(event.maxClauses.toInt()).iterator()
         }
 
         responseObserver.onNext(

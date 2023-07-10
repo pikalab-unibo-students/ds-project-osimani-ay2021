@@ -1,6 +1,6 @@
 package predicative
 
-import AbstractPrimitivesTestSuite
+import KotlinPrimitivesTestSuite
 import examples.filterKBPrimitive
 import examples.getEventsPrimitive
 import it.unibo.tuprolog.core.Clause
@@ -12,7 +12,7 @@ import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimiti
 import it.unibo.tuprolog.theory.Theory
 import kotlin.test.*
 
-class TestGetEvents: AbstractPrimitivesTestSuite() {
+class TestGetEvents: KotlinPrimitivesTestSuite() {
 
     override val primitives: List<DistributedPrimitiveWrapper> =
         listOf(getEventsPrimitive, filterKBPrimitive)
@@ -39,7 +39,8 @@ class TestGetEvents: AbstractPrimitivesTestSuite() {
                 )
             )
             val query = "filterKB"(Term.parse("f"), X)
-            val solution = solver.solve(query)
+            val solution = solver.solveList(query)
+            assertTrue(solution.size >= 2)
             solution.forEach { println(it) }
         }
     }

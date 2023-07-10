@@ -52,7 +52,6 @@ class ServerSessionImpl(
         }
         /** Handling SubRequest Event */
         else if (msg.hasResponse()) {
-            println(msg)
             ongoingSubRequests.find { it.id == msg.response.id }.let {
                 it?.signalResponse(msg.response)
             }

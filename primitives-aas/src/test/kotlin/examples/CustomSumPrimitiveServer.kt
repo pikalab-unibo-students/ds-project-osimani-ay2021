@@ -1,5 +1,6 @@
 package examples
 
+import it.unibo.tuprolog.core.Integer
 import it.unibo.tuprolog.core.Numeric
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.Term
@@ -8,12 +9,14 @@ import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory.startService
 import it.unibo.tuprolog.primitives.server.distribuited.DistributedError
 import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 import it.unibo.tuprolog.solve.exception.error.TypeError
+import org.gciatto.kt.math.BigInteger
 
 val customSumPrimitive = DistributedPrimitiveWrapper("customSum", 3) { request ->
     val arg1: Term = request.arguments[0]
     val arg2: Term = request.arguments[1]
+    val arg3: Term = request.arguments[2]
     if(arg1.isNumber && arg2.isNumber) {
-        when(val arg3: Term = request.arguments[2]) {
+        when(arg3) {
             is Var ->
                 sequenceOf(request.replySuccess(
                     Substitution.of(arg3, Numeric.of(arg1.castToNumeric().decimalValue + arg2.castToNumeric().decimalValue)))

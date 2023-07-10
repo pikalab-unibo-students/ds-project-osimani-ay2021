@@ -1,6 +1,7 @@
 package it.unibo.tuprolog.primitives.client.impl
 
 import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.core.Scope
 import it.unibo.tuprolog.primitives.GeneratorMsg
@@ -16,8 +17,9 @@ import it.unibo.tuprolog.solve.ExecutionContext
 import it.unibo.tuprolog.solve.exception.ResolutionException
 import it.unibo.tuprolog.solve.primitive.Solve
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.TimeUnit
 
-class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, channel: ManagedChannel):
+class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, channelBuilder: ManagedChannelBuilder<*>):
     ClientSession {
 
     private var closed = false
@@ -26,8 +28,10 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
     private val sessionSolver: SessionSolver
     private val responseStream: StreamObserver<SolverMsg>
     private val queue = LinkedBlockingDeque<Solve.Response>()
+    private val channel: ManagedChannel
 
     init {
+        channel = channelBuilder.build()
         responseStream = GenericPrimitiveServiceGrpc.newStub(channel).callPrimitive(this)
         responseStream.onNext(SolverMsg.newBuilder().setRequest(request.serialize()).build())
         sessionSolver = SessionSolver.of(responseStream, request.context)
@@ -35,9 +39,9 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
 
     override fun onNext(value: GeneratorMsg) {
         if(value.hasResponse()) {
-            queue.add(value.response.deserialize(scope, request.context))
-            if(!value.response.solution.hasNext) {
-                closed = true
+            val response = value.response.deserialize(scope, request.context)
+            queue.add(response)
+            if(!response.solution.isHalt and !value.response.solution.hasNext) {
                 this.onCompleted()
             }
         }
@@ -74,6 +78,14 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
         }
     }
 
+    private fun closeChannel() {
+        if(!channel.isShutdown) {
+            channel.shutdownNow()
+            channel.awaitTermination(1, TimeUnit.SECONDS)
+        }
+    }
+
+
     override fun onError(t: Throwable?) {
         queue.add(
             request.replyException(ResolutionException(
@@ -81,10 +93,12 @@ class ClientSessionImpl(private val request: Solve.Request<ExecutionContext>, ch
                 cause = t))
         )
         closed = true
+        closeChannel()
     }
 
     override fun onCompleted() {
         closed = true
+        closeChannel()
     }
 
     override val solutionsQueue: Iterator<Solve.Response> =

@@ -1,6 +1,6 @@
 package it.unibo.tuprolog.primitives.client
 
-import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
 import it.unibo.tuprolog.primitives.GeneratorMsg
 import it.unibo.tuprolog.primitives.client.impl.ClientSessionImpl
@@ -14,9 +14,9 @@ interface ClientSession: StreamObserver<GeneratorMsg> {
     companion object {
         fun of(
             request: Solve.Request<ExecutionContext>,
-            channel: ManagedChannel
+            channelBuilder: ManagedChannelBuilder<*>
         ): ClientSession =
-            ClientSessionImpl(request, channel)
+            ClientSessionImpl(request, channelBuilder)
 
     }
 }

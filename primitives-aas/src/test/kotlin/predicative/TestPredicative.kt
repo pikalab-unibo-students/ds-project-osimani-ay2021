@@ -1,24 +1,15 @@
 package predicative
 
-import AbstractPrimitivesTestSuite
+import KotlinPrimitivesTestSuite
 import examples.*
 import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.dsl.theory.logicProgramming
-import it.unibo.tuprolog.primitives.client.PrimitiveClientFactory
-import it.unibo.tuprolog.primitives.db.DbManager
-import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory
 import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
-import it.unibo.tuprolog.solve.Solver
-import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.exception.HaltException
 import it.unibo.tuprolog.solve.exception.error.TypeError
-import it.unibo.tuprolog.solve.library.Library
-import it.unibo.tuprolog.solve.library.Runtime
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
-class TestPredicative: AbstractPrimitivesTestSuite() {
+class TestPredicative: KotlinPrimitivesTestSuite() {
 
     override val primitives: List<DistributedPrimitiveWrapper> = listOf(
         innestedPrimitive, ntPrimitive, readerPrimitive,

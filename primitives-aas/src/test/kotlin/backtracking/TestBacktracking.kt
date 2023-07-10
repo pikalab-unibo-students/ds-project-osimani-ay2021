@@ -1,21 +1,13 @@
 package backtracking
 
-import AbstractPrimitivesTestSuite
+import KotlinPrimitivesTestSuite
 import examples.*
 import it.unibo.tuprolog.dsl.theory.logicProgramming
-import it.unibo.tuprolog.primitives.client.PrimitiveClientFactory
-import it.unibo.tuprolog.primitives.server.PrimitiveServerFactory
 import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
-import it.unibo.tuprolog.solve.Solver
-import it.unibo.tuprolog.solve.channel.InputChannel
 import it.unibo.tuprolog.solve.channel.InputStore
-import it.unibo.tuprolog.solve.library.Library
-import it.unibo.tuprolog.solve.library.Runtime
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
-class TestBacktracking: AbstractPrimitivesTestSuite() {
+class TestBacktracking: KotlinPrimitivesTestSuite() {
 
     override val primitives: List<DistributedPrimitiveWrapper> =
         listOf(innestedPrimitive, ntPrimitive, readerPrimitive, throwablePrimitive, writerPrimitive)
@@ -65,7 +57,7 @@ class TestBacktracking: AbstractPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testReadLine() {
         val solutions = logicProgramming {
-            val query = "readLine"(InputStore.STDIN, X)
+                val query = "readLine"(InputStore.STDIN, X)
             solver.solve(query).take(6).toList()
         }
         assertTrue { solutions.last().isNo }

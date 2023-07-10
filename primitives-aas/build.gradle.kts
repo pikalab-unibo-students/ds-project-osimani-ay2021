@@ -33,6 +33,7 @@ kotlin {
         test {
             dependencies {
                 implementation("org.testng:testng:7.1.0")
+                implementation("com.github.pgreze:kotlin-process:1.4.1")
                 implementation(libs.grpc.testing)
                 implementation(kotlin("test"))
             }

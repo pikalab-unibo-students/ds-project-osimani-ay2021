@@ -1,11 +1,9 @@
 package sideEffects
 
-import AbstractPrimitivesTestSuite
+import KotlinPrimitivesTestSuite
 import examples.customAssertPrimitive
 import examples.customWritePrimitive
-import examples.getEventsPrimitive
 import it.unibo.tuprolog.core.Clause
-import it.unibo.tuprolog.core.Struct
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.core.Term
 import it.unibo.tuprolog.core.parsing.parse
@@ -14,7 +12,7 @@ import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimiti
 import it.unibo.tuprolog.solve.channel.OutputStore
 import kotlin.test.*
 
-class TestSideEffects: AbstractPrimitivesTestSuite() {
+class TestSideEffects: KotlinPrimitivesTestSuite() {
 
     override val primitives: List<DistributedPrimitiveWrapper> =
         listOf(customAssertPrimitive, customWritePrimitive)
