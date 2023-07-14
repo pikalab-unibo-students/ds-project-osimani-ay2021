@@ -6,6 +6,7 @@ import examples.innestedPrimitive
 import it.unibo.tuprolog.core.Numeric
 import it.unibo.tuprolog.core.Substitution
 import it.unibo.tuprolog.dsl.theory.logicProgramming
+import it.unibo.tuprolog.primitives.client.PrimitiveClientFactory
 import it.unibo.tuprolog.primitives.server.distribuited.solve.DistributedPrimitiveWrapper
 import it.unibo.tuprolog.theory.Theory
 import kotlin.test.*

@@ -1,4 +1,4 @@
-package predicative
+package ml_Lib
 
 import KotlinPrimitivesTestSuite
 import examples.filterKBPrimitive
@@ -15,7 +15,7 @@ import kotlin.test.*
 class TestGetEvents: KotlinPrimitivesTestSuite() {
 
     override val primitives: List<DistributedPrimitiveWrapper> =
-        listOf(getEventsPrimitive, filterKBPrimitive)
+        listOf(filterKBPrimitive, getEventsPrimitive)
 
     /** Testing Basic Primitive **/
     @Test

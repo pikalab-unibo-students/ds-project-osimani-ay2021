@@ -19,14 +19,13 @@ abstract class KotlinPrimitivesTestSuite: AbstractPrimitivesTestSuite() {
         var port = 8080
         val latch = CountDownLatch(primitives.size)
         primitives.forEach {
+            val service = PrimitiveServerFactory.startService(it, port, "customLibrary")
+            latch.countDown()
+            activeServices[port] = service
+            port++
             executor.submit {
-                val service = PrimitiveServerFactory.startService(it, port, "customLibrary")
-                latch.countDown()
-                activeServices[port] = service
                 service.awaitTermination()
             }
-            Thread.sleep(3000)
-            port++
         }
         latch.await()
         super.beforeEach()

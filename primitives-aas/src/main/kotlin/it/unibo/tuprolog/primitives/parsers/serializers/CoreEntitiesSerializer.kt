@@ -13,7 +13,7 @@ fun Term.serialize(): ArgumentMsg {
         is Var -> builder.setVar(this.name)
         is Truth -> builder.setFlag(this.isTrue)
         is Numeric -> builder.setNumeric(this.decimalValue.toDouble())
-        is Atom -> builder.setAtom(this.toString())
+        is Atom -> builder.setAtom(this.value)
         is Struct -> builder.setStruct(this.serialize())
     }
     return builder.build()

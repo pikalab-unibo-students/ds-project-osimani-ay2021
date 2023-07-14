@@ -27,7 +27,7 @@ fun ArgumentMsg.deserialize(scope: Scope = Scope.empty()): Term =
         else
             Constant.parse(this.numeric.toInt().toString())
     } else {
-        Atom.parse(this.atom)
+        Atom.of(this.atom)
     }
 
 fun deserializeVar(name: String, scope: Scope = Scope.empty()): Var =

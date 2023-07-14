@@ -1,8 +1,12 @@
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CompletableFuture
 
 abstract class PythonPrimitivesTestSuite: AbstractPrimitivesTestSuite() {
 
-    private val numOfPrimitives: Int = 23
+    private val numOfPrimitives: Int = 27
     private val startingPort = 8080
     private val maxPort = startingPort + numOfPrimitives
     private var serverProcess: Process? = null
@@ -12,45 +16,44 @@ abstract class PythonPrimitivesTestSuite: AbstractPrimitivesTestSuite() {
 
 
     init {
-        val p1 = ProcessBuilder("cmd.exe", "/c", "pip",
+        println("install last version of library")
+        val p = ProcessBuilder("cmd.exe", "/c", "pip",
             "install", "--upgrade", "prolog-primitives").inheritIO().start()
-        p1.errorStream.bufferedReader().useLines {
+        p.inputStream.bufferedReader().useLines {
             it.forEach { line -> println(line) }
         }
-        p1.waitFor()
+        p.errorStream.bufferedReader().useLines {
+            it.forEach { line -> println(line) }
+        }
+        p.waitFor()
     }
-
-    private val logger = mutableListOf<String>()
-    private var inputThread: Thread = Thread()
-    private var errorThread: Thread = Thread()
 
     override fun beforeEach() {
         println("starting to listen")
         serverProcess = ProcessBuilder(
             "python", {}.javaClass.getResource("/Untitled-1.py")!!.path.drop(1)
         ).start()
-        inputThread = Thread {
+        executor.submit {
             serverProcess!!.inputStream.bufferedReader().useLines {
-                it.forEach { line -> println(line) }
+                it.forEach { line ->
+                    println(line)
+                }
             }
         }
-        errorThread = Thread {
+        executor.submit  {
             serverProcess!!.errorStream.bufferedReader().useLines {
-                logger.addAll(it.toList())
+                log.addAll(it.toList())
             }
         }
-        inputThread.start()
-        errorThread.start()
-        Thread.sleep(7000)
+
+        Thread.sleep(9000)
         println("Server Started")
         super.beforeEach()
     }
 
     override fun afterEach() {
         super.afterEach()
-        println(logger)
+        println(log)
         serverProcess!!.destroyForcibly()
-        inputThread.interrupt()
-        errorThread.interrupt()
     }
 }

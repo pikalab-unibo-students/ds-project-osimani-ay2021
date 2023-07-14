@@ -43,7 +43,7 @@ class DataTest() : PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testTheoryToSchema() {
         logicProgramming {
-            val query = "theoryToSchema"(X)
+            val query = "theory_to_schema"(X)
             val solution = solver.solveOnce(query)
             assertTrue(solution.isYes)
             assertTrue(solution.substitution.contains(X))
@@ -55,7 +55,7 @@ class DataTest() : PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testGetSchema() {
         logicProgramming {
-            val id = solver.solveOnce("theoryToSchema"(X)).substitution[X]!!.asTerm()
+            val id = solver.solveOnce("theory_to_schema"(X)).substitution[X]!!.asTerm()
             val query = "schema"(id, X, Y, Z)
             val solution = solver.solveOnce(query)
             assertTrue(solution.isYes)
@@ -188,7 +188,7 @@ class DataTest() : PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testTheoryFromDataset() {
         logicProgramming {
-            val schemaId = solver.solveOnce("theoryToSchema"(X)).substitution[X]!!.asTerm()
+            val schemaId = solver.solveOnce("theory_to_schema"(X)).substitution[X]!!.asTerm()
             val datasetId = solver.solveOnce("theory_to_dataset"(schemaName, X)).substitution[X]!!.asTerm()
             solver.resetStaticKb()
             val query = "theory_from_dataset"(schemaId, datasetId)

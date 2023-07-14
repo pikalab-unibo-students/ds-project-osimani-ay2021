@@ -40,8 +40,8 @@ class TransformationTest: PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testSchemaTransformation() {
         logicProgramming {
-            val id = solver.solveOnce("theoryToSchema"(X)).substitution[X]!!.asTerm()
-            val query = "schema_trasformation"(id, X)
+            val id = solver.solveOnce("theory_to_schema"(X)).substitution[X]!!.asTerm()
+            val query = "schema_transformation"(id, X)
             val solution = solver.solveOnce(query)
             assertTrue(solution.isYes)
             println(solution)
@@ -52,12 +52,12 @@ class TransformationTest: PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testNormalize() {
         logicProgramming {
-            val id = solver.solveOnce("theoryToSchema"(X)).substitution[X]!!.asTerm()
-            val query = "schema_trasformation"(id, X) and "normalize"(X, arrayOf("greet"), Y)
+            val id = solver.solveOnce("theory_to_schema"(X)).substitution[X]!!.asTerm()
+            val query = "schema_transformation"(id, X) and "normalize"(X, arrayOf("greet"), Y)
             val solution = solver.solveOnce(query)
             assertTrue(solution.isYes)
             val transfId = solution.substitution[Y]!!.asTerm()
-            val query2 = "schema_trasformation"(X, transfId) and "schema"(X, Y, W, Z)
+            val query2 = "schema_transformation"(X, transfId) and "schema"(X, Y, W, Z)
             val solution2 = solver.solveOnce(query2)
             assertTrue(solution2.isYes)
             println(solution2)
@@ -68,12 +68,12 @@ class TransformationTest: PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testOneHotEncode() {
         logicProgramming {
-            val id = solver.solveOnce("theoryToSchema"(X)).substitution[X]!!.asTerm()
-            val query = "schema_trasformation"(id, X) and "one_hot_encode"(X, arrayOf("hello"), Y)
+            val id = solver.solveOnce("theory_to_schema"(X)).substitution[X]!!.asTerm()
+            val query = "schema_transformation"(id, X) and "one_hot_encode"(X, arrayOf("hello"), Y)
             val solution = solver.solveOnce(query)
             assertTrue(solution.isYes)
             val transfId = solution.substitution[Y]!!.asTerm()
-            val query2 = "schema_trasformation"(X, transfId) and "schema"(X, Y, W, Z)
+            val query2 = "schema_transformation"(X, transfId) and "schema"(X, Y, W, Z)
             val solution2 = solver.solveOnce(query2)
             assertTrue(solution2.isYes)
             println(solution2)
@@ -84,12 +84,12 @@ class TransformationTest: PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testDropEncode() {
         logicProgramming {
-            val id = solver.solveOnce("theoryToSchema"(X)).substitution[X]!!.asTerm()
-            val query = "schema_trasformation"(id, X) and "drop"(X, arrayOf("hello"), Y)
+            val id = solver.solveOnce("theory_to_schema"(X)).substitution[X]!!.asTerm()
+            val query = "schema_transformation"(id, X) and "drop"(X, arrayOf("hello"), Y)
             val solution = solver.solveOnce(query)
             assertTrue(solution.isYes)
             val transfId = solution.substitution[Y]!!.asTerm()
-            val query2 = "schema_trasformation"(X, transfId) and "schema"(X, Y, W, Z)
+            val query2 = "schema_transformation"(X, transfId) and "schema"(X, Y, W, Z)
             val solution2 = solver.solveOnce(query2)
             assertTrue(solution2.isYes)
             println(solution2)
@@ -100,8 +100,8 @@ class TransformationTest: PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testFit() {
         logicProgramming {
-            val id = solver.solveOnce("theoryToSchema"(X)).substitution[X]!!.asTerm()
-            val query = "schema_trasformation"(id, X) and
+            val id = solver.solveOnce("theory_to_schema"(X)).substitution[X]!!.asTerm()
+            val query = "schema_transformation"(id, X) and
                 "normalize"(X, "greet", Y) and
                 "one_hot_encode"(Y, "hello", Z)
             val solution = solver.solveOnce(query)
@@ -109,7 +109,7 @@ class TransformationTest: PythonPrimitivesTestSuite() {
             val transfId = solution.substitution[Z]!!.asTerm()
             val query2 = "theory_to_dataset"(schemaName, X) and
                 "fit"(transfId, X, Y) and
-                "schema_trasformation"(Z, Y) and
+                "schema_transformation"(Z, Y) and
                 "schema"(Z, A, B, C)
             val solution2 = solver.solveOnce(query2)
             assertTrue(solution2.isYes)
@@ -121,9 +121,9 @@ class TransformationTest: PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testTransformApply() {
         logicProgramming {
-            val query = "theoryToSchema"(S) and
+            val query = "theory_to_schema"(S) and
                 "theory_to_dataset"(schemaName, D) and
-                "schema_trasformation"(S, X) and
+                "schema_transformation"(S, X) and
                 "normalize"(X, "greet", Y) and
                 "one_hot_encode"(Y, "hello", W) and
                 "fit"(W, D, Z)
@@ -142,9 +142,9 @@ class TransformationTest: PythonPrimitivesTestSuite() {
     @Throws(Exception::class)
     fun testTransformInvert() {
         logicProgramming {
-            val query = "theoryToSchema"(S) and
+            val query = "theory_to_schema"(S) and
                 "theory_to_dataset"(schemaName, D) and
-                "schema_trasformation"(S, X) and
+                "schema_transformation"(S, X) and
                 "normalize"(X, "greet", Y) and
                 "one_hot_encode"(Y, "hello", W) and
                 "fit"(W, D, Z)

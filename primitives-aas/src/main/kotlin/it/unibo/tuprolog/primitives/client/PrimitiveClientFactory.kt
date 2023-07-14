@@ -27,7 +27,7 @@ object PrimitiveClientFactory {
         val signature = GenericPrimitiveServiceGrpc.newFutureStub(channel)
             .getSignature(EmptyMsg.getDefaultInstance()).get()
         channel.shutdown()
-        channel.awaitTermination(1, TimeUnit.SECONDS)
+        channel.awaitTermination(5, TimeUnit.SECONDS)
         return signature.deserialize() to Primitive(primitive(channelBuilder))
     }
 
@@ -40,6 +40,8 @@ object PrimitiveClientFactory {
         ClientSession.of(it, channelBuilder).solutionsQueue.asSequence()
     }
 
+    /** It searches in a Database the information about a specific primitive
+     */
     fun searchPrimitive(functor: String, arity: Int):
         Pair<Signature, Primitive> {
         val address = DbManager.get().getPrimitive(functor, arity)!!
