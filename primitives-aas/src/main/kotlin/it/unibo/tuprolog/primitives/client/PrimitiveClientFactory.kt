@@ -42,7 +42,7 @@ object PrimitiveClientFactory {
 
     /** It searches in a Database the information about a specific primitive
      */
-    fun searchPrimitive(functor: String, arity: Int):
+    /*fun searchPrimitive(functor: String, arity: Int):
         Pair<Signature, Primitive> {
         val address = DbManager.get().getPrimitive(functor, arity)!!
         return connectToPrimitive(address.first, address.second)
@@ -52,5 +52,5 @@ object PrimitiveClientFactory {
         Library.of(libraryName, DbManager.get().getLibrary(libraryName)
             .associate {
                 searchPrimitive(it.first, it.second)
-            })
+            })*/
 }

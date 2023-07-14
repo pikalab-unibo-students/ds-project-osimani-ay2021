@@ -30,12 +30,12 @@ object PrimitiveServerFactory {
             .executor(executor)
             .build()
         genericPrimitive!!.start()
-        DbManager.get().addPrimitive(service.signature, port = port, libraryName =  libraryName)
+        //DbManager.get().addPrimitive(service.signature, port = port, libraryName =  libraryName)
         Runtime.getRuntime().addShutdownHook(Thread {
-            DbManager.get().deletePrimitive(service.signature, libraryName)
+            //DbManager.get().deletePrimitive(service.signature, libraryName)
             genericPrimitive.shutdownNow()
         })
-        println("${service.signature.name} listening on port $port")
+        println("${service.signature.name} of $libraryName listening on port $port")
         return genericPrimitive
     }
 }

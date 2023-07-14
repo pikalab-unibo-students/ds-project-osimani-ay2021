@@ -3,6 +3,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutorService
 
 abstract class PythonPrimitivesTestSuite: AbstractPrimitivesTestSuite() {
 
@@ -15,9 +16,9 @@ abstract class PythonPrimitivesTestSuite: AbstractPrimitivesTestSuite() {
         (startingPort until maxPort).toSet()
 
     private fun ExecutorService.pythonModuleExec(moduleName: String, healthCheck: String): Process {
-        val process = ProcessBuilder("python3", "-m", moduleName).start()
+        val process = ProcessBuilder("python", "-m", moduleName).start()
         Runtime.getRuntime().addShutdownHook(Thread { 
-            if (process.isAlive()) {
+            if (process.isAlive) {
                 process.destroyForcibly()
                 process.waitFor()
             }

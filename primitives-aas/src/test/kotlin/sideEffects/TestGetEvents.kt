@@ -1,4 +1,4 @@
-package ml_Lib
+package sideEffects
 
 import KotlinPrimitivesTestSuite
 import examples.filterKBPrimitive

@@ -63,11 +63,9 @@ class HousingDatasetTest: PythonPrimitivesTestSuite() {
                 rule {
                     "createModel"("NInput", "NOutput", G) `if` (
                         "input_layer"("NInput", A) and
-                            "dense_layer"(A, 128, "relu", B) and
-                            "dense_layer"(B, 64, "relu", C) and
-                            "dense_layer"(C, 32, "relu", D) and
-                            "dense_layer"(D, 16, "relu", E) and
-                            "output_layer"(E, "NOutput", "identity", F) and
+                            "dense_layer"(A, 100, "relu", B) and
+                            "dense_layer"(B, 50, "relu", C) and
+                            "output_layer"(C, "NOutput", "relu", F) and
                             "neural_network"(F, G)
                         )
                 },
@@ -109,7 +107,7 @@ class HousingDatasetTest: PythonPrimitivesTestSuite() {
                 rule {
                     "test"("NN", "ValidationSet", "Performance") `if` (
                         "predict"("NN", "ValidationSet", "ActualPredictions") and
-                            "mae"("ActualPredictions", "ValidationSet", "Performance")
+                            "mse"("ActualPredictions", "ValidationSet", "Performance")
                         )
                 },
                 //Computes the Performance of the provided NN against the provided ValidationSet
@@ -147,7 +145,7 @@ class HousingDatasetTest: PythonPrimitivesTestSuite() {
                     "train_cv"(
                         "Transformed",
                         arrayOf(
-                            "max_epoch"(100), "loss"("mae")
+                            "max_epoch"(100), "loss"("mse")
                         ),
                         performancesVar)
             ).toList().map {
