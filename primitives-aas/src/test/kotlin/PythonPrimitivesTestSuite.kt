@@ -9,51 +9,39 @@ abstract class PythonPrimitivesTestSuite: AbstractPrimitivesTestSuite() {
     private val numOfPrimitives: Int = 27
     private val startingPort = 8080
     private val maxPort = startingPort + numOfPrimitives
-    private var serverProcess: Process? = null
+    private lateinit var serverProcess: Process
 
     override fun getActivePorts(): Set<Int> =
         (startingPort until maxPort).toSet()
 
-
-    init {
-        println("install last version of library")
-        val p = ProcessBuilder("cmd.exe", "/c", "pip",
-            "install", "--upgrade", "prolog-primitives").inheritIO().start()
-        p.inputStream.bufferedReader().useLines {
-            it.forEach { line -> println(line) }
+    private fun ExecutorService.pythonModuleExec(moduleName: String, healthCheck: String): Process {
+        val process = ProcessBuilder("python3", "-m", moduleName).start()
+        Runtime.getRuntime().addShutdownHook(Thread { 
+            if (process.isAlive()) {
+                process.destroyForcibly()
+                process.waitFor()
+            }
+        })
+        val healthCheckPattern = healthCheck.toRegex()
+        submit {
+            process.errorStream.bufferedReader().useLines {
+                it.forEach(System.err::println)
+            }
         }
-        p.errorStream.bufferedReader().useLines {
-            it.forEach { line -> println(line) }
+        val healthy = process.inputStream.bufferedReader().lineSequence().firstOrNull {
+            it.matches(healthCheckPattern)
         }
-        p.waitFor()
+        return if (healthy != null) process else error("Message here")
     }
 
     override fun beforeEach() {
-        println("starting to listen")
-        serverProcess = ProcessBuilder(
-            "python", {}.javaClass.getResource("/Untitled-1.py")!!.path.drop(1)
-        ).start()
-        executor.submit {
-            serverProcess!!.inputStream.bufferedReader().useLines {
-                it.forEach { line ->
-                    println(line)
-                }
-            }
-        }
-        executor.submit  {
-            serverProcess!!.errorStream.bufferedReader().useLines {
-                log.addAll(it.toList())
-            }
-        }
-
-        Thread.sleep(9000)
-        println("Server Started")
+        serverProcess = executor.pythonModuleExec("prolog_primitives.ml_lib", "^Servers listening from \\d+ to \\d+")
         super.beforeEach()
     }
 
     override fun afterEach() {
         super.afterEach()
-        println(log)
-        serverProcess!!.destroyForcibly()
+        serverProcess.destroyForcibly()
+        serverProcess.waitFor()
     }
 }

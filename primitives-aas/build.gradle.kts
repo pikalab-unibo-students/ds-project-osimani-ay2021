@@ -54,3 +54,9 @@ protobuf {
         }
     }
 }
+
+tasks.create<Exec>("installPythonDependencies") {
+    commandLine = listOf("pip3", "install", "prolog-primitives")
+    group = "verification"
+    tasks.getByName("test").dependsOn(this)
+}
