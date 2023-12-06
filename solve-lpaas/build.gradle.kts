@@ -8,7 +8,7 @@ plugins {
     `kotlin-jvm-only`
     `kotlin-doc`
     `publish-on-maven`
-    id("com.bmuschko.docker-java-application") version "9.3.0"
+    id("com.bmuschko.docker-java-application") version "9.3.7"
     alias(libs.plugins.javafx)
     alias(libs.plugins.protobuf)
     alias(libs.plugins.shadowJar)
