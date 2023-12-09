@@ -15,7 +15,7 @@ npm-syncRequest = "6.1.0" # sync-request
 ktlint = "10.3.0"
 detekt = "1.22.0"
 grpc = "1.54.2"
-proto = "3.21.9"
+proto = "3.21.12"
 
 [plugins]
 ktNpmPublish = "io.github.gciatto.kt-npm-publish:0.3.9"
