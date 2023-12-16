@@ -17,7 +17,7 @@ services:
             - internal-network
     mongodb:
         container_name: mongodb
-        image: mongo:6.0
+        image: mongo:7.0
         volumes:
             - ~/mongo:/data/db
         ports:
