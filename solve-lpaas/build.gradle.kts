@@ -18,7 +18,7 @@ kotlin {
     sourceSets {
         main {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
                 implementation("org.litote.kmongo:kmongo:4.11.0")
                 implementation(project(":io-lib"))
                 implementation(project(":oop-lib"))
