@@ -1,4 +1,4 @@
-FROM gradle:7.6.4 AS build
+FROM gradle:8.10.2 AS build
 COPY --chown=gradle:gradle . /home/gradle/project
 WORKDIR /home/gradle/project
 RUN gradle :solve-lpaas:shadowJar
